@@ -9,9 +9,6 @@ dist/
 web-build/
 expo-env.d.ts
 
-# Vercel
-.vercel
-
 # Native
 .kotlin/
 *.orig.*

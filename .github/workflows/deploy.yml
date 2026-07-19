@@ -1,15 +1,23 @@
-name: Deploy
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches: [master]
+  workflow_dispatch:
 
+# Allow the workflow to publish to Pages using the built-in token.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One production deploy at a time; don't cancel a run mid-publish.
 concurrency:
-  group: deploy-production
-  cancel-in-progress: true
+  group: pages
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,9 +38,26 @@ jobs:
       - name: Export web build
         run: npx expo export --platform web
 
-      - name: Deploy to Vercel (production)
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx --yes vercel@latest deploy dist --prod --token "$VERCEL_TOKEN" --yes
+      - name: Disable Jekyll (serve _expo/ assets verbatim)
+        run: touch dist/.nojekyll
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
