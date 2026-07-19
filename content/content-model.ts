@@ -162,6 +162,11 @@ export const fruitsUnit: Unit = {
           prompt: "fruit.banana",
           choices: ["fruit.apple", "fruit.pear", "fruit.grapes"],
         },
+        {
+          type: "match_pairs",
+          prompt: "fruit.apple",
+          choices: ["fruit.banana", "fruit.grapes", "fruit.pear"],
+        },
       ],
     },
   ],
@@ -195,5 +200,35 @@ export function buildPickPicture(exercise: Exercise, dir: Direction) {
       audio: v.audio[dir.learning],
     })),
     hint: exercise.hint?.[dir.known],
+  };
+}
+
+// match_pairs: the prompt + choices become a small set of items the child
+// pairs up (picture <-> word). Same direction rule — the word shown is the
+// language being learned, its audio is the learning language.
+export function buildMatchPairs(exercise: Exercise, dir: Direction) {
+  const ids = [exercise.prompt, ...(exercise.choices ?? [])];
+  return ids.map((id) => {
+    const v = VOCAB[id];
+    return {
+      id: v.id,
+      emoji: v.emoji,
+      word: v.labels[dir.learning],
+      gloss: v.labels[dir.known],
+      audio: v.audio[dir.learning],
+    };
+  });
+}
+
+// say_it: nothing direction-specific to compute beyond the reference clip in
+// the language being learned and the label to show. The child records their
+// own voice and plays it back against this reference.
+export function buildSayIt(exercise: Exercise, dir: Direction) {
+  const item = VOCAB[exercise.prompt];
+  return {
+    referenceAudio: item.audio[dir.learning],
+    word: item.labels[dir.learning],
+    gloss: item.labels[dir.known],
+    emoji: item.emoji,
   };
 }

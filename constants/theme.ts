@@ -9,6 +9,9 @@ export const Colors = {
   textMuted: "#8C6F6F",
   gold: "#F2C14E",
   correct: "#5FA777",
+  // Soft background tints for resolved/selected states.
+  tintGold: "#FBF3DC",
+  tintGreen: "#E7F5EC",
 } as const;
 
 export const Spacing = {
