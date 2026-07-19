@@ -19,6 +19,16 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <Pressable
+        onLongPress={() => router.push("/parent-setup")}
+        delayLongPress={1200}
+        accessibilityRole="button"
+        accessibilityLabel="Parent settings"
+        style={({ pressed }) => [styles.gearButton, pressed && styles.pressed]}
+      >
+        <Text style={styles.gearEmoji}>⚙️</Text>
+      </Pressable>
+
       <View style={styles.content}>
         <Text style={styles.title}>{fruitsUnit.theme[direction.known]}</Text>
 
@@ -72,5 +82,20 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.label,
     fontWeight: "700",
     color: Colors.white,
+  },
+  gearButton: {
+    position: "absolute",
+    top: Spacing.lg,
+    right: Spacing.lg,
+    zIndex: 1,
+    width: 48,
+    height: 48,
+    borderRadius: Radii.round,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  gearEmoji: {
+    fontSize: 24,
+    opacity: 0.5,
   },
 });
