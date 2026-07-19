@@ -63,6 +63,10 @@ export interface Lesson {
   title: Record<LangCode, string>; // shown in the known language
   exercises: Exercise[];
   reward: "martenitsa"; // what Baba Marta hands out on completion
+  // Krali Marko's end-of-unit "юнашки изпит" (hero's challenge): a mixed review
+  // of the whole unit. Gets a themed intro, Krali Marko hosts the tiles, and
+  // the reward screen adds a hero's medal. Still positive-only.
+  boss?: boolean;
 }
 
 // A themed unit = a node on the map, hosted by one folklore character.
@@ -631,8 +635,9 @@ export const fruitsUnit: Unit = {
     },
     {
       id: "unit.fruits.review",
-      title: { bg: "Плодове — преговор", en: "Fruits — review" },
+      title: { bg: "Юнашки изпит — Плодове", en: "Hero's Challenge — Fruits" },
       reward: "martenitsa",
+      boss: true,
       exercises: [
         {
           type: "match_pairs",
@@ -643,6 +648,11 @@ export const fruitsUnit: Unit = {
           type: "match_pairs",
           prompt: "fruit.grapes",
           choices: ["fruit.pear", "fruit.watermelon", "fruit.lemon"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "fruit.watermelon",
+          choices: ["fruit.apple", "fruit.lemon", "fruit.grapes"],
         },
         {
           type: "odd_one_out",
@@ -716,6 +726,29 @@ export const animalsUnit: Unit = {
         },
       ],
     },
+    {
+      id: "unit.animals.boss",
+      title: { bg: "Юнашки изпит — Животни", en: "Hero's Challenge — Animals" },
+      reward: "martenitsa",
+      boss: true,
+      exercises: [
+        {
+          type: "match_pairs",
+          prompt: "animal.cat",
+          choices: ["animal.dog", "animal.cow", "animal.horse"],
+        },
+        {
+          type: "match_pairs",
+          prompt: "animal.bird",
+          choices: ["animal.fish", "animal.sheep", "animal.pig"],
+        },
+        {
+          type: "odd_one_out",
+          prompt: "fruit.lemon",
+          choices: ["animal.cat", "animal.cow", "animal.fish"],
+        },
+      ],
+    },
   ],
 };
 
@@ -772,6 +805,29 @@ export const colorsUnit: Unit = {
         },
       ],
     },
+    {
+      id: "unit.colors.boss",
+      title: { bg: "Юнашки изпит — Цветове", en: "Hero's Challenge — Colors" },
+      reward: "martenitsa",
+      boss: true,
+      exercises: [
+        {
+          type: "match_pairs",
+          prompt: "color.red",
+          choices: ["color.blue", "color.orange", "color.purple"],
+        },
+        {
+          type: "match_pairs",
+          prompt: "color.green",
+          choices: ["color.yellow", "color.black", "color.white"],
+        },
+        {
+          type: "odd_one_out",
+          prompt: "animal.dog",
+          choices: ["color.red", "color.black", "color.yellow"],
+        },
+      ],
+    },
   ],
 };
 
@@ -824,6 +880,29 @@ export const numbersUnit: Unit = {
           type: "pick_picture",
           prompt: "num.ten",
           choices: ["num.six", "num.eight", "num.nine"],
+        },
+      ],
+    },
+    {
+      id: "unit.numbers.boss",
+      title: { bg: "Юнашки изпит — Числа", en: "Hero's Challenge — Numbers" },
+      reward: "martenitsa",
+      boss: true,
+      exercises: [
+        {
+          type: "match_pairs",
+          prompt: "num.one",
+          choices: ["num.three", "num.six", "num.eight"],
+        },
+        {
+          type: "match_pairs",
+          prompt: "num.five",
+          choices: ["num.seven", "num.nine", "num.ten"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "num.nine",
+          choices: ["num.two", "num.six", "num.ten"],
         },
       ],
     },
@@ -1070,4 +1149,24 @@ export const TTS_LANG_FOR_SCRIPT: Record<Script, LangCode> = {
 export const PRAISE: Record<LangCode, { text: string; audio: AudioClip }> = {
   bg: { text: "Браво!", audio: { src: "audio/bg/praise__default.mp3", voiceId: "default" } },
   en: { text: "Well done!", audio: { src: "audio/en/praise__default.mp3", voiceId: "default" } },
+};
+
+// Krali Marko's hero's-challenge lines (spoken, in the child's known language):
+// an intro before the boss round and a pass line at the medal screen.
+export const CHALLENGE: Record<
+  LangCode,
+  { intro: string; introAudio: AudioClip; pass: string; passAudio: AudioClip }
+> = {
+  bg: {
+    intro: "Юнашко изпитание! Готов ли си?",
+    introAudio: { src: "audio/bg/challenge_intro__default.mp3", voiceId: "default" },
+    pass: "Ти си юнак!",
+    passAudio: { src: "audio/bg/challenge_pass__default.mp3", voiceId: "default" },
+  },
+  en: {
+    intro: "A hero's challenge! Are you ready?",
+    introAudio: { src: "audio/en/challenge_intro__default.mp3", voiceId: "default" },
+    pass: "You are a hero!",
+    passAudio: { src: "audio/en/challenge_pass__default.mp3", voiceId: "default" },
+  },
 };

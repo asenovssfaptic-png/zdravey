@@ -43,25 +43,28 @@ words; review lessons consolidate. Characters host per their role (see
 |--------|-------|-------|
 | Fruits 1 | apple, banana, grapes, pear | ✅ |
 | Fruits 2 | orange, strawberry, watermelon, lemon | ✅ |
-| Fruits Review | all 8 | ✅ match_pairs + odd_one_out |
+| Fruits — Hero's Challenge | all 8 | ✅ Krali Marko boss round |
 
 ### Unit 2 — Animals · Животни  (host: Samodiva 🌿)
 | Lesson | Words | Notes |
 |--------|-------|-------|
 | Animals 1 | cat, dog, bird, fish | ✅ |
 | Animals 2 | cow, horse, sheep, pig | ✅ farm set |
+| Animals — Hero's Challenge | all 8 | ✅ Krali Marko boss round |
 
 ### Unit 3 — Colors · Цветове  (host: Samodiva 🌿)
 | Lesson | Words | Notes |
 |--------|-------|-------|
 | Colors 1 | red, blue, green, yellow | ✅ |
 | Colors 2 | orange, purple, black, white | ✅ |
+| Colors — Hero's Challenge | all 8 | ✅ Krali Marko boss round |
 
 ### Unit 4 — Numbers · Числа  (host: Krali Marko 🗡️)
 | Lesson | Words | Notes |
 |--------|-------|-------|
 | Numbers 1 | one–five | ✅ |
 | Numbers 2 | six–ten | ✅ |
+| Numbers — Hero's Challenge | all 10 | ✅ Krali Marko boss round |
 
 ### Unit 5 — Family · Семейство  (host: Baba Marta 👵)
 | Lesson | Words | Notes |
@@ -84,11 +87,18 @@ words; review lessons consolidate. Characters host per their role (see
 
 ## Planned next (not yet built)
 
-- **Family 2** (brother, sister) and **Body 2** (ear, foot, leg) second lessons.
+- **Family 2** (brother, sister) and **Body 2** (ear, foot, leg) second lessons,
+  each capped with a Krali Marko **Hero's Challenge** boss round.
 - **Weather 2** (wind, storm) and a review lesson per new unit.
-- **Krali Marko's review challenge** ("юнашки изпит"): an end-of-unit boss round
-  mixing a whole unit, hosted by Krali Marko.
 - **Baba Marta seasonal event**: a 1st-of-March martenitsa give-away.
+
+### The Hero's Challenge (юнашки изпит) — built
+
+A `boss: true` lesson (see the `Lesson` type). Krali Marko opens with a spoken
+challenge (BossIntro), hosts the mixed-review tiles himself, and the reward
+screen adds a gold medal 🏅 with his "Ти си юнак!" line. Still positive-only —
+a hero's game, never a test you can fail. Add one by setting `boss: true` on a
+review lesson.
 
 ## Authoring a new lesson (for contributors)
 
