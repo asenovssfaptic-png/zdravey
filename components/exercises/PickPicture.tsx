@@ -9,7 +9,7 @@ import { Colors, Radii, Spacing } from "@/constants/theme";
 import { buildPickPicture } from "@/content/content-model";
 import { useClipPlayer } from "@/lib/audio";
 import { useDirection } from "@/lib/direction";
-import { shuffled } from "@/lib/shuffle";
+import { useShuffled } from "@/lib/shuffle";
 
 import { REVEAL_DELAY_MS, type ExerciseProps } from "./types";
 
@@ -19,7 +19,7 @@ export function PickPicture({ exercise, host, onDone }: ExerciseProps) {
   const kumaLisa = CHARACTERS.kuma_lisa;
 
   const built = useMemo(() => buildPickPicture(exercise, direction), [exercise, direction]);
-  const tiles = useMemo(() => shuffled(built.tiles), [built]);
+  const tiles = useShuffled(built.tiles);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showHint, setShowHint] = useState(false);

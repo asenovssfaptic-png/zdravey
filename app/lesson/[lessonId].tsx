@@ -1,10 +1,11 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CHARACTERS } from "@/characters/characters";
 import { MatchPairs } from "@/components/exercises/MatchPairs";
+import { OddOneOut } from "@/components/exercises/OddOneOut";
 import { PickPicture } from "@/components/exercises/PickPicture";
 import { SayIt } from "@/components/exercises/SayIt";
 import type { ExerciseProps } from "@/components/exercises/types";
@@ -21,7 +22,17 @@ const EXERCISE_COMPONENTS: Partial<Record<ExerciseType, (props: ExerciseProps) =
   pick_picture: PickPicture,
   match_pairs: MatchPairs,
   say_it: SayIt,
+  odd_one_out: OddOneOut,
 };
+
+// Pre-render one static HTML page per lesson so deep-links/refreshes resolve
+// to real HTML instead of a 404 or the bare [lessonId] template.
+export function generateStaticParams(): { lessonId: string }[] {
+  return UNITS.flatMap((unit) => unit.lessons.map((lesson) => ({ lessonId: lesson.id })));
+}
+
+// Stable no-op subscribe for useSyncExternalStore (client-detection only).
+const emptySubscribe = () => () => {};
 
 function findLesson(lessonId: string) {
   for (const unit of UNITS) {
@@ -49,11 +60,26 @@ export default function LessonScreen() {
   const [index, setIndex] = useState(0);
   const finished = exercises.length > 0 && index >= exercises.length;
 
+  // The lesson is a client-only interactive experience (audio playback,
+  // recording, local progress); those hooks aren't safe to run during the
+  // static export's server render. Render a bare shell until mounted so the
+  // pre-rendered HTML and first client render agree (no hydration mismatch),
+  // then mount the real, audio-driven content client-side only.
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
+
   // Award the martenitsa once, when the child reaches the end of the lesson.
   useEffect(() => {
     if (finished && found) completeLesson(found.lesson.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finished]);
+
+  if (!mounted) {
+    return <SafeAreaView style={styles.safeArea} />;
+  }
 
   if (!found) {
     return (

@@ -1,24 +1,39 @@
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CHARACTERS } from "@/characters/characters";
 import { CharacterBubble } from "@/components/CharacterBubble";
 import { Colors, FontSizes, Radii, Spacing } from "@/constants/theme";
-import { fruitsUnit } from "@/content/content-model";
+import type { Lesson, Unit } from "@/content/content-model";
+import { UNITS, VOCAB } from "@/content/content-model";
 import { useDirection } from "@/lib/direction";
 import { useProgress } from "@/lib/progress";
+
+// A few representative emoji for a lesson tile, pulled from the vocab it uses.
+function lessonEmojis(lesson: Lesson): string {
+  const ids = new Set<string>();
+  for (const ex of lesson.exercises) {
+    ids.add(ex.prompt);
+    for (const c of ex.choices ?? []) ids.add(c);
+  }
+  const emojis: string[] = [];
+  for (const id of ids) {
+    const e = VOCAB[id]?.emoji;
+    if (e && !emojis.includes(e)) emojis.push(e);
+    if (emojis.length === 4) break;
+  }
+  return emojis.join("");
+}
 
 export default function HomeScreen() {
   const router = useRouter();
   const { direction } = useDirection();
-  const { martenitsi, isLessonComplete } = useProgress();
-  const host = CHARACTERS[fruitsUnit.host];
-  const lesson = fruitsUnit.lessons[0];
-  const lessonDone = isLessonComplete(lesson.id);
+  const { martenitsi } = useProgress();
+  const babaMarta = CHARACTERS.baba_marta;
 
   const greeting =
-    direction.known === "bg" ? "Здравей! Хайде да учим плодове!" : "Hello! Let's learn some fruits!";
+    direction.known === "bg" ? "Здравей! Хайде да учим!" : "Hello! Let's learn!";
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -43,24 +58,48 @@ export default function HomeScreen() {
         <Text style={styles.gearEmoji}>⚙️</Text>
       </Pressable>
 
-      <View style={styles.content}>
-        <Text style={styles.title}>{fruitsUnit.theme[direction.known]}</Text>
+      <ScrollView contentContainerStyle={styles.content}>
+        <CharacterBubble character={babaMarta} text={greeting} />
 
-        <CharacterBubble character={host} text={greeting} />
-
-        <Pressable
-          onPress={() => router.push(`/lesson/${lesson.id}`)}
-          accessibilityRole="button"
-          accessibilityLabel={lesson.title[direction.known]}
-          accessibilityState={{ selected: lessonDone }}
-          style={({ pressed }) => [styles.unitTile, pressed && styles.pressed]}
-        >
-          {lessonDone && <Text style={styles.doneBadge}>🧿</Text>}
-          <Text style={styles.unitEmoji}>🍎🍌🍇🍐</Text>
-          <Text style={styles.unitLabel}>{lesson.title[direction.known]}</Text>
-        </Pressable>
-      </View>
+        {UNITS.map((unit) => (
+          <UnitSection key={unit.id} unit={unit} knownLang={direction.known} onOpen={(id) => router.push(`/lesson/${id}`)} />
+        ))}
+      </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function UnitSection({
+  unit,
+  knownLang,
+  onOpen,
+}: {
+  unit: Unit;
+  knownLang: "bg" | "en";
+  onOpen: (lessonId: string) => void;
+}) {
+  const { isLessonComplete } = useProgress();
+  return (
+    <View style={styles.unitSection}>
+      <Text style={styles.title}>{unit.theme[knownLang]}</Text>
+      {unit.lessons.map((lesson) => {
+        const done = isLessonComplete(lesson.id);
+        return (
+          <Pressable
+            key={lesson.id}
+            onPress={() => onOpen(lesson.id)}
+            accessibilityRole="button"
+            accessibilityLabel={lesson.title[knownLang]}
+            accessibilityState={{ selected: done }}
+            style={({ pressed }) => [styles.unitTile, pressed && styles.pressed]}
+          >
+            {done && <Text style={styles.doneBadge}>🧿</Text>}
+            <Text style={styles.unitEmoji}>{lessonEmojis(lesson)}</Text>
+            <Text style={styles.unitLabel}>{lesson.title[knownLang]}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
@@ -70,16 +109,18 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
   },
   content: {
-    flex: 1,
     padding: Spacing.lg,
     gap: Spacing.xl,
-    justifyContent: "center",
+    paddingTop: 76, // clear the absolutely-positioned martenitsa pill / gear
   },
   title: {
     fontSize: FontSizes.title,
     fontWeight: "800",
     color: Colors.darkRed,
     textAlign: "center",
+  },
+  unitSection: {
+    gap: Spacing.md,
   },
   unitTile: {
     backgroundColor: Colors.red,
