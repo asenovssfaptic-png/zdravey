@@ -5,7 +5,7 @@ import { CHARACTERS } from "@/characters/characters";
 import { CharacterBubble } from "@/components/CharacterBubble";
 import { Martenitsa } from "@/components/Martenitsa";
 import { Colors, FontSizes, Radii, Spacing } from "@/constants/theme";
-import { PRAISE } from "@/content/content-model";
+import { CHALLENGE, PRAISE } from "@/content/content-model";
 import { useClipPlayer } from "@/lib/audio";
 import { useDirection } from "@/lib/direction";
 
@@ -13,11 +13,23 @@ import { useDirection } from "@/lib/direction";
 // praise so the screen isn't text-only — a pre-reader hears "Браво!" and can
 // tap the big martenitsa to hear it again. The martenitsa springs in for a
 // little delight, and the exit is a big house icon, not just a word.
-export function Celebration({ martenitsi, onHome }: { martenitsi: number; onHome: () => void }) {
+//
+// After a Krali Marko boss round (`boss`), he gives the praise and a hero's
+// medal appears above the martenitsa.
+export function Celebration({
+  martenitsi,
+  onHome,
+  boss = false,
+}: {
+  martenitsi: number;
+  onHome: () => void;
+  boss?: boolean;
+}) {
   const { direction } = useDirection();
   const known = direction.known;
-  const babaMarta = CHARACTERS.baba_marta;
-  const praise = useClipPlayer(PRAISE[known].audio);
+  const host = boss ? CHARACTERS.krali_marko : CHARACTERS.baba_marta;
+  const rewardAudio = boss ? CHALLENGE[known].passAudio : PRAISE[known].audio;
+  const praise = useClipPlayer(rewardAudio);
   const [scale] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
@@ -26,12 +38,17 @@ export function Celebration({ martenitsi, onHome }: { martenitsi: number; onHome
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const bubbleText = boss
+    ? CHALLENGE[known].pass
+    : known === "bg"
+      ? "Браво! Ето ти мартеница!"
+      : "Well done! Here's a martenitsa!";
+
   return (
     <View style={styles.centered}>
-      <CharacterBubble
-        character={babaMarta}
-        text={known === "bg" ? "Браво! Ето ти мартеница!" : "Well done! Here's a martenitsa!"}
-      />
+      <CharacterBubble character={host} text={bubbleText} />
+
+      {boss && <Text style={styles.medal}>🏅</Text>}
 
       <Pressable
         onPress={praise.play}
@@ -83,6 +100,9 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.label,
     fontWeight: "700",
     color: Colors.text,
+  },
+  medal: {
+    fontSize: 72,
   },
   homeButton: {
     flexDirection: "row",

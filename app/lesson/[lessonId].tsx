@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CHARACTERS } from "@/characters/characters";
+import { BossIntro } from "@/components/BossIntro";
 import { Celebration } from "@/components/Celebration";
 import { MatchPairs } from "@/components/exercises/MatchPairs";
 import { OddOneOut } from "@/components/exercises/OddOneOut";
@@ -14,6 +15,7 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { Colors, FontSizes, Spacing } from "@/constants/theme";
 import type { ExerciseType } from "@/content/content-model";
 import { UNITS } from "@/content/content-model";
+import { useDirection } from "@/lib/direction";
 import { useProgress } from "@/lib/progress";
 
 // Exercise type -> component. Adding a new exercise type is one line here plus
@@ -45,6 +47,7 @@ function findLesson(lessonId: string) {
 export default function LessonScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
   const router = useRouter();
+  const { direction } = useDirection();
   const { completeLesson, martenitsi } = useProgress();
 
   const found = findLesson(lessonId);
@@ -57,6 +60,7 @@ export default function LessonScreen() {
   );
 
   const [index, setIndex] = useState(0);
+  const [started, setStarted] = useState(false);
   const finished = exercises.length > 0 && index >= exercises.length;
 
   // The lesson is a client-only interactive experience (audio playback,
@@ -90,17 +94,29 @@ export default function LessonScreen() {
     );
   }
 
+  const isBoss = found.lesson.boss === true;
+
+  // Krali Marko's challenge opens with a themed intro gate.
+  if (isBoss && !started) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <BossIntro known={direction.known} onStart={() => setStarted(true)} />
+      </SafeAreaView>
+    );
+  }
+
   const exercise = exercises[index];
 
   if (!exercise) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <Celebration martenitsi={martenitsi} onHome={() => router.replace("/")} />
+        <Celebration martenitsi={martenitsi} onHome={() => router.replace("/")} boss={isBoss} />
       </SafeAreaView>
     );
   }
 
-  const host = CHARACTERS[found.unit.host];
+  // Krali Marko hosts his own challenge; otherwise the unit's host.
+  const host = CHARACTERS[isBoss ? "krali_marko" : found.unit.host];
   const Component = EXERCISE_COMPONENTS[exercise.type]!;
 
   return (
