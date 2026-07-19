@@ -7,18 +7,32 @@ import { CharacterBubble } from "@/components/CharacterBubble";
 import { Colors, FontSizes, Radii, Spacing } from "@/constants/theme";
 import { fruitsUnit } from "@/content/content-model";
 import { useDirection } from "@/lib/direction";
+import { useProgress } from "@/lib/progress";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { direction } = useDirection();
+  const { martenitsi, isLessonComplete } = useProgress();
   const host = CHARACTERS[fruitsUnit.host];
   const lesson = fruitsUnit.lessons[0];
+  const lessonDone = isLessonComplete(lesson.id);
 
   const greeting =
     direction.known === "bg" ? "Здравей! Хайде да учим плодове!" : "Hello! Let's learn some fruits!";
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View
+        style={styles.martenitsaPill}
+        accessibilityRole="text"
+        accessibilityLabel={
+          direction.known === "bg" ? `Мартеници: ${martenitsi}` : `Martenitsi: ${martenitsi}`
+        }
+      >
+        <Text style={styles.martenitsaIcon}>🧿</Text>
+        <Text style={styles.martenitsaNumber}>{martenitsi}</Text>
+      </View>
+
       <Pressable
         onLongPress={() => router.push("/parent-setup")}
         delayLongPress={1200}
@@ -38,8 +52,10 @@ export default function HomeScreen() {
           onPress={() => router.push(`/lesson/${lesson.id}`)}
           accessibilityRole="button"
           accessibilityLabel={lesson.title[direction.known]}
+          accessibilityState={{ selected: lessonDone }}
           style={({ pressed }) => [styles.unitTile, pressed && styles.pressed]}
         >
+          {lessonDone && <Text style={styles.doneBadge}>🧿</Text>}
           <Text style={styles.unitEmoji}>🍎🍌🍇🍐</Text>
           <Text style={styles.unitLabel}>{lesson.title[direction.known]}</Text>
         </Pressable>
@@ -97,5 +113,34 @@ const styles = StyleSheet.create({
   gearEmoji: {
     fontSize: 24,
     opacity: 0.5,
+  },
+  martenitsaPill: {
+    position: "absolute",
+    top: Spacing.lg,
+    left: Spacing.lg,
+    zIndex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    backgroundColor: Colors.tintGreen,
+    borderRadius: Radii.round,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    borderWidth: 2,
+    borderColor: Colors.correct,
+  },
+  martenitsaIcon: {
+    fontSize: 22,
+  },
+  martenitsaNumber: {
+    fontSize: FontSizes.label,
+    fontWeight: "800",
+    color: Colors.darkRed,
+  },
+  doneBadge: {
+    position: "absolute",
+    top: Spacing.sm,
+    right: Spacing.md,
+    fontSize: 28,
   },
 });
