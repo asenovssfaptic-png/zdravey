@@ -30,17 +30,24 @@ import { existsSync, mkdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { VOCAB } from "../content/content-model.ts";
+import { ALPHABET, TTS_LANG_FOR_SCRIPT, VOCAB } from "../content/content-model.ts";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const ASSETS = join(ROOT, "assets");
 const force = process.argv.includes("--force");
 
-// Collect every (src, lang, text) the content model expects.
+// Collect every (src, lang, text) the content model expects: vocab words in
+// each language, plus every alphabet letter spoken in its script's language.
 const clips = [];
 for (const item of Object.values(VOCAB)) {
   for (const lang of Object.keys(item.audio)) {
     clips.push({ src: item.audio[lang].src, lang, text: item.labels[lang] });
+  }
+}
+for (const [script, letters] of Object.entries(ALPHABET)) {
+  const lang = TTS_LANG_FOR_SCRIPT[script];
+  for (const letter of letters) {
+    clips.push({ src: letter.audio.src, lang, text: letter.char });
   }
 }
 

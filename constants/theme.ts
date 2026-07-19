@@ -38,4 +38,5 @@ export const FontSizes = {
 
 export const TouchTarget = {
   min: 88,
+  comfortable: 72, // grid cells (alphabet) where many targets share a screen
 } as const;
