@@ -267,6 +267,184 @@ export const VOCAB: Record<string, VocabItem> = {
     },
     transliteration: { bg: "pet" },
   },
+
+  // --- Fruits 2 ---
+  "fruit.orange": {
+    id: "fruit.orange",
+    emoji: "🍊",
+    labels: { bg: "портокал", en: "orange" },
+    audio: {
+      bg: { src: "audio/bg/portokal__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/orange__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "portokal" },
+  },
+  "fruit.strawberry": {
+    id: "fruit.strawberry",
+    emoji: "🍓",
+    labels: { bg: "ягода", en: "strawberry" },
+    audio: {
+      bg: { src: "audio/bg/yagoda__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/strawberry__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "yagoda" },
+  },
+  "fruit.watermelon": {
+    id: "fruit.watermelon",
+    emoji: "🍉",
+    labels: { bg: "диня", en: "watermelon" },
+    audio: {
+      bg: { src: "audio/bg/dinya__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/watermelon__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "dinya" },
+  },
+  "fruit.lemon": {
+    id: "fruit.lemon",
+    emoji: "🍋",
+    labels: { bg: "лимон", en: "lemon" },
+    audio: {
+      bg: { src: "audio/bg/limon__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/lemon__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "limon" },
+  },
+
+  // --- Animals 2 (farm) ---
+  "animal.cow": {
+    id: "animal.cow",
+    emoji: "🐮",
+    labels: { bg: "крава", en: "cow" },
+    audio: {
+      bg: { src: "audio/bg/krava__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/cow__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "krava" },
+  },
+  "animal.horse": {
+    id: "animal.horse",
+    emoji: "🐴",
+    labels: { bg: "кон", en: "horse" },
+    audio: {
+      bg: { src: "audio/bg/kon__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/horse__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "kon" },
+  },
+  "animal.sheep": {
+    id: "animal.sheep",
+    emoji: "🐑",
+    labels: { bg: "овца", en: "sheep" },
+    audio: {
+      bg: { src: "audio/bg/ovtsa__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/sheep__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "ovtsa" },
+  },
+  "animal.pig": {
+    id: "animal.pig",
+    emoji: "🐷",
+    labels: { bg: "прасе", en: "pig" },
+    audio: {
+      bg: { src: "audio/bg/prase__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/pig__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "prase" },
+  },
+
+  // --- Colors 2 ---
+  "color.orange": {
+    id: "color.orange",
+    emoji: "🟠",
+    labels: { bg: "оранжево", en: "orange" },
+    audio: {
+      bg: { src: "audio/bg/oranzhevo__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/orange_color__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "oranzhevo" },
+  },
+  "color.purple": {
+    id: "color.purple",
+    emoji: "🟣",
+    labels: { bg: "лилаво", en: "purple" },
+    audio: {
+      bg: { src: "audio/bg/lilavo__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/purple__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "lilavo" },
+  },
+  "color.black": {
+    id: "color.black",
+    emoji: "⚫",
+    labels: { bg: "черно", en: "black" },
+    audio: {
+      bg: { src: "audio/bg/cherno__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/black__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "cherno" },
+  },
+  "color.white": {
+    id: "color.white",
+    emoji: "⚪",
+    labels: { bg: "бяло", en: "white" },
+    audio: {
+      bg: { src: "audio/bg/byalo__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/white__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "byalo" },
+  },
+
+  // --- Numbers 2 (6–10) ---
+  "num.six": {
+    id: "num.six",
+    emoji: "6️⃣",
+    labels: { bg: "шест", en: "six" },
+    audio: {
+      bg: { src: "audio/bg/shest__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/six__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "shest" },
+  },
+  "num.seven": {
+    id: "num.seven",
+    emoji: "7️⃣",
+    labels: { bg: "седем", en: "seven" },
+    audio: {
+      bg: { src: "audio/bg/sedem__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/seven__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "sedem" },
+  },
+  "num.eight": {
+    id: "num.eight",
+    emoji: "8️⃣",
+    labels: { bg: "осем", en: "eight" },
+    audio: {
+      bg: { src: "audio/bg/osem__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/eight__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "osem" },
+  },
+  "num.nine": {
+    id: "num.nine",
+    emoji: "9️⃣",
+    labels: { bg: "девет", en: "nine" },
+    audio: {
+      bg: { src: "audio/bg/devet__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/nine__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "devet" },
+  },
+  "num.ten": {
+    id: "num.ten",
+    emoji: "🔟",
+    labels: { bg: "десет", en: "ten" },
+    audio: {
+      bg: { src: "audio/bg/deset__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/ten__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "deset" },
+  },
 };
 
 export const fruitsUnit: Unit = {
@@ -299,6 +477,51 @@ export const fruitsUnit: Unit = {
           type: "match_pairs",
           prompt: "fruit.apple",
           choices: ["fruit.banana", "fruit.grapes", "fruit.pear"],
+        },
+      ],
+    },
+    {
+      id: "unit.fruits.l2",
+      title: { bg: "Плодове 2", en: "Fruits 2" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "fruit.orange",
+          choices: ["fruit.strawberry", "fruit.watermelon", "fruit.lemon"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "fruit.strawberry",
+          choices: ["fruit.orange", "fruit.watermelon", "fruit.lemon"],
+        },
+        { type: "say_it", prompt: "fruit.lemon" },
+        {
+          type: "match_pairs",
+          prompt: "fruit.orange",
+          choices: ["fruit.strawberry", "fruit.watermelon", "fruit.lemon"],
+        },
+      ],
+    },
+    {
+      id: "unit.fruits.review",
+      title: { bg: "Плодове — преговор", en: "Fruits — review" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "match_pairs",
+          prompt: "fruit.apple",
+          choices: ["fruit.banana", "fruit.orange", "fruit.strawberry"],
+        },
+        {
+          type: "match_pairs",
+          prompt: "fruit.grapes",
+          choices: ["fruit.pear", "fruit.watermelon", "fruit.lemon"],
+        },
+        {
+          type: "odd_one_out",
+          prompt: "animal.cat",
+          choices: ["fruit.apple", "fruit.lemon", "fruit.grapes"],
         },
       ],
     },
@@ -339,6 +562,34 @@ export const animalsUnit: Unit = {
         },
       ],
     },
+    {
+      id: "unit.animals.l2",
+      title: { bg: "Животни 2", en: "Animals 2" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "animal.cow",
+          choices: ["animal.horse", "animal.sheep", "animal.pig"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "animal.horse",
+          choices: ["animal.cow", "animal.sheep", "animal.pig"],
+        },
+        { type: "say_it", prompt: "animal.pig" },
+        {
+          type: "match_pairs",
+          prompt: "animal.cow",
+          choices: ["animal.horse", "animal.sheep", "animal.pig"],
+        },
+        {
+          type: "odd_one_out",
+          prompt: "color.red",
+          choices: ["animal.cow", "animal.horse", "animal.sheep"],
+        },
+      ],
+    },
   ],
 };
 
@@ -372,6 +623,29 @@ export const colorsUnit: Unit = {
         },
       ],
     },
+    {
+      id: "unit.colors.l2",
+      title: { bg: "Цветове 2", en: "Colors 2" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "color.orange",
+          choices: ["color.purple", "color.black", "color.white"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "color.purple",
+          choices: ["color.orange", "color.black", "color.white"],
+        },
+        { type: "say_it", prompt: "color.white" },
+        {
+          type: "match_pairs",
+          prompt: "color.orange",
+          choices: ["color.purple", "color.black", "color.white"],
+        },
+      ],
+    },
   ],
 };
 
@@ -401,6 +675,29 @@ export const numbersUnit: Unit = {
           type: "pick_picture",
           prompt: "num.five",
           choices: ["num.two", "num.three", "num.four"],
+        },
+      ],
+    },
+    {
+      id: "unit.numbers.l2",
+      title: { bg: "Числа 2", en: "Numbers 2" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "num.seven",
+          choices: ["num.six", "num.eight", "num.ten"],
+        },
+        { type: "say_it", prompt: "num.six" },
+        {
+          type: "match_pairs",
+          prompt: "num.six",
+          choices: ["num.seven", "num.eight", "num.nine"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "num.ten",
+          choices: ["num.six", "num.eight", "num.nine"],
         },
       ],
     },
