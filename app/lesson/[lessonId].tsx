@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -13,6 +13,7 @@ import { Colors, FontSizes, Radii, Spacing } from "@/constants/theme";
 import type { ExerciseType } from "@/content/content-model";
 import { UNITS } from "@/content/content-model";
 import { useDirection } from "@/lib/direction";
+import { useProgress } from "@/lib/progress";
 
 // Exercise type -> component. Adding a new exercise type is one line here plus
 // its component; the lesson engine below doesn't change.
@@ -34,6 +35,7 @@ export default function LessonScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
   const router = useRouter();
   const { direction } = useDirection();
+  const { completeLesson, martenitsi } = useProgress();
 
   const found = findLesson(lessonId);
 
@@ -45,6 +47,13 @@ export default function LessonScreen() {
   );
 
   const [index, setIndex] = useState(0);
+  const finished = exercises.length > 0 && index >= exercises.length;
+
+  // Award the martenitsa once, when the child reaches the end of the lesson.
+  useEffect(() => {
+    if (finished && found) completeLesson(found.lesson.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finished]);
 
   if (!found) {
     return (
@@ -67,6 +76,13 @@ export default function LessonScreen() {
             {direction.known === "bg"
               ? "Браво! Получи мартеница!"
               : "Well done! You earned a martenitsa!"}
+          </Text>
+          <Text style={styles.martenitsaCount}>
+            {"🧿".repeat(Math.min(martenitsi, 8))}
+            {"\n"}
+            {direction.known === "bg"
+              ? `Мартеници: ${martenitsi}`
+              : `Martenitsi: ${martenitsi}`}
           </Text>
           <Pressable
             onPress={() => router.replace("/")}
@@ -124,6 +140,13 @@ const styles = StyleSheet.create({
   },
   celebrationEmoji: {
     fontSize: FontSizes.huge,
+  },
+  martenitsaCount: {
+    fontSize: FontSizes.label,
+    color: Colors.text,
+    fontWeight: "700",
+    textAlign: "center",
+    lineHeight: 34,
   },
   homeButton: {
     backgroundColor: Colors.red,

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 import { Colors } from "@/constants/theme";
 import { DirectionProvider } from "@/lib/direction";
+import { ProgressProvider } from "@/lib/progress";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -14,12 +15,14 @@ export default function RootLayout() {
 
   return (
     <DirectionProvider>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: Colors.white },
-        }}
-      />
+      <ProgressProvider>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: Colors.white },
+          }}
+        />
+      </ProgressProvider>
     </DirectionProvider>
   );
 }
