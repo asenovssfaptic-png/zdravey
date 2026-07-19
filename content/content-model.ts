@@ -134,6 +134,47 @@ export const VOCAB: Record<string, VocabItem> = {
     },
     transliteration: { bg: "krusha" },
   },
+  // Animals — audio is TTS-generated (.mp3) via scripts/generate-audio.mjs.
+  "animal.cat": {
+    id: "animal.cat",
+    emoji: "🐱",
+    labels: { bg: "котка", en: "cat" },
+    audio: {
+      bg: { src: "audio/bg/kotka__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/cat__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "kotka" },
+  },
+  "animal.dog": {
+    id: "animal.dog",
+    emoji: "🐶",
+    labels: { bg: "куче", en: "dog" },
+    audio: {
+      bg: { src: "audio/bg/kuche__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/dog__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "kuche" },
+  },
+  "animal.bird": {
+    id: "animal.bird",
+    emoji: "🐦",
+    labels: { bg: "птица", en: "bird" },
+    audio: {
+      bg: { src: "audio/bg/ptitsa__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/bird__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "ptitsa" },
+  },
+  "animal.fish": {
+    id: "animal.fish",
+    emoji: "🐟",
+    labels: { bg: "риба", en: "fish" },
+    audio: {
+      bg: { src: "audio/bg/riba__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/fish__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "riba" },
+  },
 };
 
 export const fruitsUnit: Unit = {
@@ -172,8 +213,45 @@ export const fruitsUnit: Unit = {
   ],
 };
 
+export const animalsUnit: Unit = {
+  id: "unit.animals",
+  theme: { bg: "Животни", en: "Animals" },
+  host: "samodiva",
+  guardian: "zmey",
+  lessons: [
+    {
+      id: "unit.animals.l1",
+      title: { bg: "Животни 1", en: "Animals 1" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "animal.cat",
+          choices: ["animal.dog", "animal.bird", "animal.fish"],
+          hint: {
+            bg: "Слушай първия звук: c-c-cat.",
+            en: "Listen for the first sound: к-к-котка.",
+          },
+        },
+        { type: "say_it", prompt: "animal.dog" },
+        {
+          type: "match_pairs",
+          prompt: "animal.cat",
+          choices: ["animal.dog", "animal.bird", "animal.fish"],
+        },
+        {
+          // Hitar Petar's trick: three animals + one fruit. Tap the odd one.
+          type: "odd_one_out",
+          prompt: "fruit.apple",
+          choices: ["animal.cat", "animal.dog", "animal.bird"],
+        },
+      ],
+    },
+  ],
+};
+
 // Every unit on the map. Add new units here as they're built.
-export const UNITS: Unit[] = [fruitsUnit];
+export const UNITS: Unit[] = [fruitsUnit, animalsUnit];
 
 // ---------------------------------------------------------------------------
 // How ONE component renders in BOTH directions.
@@ -230,5 +308,22 @@ export function buildSayIt(exercise: Exercise, dir: Direction) {
     word: item.labels[dir.learning],
     gloss: item.labels[dir.known],
     emoji: item.emoji,
+  };
+}
+
+// odd_one_out (Hitar Petar's trick round): `prompt` is the item that does NOT
+// belong; `choices` are the group it's mixed into. The child taps the odd one.
+export function buildOddOneOut(exercise: Exercise, dir: Direction) {
+  const odd = VOCAB[exercise.prompt];
+  const group = (exercise.choices ?? []).map((id) => VOCAB[id]);
+  return {
+    correctId: odd.id,
+    tiles: [odd, ...group].map((v) => ({
+      id: v.id,
+      emoji: v.emoji,
+      main: v.labels[dir.learning],
+      gloss: v.labels[dir.known],
+      audio: v.audio[dir.learning],
+    })),
   };
 }
