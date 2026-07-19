@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.97 }],
   },
   correct: {
-    backgroundColor: "#E7F5EC",
+    backgroundColor: Colors.tintGreen,
     borderColor: Colors.correct,
   },
   gentle: {
