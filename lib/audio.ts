@@ -17,3 +17,19 @@ export function useClipPlayer(clip: AudioClip) {
 
   return { play, isPlaying: status.playing };
 }
+
+// One reusable player for grids (e.g. the alphabet) where mounting a separate
+// player per tile would be wasteful. Swaps the source on each tap.
+export function useOnDemandPlayer() {
+  const player = useAudioPlayer(null);
+
+  function play(clip: AudioClip) {
+    const source = AUDIO_ASSETS[clip.src] ?? null;
+    if (!source) return;
+    player.replace(source);
+    player.seekTo(0);
+    player.play();
+  }
+
+  return { play };
+}

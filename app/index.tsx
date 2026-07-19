@@ -64,6 +64,18 @@ export default function HomeScreen() {
         {UNITS.map((unit) => (
           <UnitSection key={unit.id} unit={unit} knownLang={direction.known} onOpen={(id) => router.push(`/lesson/${id}`)} />
         ))}
+
+        <Pressable
+          onPress={() => router.push("/alphabet")}
+          accessibilityRole="button"
+          accessibilityLabel={direction.known === "bg" ? "Азбука" : "Alphabet"}
+          style={({ pressed }) => [styles.alphabetTile, pressed && styles.pressed]}
+        >
+          <Text style={styles.alphabetGlyphs}>
+            {direction.learning === "bg" ? "Абв" : "Abc"}
+          </Text>
+          <Text style={styles.alphabetLabel}>{direction.known === "bg" ? "Азбука" : "Alphabet"}</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -139,6 +151,25 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.label,
     fontWeight: "700",
     color: Colors.white,
+  },
+  alphabetTile: {
+    backgroundColor: Colors.white,
+    borderRadius: Radii.lg,
+    borderWidth: 3,
+    borderColor: Colors.red,
+    paddingVertical: Spacing.lg,
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
+  alphabetGlyphs: {
+    fontSize: FontSizes.huge,
+    fontWeight: "800",
+    color: Colors.red,
+  },
+  alphabetLabel: {
+    fontSize: FontSizes.label,
+    fontWeight: "700",
+    color: Colors.darkRed,
   },
   gearButton: {
     position: "absolute",
