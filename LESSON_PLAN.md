@@ -63,16 +63,29 @@ words; review lessons consolidate. Characters host per their role (see
 | Numbers 1 | one–five | ✅ |
 | Numbers 2 | six–ten | ✅ |
 
+### Unit 5 — Family · Семейство  (host: Baba Marta 👵)
+| Lesson | Words | Notes |
+|--------|-------|-------|
+| Family 1 | mother, father, grandma, grandpa | ✅ |
+
+### Unit 6 — Body · Тяло  (host: Kuker 🔔)
+| Lesson | Words | Notes |
+|--------|-------|-------|
+| Body 1 | hand, eye, nose, mouth | ✅ |
+
+### Unit 7 — Weather · Време  (host: Samodiva 🌿)
+| Lesson | Words | Notes |
+|--------|-------|-------|
+| Weather 1 | sun, rain, cloud, snow | ✅ |
+
 ### Alphabet track  (host: Kuker 🔔) — direction-specific
 - Browse: tap any letter to hear it (Latin for →English, Cyrillic for →Bulgarian).
 - **Practice** (`letter_sound`): hear a letter, tap it. 5 rounds.
 
 ## Planned next (not yet built)
 
-- **Family · Семейство** (Baba Marta 👵): mother, father, grandma, grandpa,
-  brother, sister.
-- **Body · Тяло** (Kuker 🔔): head, hand, eye, nose, mouth, ear.
-- **Weather · Време** (Samodiva 🌿): sun, rain, cloud, snow, wind.
+- **Family 2** (brother, sister) and **Body 2** (ear, foot, leg) second lessons.
+- **Weather 2** (wind, storm) and a review lesson per new unit.
 - **Krali Marko's review challenge** ("юнашки изпит"): an end-of-unit boss round
   mixing a whole unit, hosted by Krali Marko.
 - **Baba Marta seasonal event**: a 1st-of-March martenitsa give-away.

@@ -445,6 +445,132 @@ export const VOCAB: Record<string, VocabItem> = {
     },
     transliteration: { bg: "deset" },
   },
+
+  // --- Family ---
+  "family.mother": {
+    id: "family.mother",
+    emoji: "👩",
+    labels: { bg: "майка", en: "mother" },
+    audio: {
+      bg: { src: "audio/bg/mayka__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/mother__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "mayka" },
+  },
+  "family.father": {
+    id: "family.father",
+    emoji: "👨",
+    labels: { bg: "баща", en: "father" },
+    audio: {
+      bg: { src: "audio/bg/bashta__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/father__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "bashta" },
+  },
+  "family.grandma": {
+    id: "family.grandma",
+    emoji: "👵",
+    labels: { bg: "баба", en: "grandma" },
+    audio: {
+      bg: { src: "audio/bg/baba__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/grandma__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "baba" },
+  },
+  "family.grandpa": {
+    id: "family.grandpa",
+    emoji: "👴",
+    labels: { bg: "дядо", en: "grandpa" },
+    audio: {
+      bg: { src: "audio/bg/dyado__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/grandpa__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "dyado" },
+  },
+
+  // --- Body ---
+  "body.hand": {
+    id: "body.hand",
+    emoji: "✋",
+    labels: { bg: "ръка", en: "hand" },
+    audio: {
+      bg: { src: "audio/bg/raka__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/hand__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "raka" },
+  },
+  "body.eye": {
+    id: "body.eye",
+    emoji: "👁️",
+    labels: { bg: "око", en: "eye" },
+    audio: {
+      bg: { src: "audio/bg/oko__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/eye__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "oko" },
+  },
+  "body.nose": {
+    id: "body.nose",
+    emoji: "👃",
+    labels: { bg: "нос", en: "nose" },
+    audio: {
+      bg: { src: "audio/bg/nos__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/nose__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "nos" },
+  },
+  "body.mouth": {
+    id: "body.mouth",
+    emoji: "👄",
+    labels: { bg: "уста", en: "mouth" },
+    audio: {
+      bg: { src: "audio/bg/usta__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/mouth__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "usta" },
+  },
+
+  // --- Weather ---
+  "weather.sun": {
+    id: "weather.sun",
+    emoji: "☀️",
+    labels: { bg: "слънце", en: "sun" },
+    audio: {
+      bg: { src: "audio/bg/slantse__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/sun__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "slantse" },
+  },
+  "weather.rain": {
+    id: "weather.rain",
+    emoji: "🌧️",
+    labels: { bg: "дъжд", en: "rain" },
+    audio: {
+      bg: { src: "audio/bg/dazhd__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/rain__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "dazhd" },
+  },
+  "weather.cloud": {
+    id: "weather.cloud",
+    emoji: "☁️",
+    labels: { bg: "облак", en: "cloud" },
+    audio: {
+      bg: { src: "audio/bg/oblak__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/cloud__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "oblak" },
+  },
+  "weather.snow": {
+    id: "weather.snow",
+    emoji: "❄️",
+    labels: { bg: "сняг", en: "snow" },
+    audio: {
+      bg: { src: "audio/bg/snyag__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/snow__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "snyag" },
+  },
 };
 
 export const fruitsUnit: Unit = {
@@ -704,8 +830,117 @@ export const numbersUnit: Unit = {
   ],
 };
 
+export const familyUnit: Unit = {
+  id: "unit.family",
+  theme: { bg: "Семейство", en: "Family" },
+  host: "baba_marta",
+  guardian: "zmey",
+  lessons: [
+    {
+      id: "unit.family.l1",
+      title: { bg: "Семейство 1", en: "Family 1" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "family.mother",
+          choices: ["family.father", "family.grandma", "family.grandpa"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "family.grandma",
+          choices: ["family.mother", "family.father", "family.grandpa"],
+        },
+        { type: "say_it", prompt: "family.father" },
+        {
+          type: "match_pairs",
+          prompt: "family.mother",
+          choices: ["family.father", "family.grandma", "family.grandpa"],
+        },
+      ],
+    },
+  ],
+};
+
+export const bodyUnit: Unit = {
+  id: "unit.body",
+  theme: { bg: "Тяло", en: "Body" },
+  host: "kuker",
+  guardian: "zmey",
+  lessons: [
+    {
+      id: "unit.body.l1",
+      title: { bg: "Тяло 1", en: "Body 1" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "body.hand",
+          choices: ["body.eye", "body.nose", "body.mouth"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "body.nose",
+          choices: ["body.hand", "body.eye", "body.mouth"],
+        },
+        { type: "say_it", prompt: "body.mouth" },
+        {
+          type: "match_pairs",
+          prompt: "body.hand",
+          choices: ["body.eye", "body.nose", "body.mouth"],
+        },
+      ],
+    },
+  ],
+};
+
+export const weatherUnit: Unit = {
+  id: "unit.weather",
+  theme: { bg: "Време", en: "Weather" },
+  host: "samodiva",
+  guardian: "zmey",
+  lessons: [
+    {
+      id: "unit.weather.l1",
+      title: { bg: "Време 1", en: "Weather 1" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "weather.sun",
+          choices: ["weather.rain", "weather.cloud", "weather.snow"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "weather.rain",
+          choices: ["weather.sun", "weather.cloud", "weather.snow"],
+        },
+        { type: "say_it", prompt: "weather.snow" },
+        {
+          type: "match_pairs",
+          prompt: "weather.sun",
+          choices: ["weather.rain", "weather.cloud", "weather.snow"],
+        },
+        {
+          type: "odd_one_out",
+          prompt: "animal.cat",
+          choices: ["weather.sun", "weather.rain", "weather.cloud"],
+        },
+      ],
+    },
+  ],
+};
+
 // Every unit on the map. Add new units here as they're built.
-export const UNITS: Unit[] = [fruitsUnit, animalsUnit, colorsUnit, numbersUnit];
+export const UNITS: Unit[] = [
+  fruitsUnit,
+  animalsUnit,
+  colorsUnit,
+  numbersUnit,
+  familyUnit,
+  bodyUnit,
+  weatherUnit,
+];
 
 // ---------------------------------------------------------------------------
 // How ONE component renders in BOTH directions.
