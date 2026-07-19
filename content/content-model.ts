@@ -175,6 +175,98 @@ export const VOCAB: Record<string, VocabItem> = {
     },
     transliteration: { bg: "riba" },
   },
+  // Colors — swatch emoji as the "picture". Audio TTS-generated.
+  "color.red": {
+    id: "color.red",
+    emoji: "🔴",
+    labels: { bg: "червено", en: "red" },
+    audio: {
+      bg: { src: "audio/bg/cherveno__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/red__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "cherveno" },
+  },
+  "color.blue": {
+    id: "color.blue",
+    emoji: "🔵",
+    labels: { bg: "синьо", en: "blue" },
+    audio: {
+      bg: { src: "audio/bg/sinyo__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/blue__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "sinyo" },
+  },
+  "color.green": {
+    id: "color.green",
+    emoji: "🟢",
+    labels: { bg: "зелено", en: "green" },
+    audio: {
+      bg: { src: "audio/bg/zeleno__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/green__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "zeleno" },
+  },
+  "color.yellow": {
+    id: "color.yellow",
+    emoji: "🟡",
+    labels: { bg: "жълто", en: "yellow" },
+    audio: {
+      bg: { src: "audio/bg/zhalto__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/yellow__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "zhalto" },
+  },
+  // Numbers 1–5 — keycap emoji as the "picture".
+  "num.one": {
+    id: "num.one",
+    emoji: "1️⃣",
+    labels: { bg: "едно", en: "one" },
+    audio: {
+      bg: { src: "audio/bg/edno__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/one__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "edno" },
+  },
+  "num.two": {
+    id: "num.two",
+    emoji: "2️⃣",
+    labels: { bg: "две", en: "two" },
+    audio: {
+      bg: { src: "audio/bg/dve__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/two__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "dve" },
+  },
+  "num.three": {
+    id: "num.three",
+    emoji: "3️⃣",
+    labels: { bg: "три", en: "three" },
+    audio: {
+      bg: { src: "audio/bg/tri__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/three__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "tri" },
+  },
+  "num.four": {
+    id: "num.four",
+    emoji: "4️⃣",
+    labels: { bg: "четири", en: "four" },
+    audio: {
+      bg: { src: "audio/bg/chetiri__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/four__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "chetiri" },
+  },
+  "num.five": {
+    id: "num.five",
+    emoji: "5️⃣",
+    labels: { bg: "пет", en: "five" },
+    audio: {
+      bg: { src: "audio/bg/pet__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/five__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "pet" },
+  },
 };
 
 export const fruitsUnit: Unit = {
@@ -250,8 +342,73 @@ export const animalsUnit: Unit = {
   ],
 };
 
+export const colorsUnit: Unit = {
+  id: "unit.colors",
+  theme: { bg: "Цветове", en: "Colors" },
+  host: "samodiva",
+  guardian: "zmey",
+  lessons: [
+    {
+      id: "unit.colors.l1",
+      title: { bg: "Цветове 1", en: "Colors 1" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "color.red",
+          choices: ["color.blue", "color.green", "color.yellow"],
+        },
+        { type: "say_it", prompt: "color.blue" },
+        {
+          type: "match_pairs",
+          prompt: "color.red",
+          choices: ["color.blue", "color.green", "color.yellow"],
+        },
+        {
+          // three colors + one fruit — tap the odd one.
+          type: "odd_one_out",
+          prompt: "fruit.apple",
+          choices: ["color.red", "color.blue", "color.green"],
+        },
+      ],
+    },
+  ],
+};
+
+export const numbersUnit: Unit = {
+  id: "unit.numbers",
+  theme: { bg: "Числа", en: "Numbers" },
+  host: "krali_marko",
+  guardian: "zmey",
+  lessons: [
+    {
+      id: "unit.numbers.l1",
+      title: { bg: "Числа 1", en: "Numbers 1" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "num.three",
+          choices: ["num.one", "num.two", "num.five"],
+        },
+        { type: "say_it", prompt: "num.two" },
+        {
+          type: "match_pairs",
+          prompt: "num.one",
+          choices: ["num.two", "num.three", "num.four"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "num.five",
+          choices: ["num.two", "num.three", "num.four"],
+        },
+      ],
+    },
+  ],
+};
+
 // Every unit on the map. Add new units here as they're built.
-export const UNITS: Unit[] = [fruitsUnit, animalsUnit];
+export const UNITS: Unit[] = [fruitsUnit, animalsUnit, colorsUnit, numbersUnit];
 
 // ---------------------------------------------------------------------------
 // How ONE component renders in BOTH directions.
