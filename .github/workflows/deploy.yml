@@ -41,6 +41,14 @@ jobs:
       - name: Disable Jekyll (serve _expo/ assets verbatim)
         run: touch dist/.nojekyll
 
+      # GitHub Pages has no SPA rewrite: any path without a matching file (an
+      # unknown route, or a pre-rendered route requested WITH a trailing slash,
+      # e.g. /alphabet/) would hit GitHub's own 404. Serving index.html as
+      # 404.html boots the app for those paths so Expo Router can resolve them
+      # client-side.
+      - name: SPA fallback for GitHub Pages
+        run: cp dist/index.html dist/404.html
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
