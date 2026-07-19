@@ -26,10 +26,18 @@ export function OddOneOut({ exercise, onDone }: ExerciseProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const resolved = selectedId !== null;
 
+  const correctTile = built.tiles.find((t) => t.id === built.correctId)!;
+  const correctPlayer = useClipPlayer(correctTile.audio);
+
   useEffect(() => {
     if (!resolved) return;
-    const timer = setTimeout(onDone, REVEAL_DELAY_MS);
-    return () => clearTimeout(timer);
+    // Speak the odd one out on reveal so the correction isn't silent.
+    const say = setTimeout(correctPlayer.play, 350);
+    const advance = setTimeout(onDone, REVEAL_DELAY_MS);
+    return () => {
+      clearTimeout(say);
+      clearTimeout(advance);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolved]);
 

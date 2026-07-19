@@ -35,8 +35,14 @@ export function PickPicture({ exercise, host, onDone }: ExerciseProps) {
 
   useEffect(() => {
     if (!resolved) return;
-    const timer = setTimeout(onDone, REVEAL_DELAY_MS);
-    return () => clearTimeout(timer);
+    // Speak the correct word on reveal so a pre-reader hears the right answer
+    // (the green highlight alone is silent). promptAudio is the correct word.
+    const say = setTimeout(promptPlayer.play, 350);
+    const advance = setTimeout(onDone, REVEAL_DELAY_MS);
+    return () => {
+      clearTimeout(say);
+      clearTimeout(advance);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolved]);
 

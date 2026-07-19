@@ -12,6 +12,8 @@ export const Colors = {
   // Soft background tints for resolved/selected states.
   tintGold: "#FBF3DC",
   tintGreen: "#E7F5EC",
+  // Crisp white for the martenitsa's Pizho doll (the app "white" is cream).
+  martenitsaWhite: "#FFFFFF",
 } as const;
 
 export const Spacing = {

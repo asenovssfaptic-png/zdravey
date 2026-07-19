@@ -65,6 +65,7 @@ export const AUDIO_ASSETS: Record<string, number> = {
   "audio/bg/kotka__default.mp3": require("../assets/audio/bg/kotka__default.mp3"),
   "audio/bg/krusha__baba.wav": require("../assets/audio/bg/krusha__baba.wav"),
   "audio/bg/kuche__default.mp3": require("../assets/audio/bg/kuche__default.mp3"),
+  "audio/bg/praise__default.mp3": require("../assets/audio/bg/praise__default.mp3"),
   "audio/bg/ptitsa__default.mp3": require("../assets/audio/bg/ptitsa__default.mp3"),
   "audio/bg/riba__default.mp3": require("../assets/audio/bg/riba__default.mp3"),
   "audio/bg/yabalka__baba.wav": require("../assets/audio/bg/yabalka__baba.wav"),
@@ -76,4 +77,5 @@ export const AUDIO_ASSETS: Record<string, number> = {
   "audio/en/fish__default.mp3": require("../assets/audio/en/fish__default.mp3"),
   "audio/en/grapes__default.wav": require("../assets/audio/en/grapes__default.wav"),
   "audio/en/pear__default.wav": require("../assets/audio/en/pear__default.wav"),
+  "audio/en/praise__default.mp3": require("../assets/audio/en/praise__default.mp3"),
 };

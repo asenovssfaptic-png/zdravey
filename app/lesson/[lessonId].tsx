@@ -1,19 +1,19 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CHARACTERS } from "@/characters/characters";
+import { Celebration } from "@/components/Celebration";
 import { MatchPairs } from "@/components/exercises/MatchPairs";
 import { OddOneOut } from "@/components/exercises/OddOneOut";
 import { PickPicture } from "@/components/exercises/PickPicture";
 import { SayIt } from "@/components/exercises/SayIt";
 import type { ExerciseProps } from "@/components/exercises/types";
 import { ProgressBar } from "@/components/ProgressBar";
-import { Colors, FontSizes, Radii, Spacing } from "@/constants/theme";
+import { Colors, FontSizes, Spacing } from "@/constants/theme";
 import type { ExerciseType } from "@/content/content-model";
 import { UNITS } from "@/content/content-model";
-import { useDirection } from "@/lib/direction";
 import { useProgress } from "@/lib/progress";
 
 // Exercise type -> component. Adding a new exercise type is one line here plus
@@ -45,7 +45,6 @@ function findLesson(lessonId: string) {
 export default function LessonScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
   const router = useRouter();
-  const { direction } = useDirection();
   const { completeLesson, martenitsi } = useProgress();
 
   const found = findLesson(lessonId);
@@ -96,28 +95,7 @@ export default function LessonScreen() {
   if (!exercise) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.centered}>
-          <Text style={styles.celebrationEmoji}>🧿🎉</Text>
-          <Text style={styles.title}>
-            {direction.known === "bg"
-              ? "Браво! Получи мартеница!"
-              : "Well done! You earned a martenitsa!"}
-          </Text>
-          <Text style={styles.martenitsaCount}>
-            {"🧿".repeat(Math.min(martenitsi, 8))}
-            {"\n"}
-            {direction.known === "bg"
-              ? `Мартеници: ${martenitsi}`
-              : `Martenitsi: ${martenitsi}`}
-          </Text>
-          <Pressable
-            onPress={() => router.replace("/")}
-            style={({ pressed }) => [styles.homeButton, pressed && styles.pressed]}
-            accessibilityRole="button"
-          >
-            <Text style={styles.homeButtonText}>{direction.known === "bg" ? "Начало" : "Home"}</Text>
-          </Pressable>
-        </View>
+        <Celebration martenitsi={martenitsi} onHome={() => router.replace("/")} />
       </SafeAreaView>
     );
   }
@@ -163,29 +141,5 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: Colors.darkRed,
     textAlign: "center",
-  },
-  celebrationEmoji: {
-    fontSize: FontSizes.huge,
-  },
-  martenitsaCount: {
-    fontSize: FontSizes.label,
-    color: Colors.text,
-    fontWeight: "700",
-    textAlign: "center",
-    lineHeight: 34,
-  },
-  homeButton: {
-    backgroundColor: Colors.red,
-    borderRadius: Radii.lg,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xl,
-  },
-  pressed: {
-    transform: [{ scale: 0.97 }],
-  },
-  homeButtonText: {
-    fontSize: FontSizes.label,
-    fontWeight: "700",
-    color: Colors.white,
   },
 });

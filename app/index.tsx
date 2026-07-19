@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CHARACTERS } from "@/characters/characters";
 import { CharacterBubble } from "@/components/CharacterBubble";
+import { Martenitsa } from "@/components/Martenitsa";
 import { Colors, FontSizes, Radii, Spacing } from "@/constants/theme";
 import type { Lesson, Unit } from "@/content/content-model";
 import { UNITS, VOCAB } from "@/content/content-model";
@@ -44,7 +45,7 @@ export default function HomeScreen() {
           direction.known === "bg" ? `Мартеници: ${martenitsi}` : `Martenitsi: ${martenitsi}`
         }
       >
-        <Text style={styles.martenitsaIcon}>🧿</Text>
+        <Martenitsa size={26} />
         <Text style={styles.martenitsaNumber}>{martenitsi}</Text>
       </View>
 
@@ -105,7 +106,11 @@ function UnitSection({
             accessibilityState={{ selected: done }}
             style={({ pressed }) => [styles.unitTile, pressed && styles.pressed]}
           >
-            {done && <Text style={styles.doneBadge}>🧿</Text>}
+            {done && (
+            <View style={styles.doneBadge}>
+              <Martenitsa size={30} />
+            </View>
+          )}
             <Text style={styles.unitEmoji}>{lessonEmojis(lesson)}</Text>
             <Text style={styles.unitLabel}>{lesson.title[knownLang]}</Text>
           </Pressable>
@@ -201,9 +206,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: Colors.correct,
   },
-  martenitsaIcon: {
-    fontSize: 22,
-  },
   martenitsaNumber: {
     fontSize: FontSizes.label,
     fontWeight: "800",
@@ -213,6 +215,5 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: Spacing.sm,
     right: Spacing.md,
-    fontSize: 28,
   },
 });
