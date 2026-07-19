@@ -65,6 +65,16 @@ function AlphabetContent() {
           <LetterTile key={letter.audio.src} letter={letter} onPress={() => play(letter.audio)} />
         ))}
       </ScrollView>
+
+      <Pressable
+        onPress={() => router.push("/alphabet-practice")}
+        accessibilityRole="button"
+        accessibilityLabel={direction.known === "bg" ? "Упражнение" : "Practice"}
+        style={({ pressed }) => [styles.practiceButton, pressed && styles.pressed]}
+      >
+        <Text style={styles.practiceIcon}>👂</Text>
+        <Text style={styles.practiceText}>{direction.known === "bg" ? "Упражнение" : "Practice"}</Text>
+      </Pressable>
     </SafeAreaView>
   );
 }
@@ -137,5 +147,23 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
+  },
+  practiceButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    backgroundColor: Colors.gold,
+    borderRadius: Radii.lg,
+    paddingVertical: Spacing.md,
+    marginTop: Spacing.sm,
+  },
+  practiceIcon: {
+    fontSize: 28,
+  },
+  practiceText: {
+    fontSize: FontSizes.label,
+    fontWeight: "700",
+    color: Colors.text,
   },
 });
