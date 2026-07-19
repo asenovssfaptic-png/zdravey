@@ -30,6 +30,9 @@ export interface VocabItem {
   labels: Record<LangCode, string>; // { bg: "ябълка", en: "apple" }
   audio: Record<LangCode, AudioClip>; // per-language recordings
   transliteration?: Partial<Record<LangCode, string>>; // { bg: "yabalka" }
+  // For places on the map of Bulgaria: relative position, 0..1 (x = west→east,
+  // y = north→south). Used by the find_on_map exercise.
+  map?: { x: number; y: number };
 }
 
 // A recording can come from a family member (the heritage feature) or
@@ -48,7 +51,8 @@ export type ExerciseType =
   | "match_pairs" // match picture <-> word
   | "say_it" // repeat after the character (record + playback for a parent)
   | "odd_one_out" // Hitar Petar's trick round
-  | "letter_sound"; // alphabet track (Latin for bg->en, Cyrillic for en->bg)
+  | "letter_sound" // alphabet track (Latin for bg->en, Cyrillic for en->bg)
+  | "find_on_map"; // hear a city, tap its spot on the map of Bulgaria
 
 export interface Exercise {
   type: ExerciseType;
@@ -575,6 +579,125 @@ export const VOCAB: Record<string, VocabItem> = {
     },
     transliteration: { bg: "snyag" },
   },
+
+  // --- Cities of Bulgaria (map coords: x west→east, y north→south) ---
+  "city.sofia": {
+    id: "city.sofia",
+    emoji: "🏛️",
+    labels: { bg: "София", en: "Sofia" },
+    audio: {
+      bg: { src: "audio/bg/sofia__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/sofia_city__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "Sofia" },
+    map: { x: 0.24, y: 0.55 },
+  },
+  "city.plovdiv": {
+    id: "city.plovdiv",
+    emoji: "🎭",
+    labels: { bg: "Пловдив", en: "Plovdiv" },
+    audio: {
+      bg: { src: "audio/bg/plovdiv__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/plovdiv__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "Plovdiv" },
+    map: { x: 0.45, y: 0.66 },
+  },
+  "city.varna": {
+    id: "city.varna",
+    emoji: "⚓",
+    labels: { bg: "Варна", en: "Varna" },
+    audio: {
+      bg: { src: "audio/bg/varna__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/varna__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "Varna" },
+    map: { x: 0.88, y: 0.4 },
+  },
+  "city.burgas": {
+    id: "city.burgas",
+    emoji: "⛵",
+    labels: { bg: "Бургас", en: "Burgas" },
+    audio: {
+      bg: { src: "audio/bg/burgas__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/burgas__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "Burgas" },
+    map: { x: 0.82, y: 0.62 },
+  },
+  "city.veliko": {
+    id: "city.veliko",
+    emoji: "🏰",
+    labels: { bg: "Велико Търново", en: "Veliko Tarnovo" },
+    audio: {
+      bg: { src: "audio/bg/veliko_tarnovo__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/veliko_tarnovo__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "Veliko Tarnovo" },
+    map: { x: 0.56, y: 0.4 },
+  },
+
+  // --- Places / nature (picturable geography nouns) ---
+  "place.sea": {
+    id: "place.sea",
+    emoji: "🌊",
+    labels: { bg: "море", en: "sea" },
+    audio: {
+      bg: { src: "audio/bg/more__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/sea__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "more" },
+  },
+  "place.mountain": {
+    id: "place.mountain",
+    emoji: "⛰️",
+    labels: { bg: "планина", en: "mountain" },
+    audio: {
+      bg: { src: "audio/bg/planina__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/mountain__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "planina" },
+  },
+  "place.river": {
+    id: "place.river",
+    emoji: "🏞️",
+    labels: { bg: "река", en: "river" },
+    audio: {
+      bg: { src: "audio/bg/reka__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/river__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "reka" },
+  },
+  "place.forest": {
+    id: "place.forest",
+    emoji: "🌲",
+    labels: { bg: "гора", en: "forest" },
+    audio: {
+      bg: { src: "audio/bg/gora__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/forest__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "gora" },
+  },
+  "place.city": {
+    id: "place.city",
+    emoji: "🏙️",
+    labels: { bg: "град", en: "city" },
+    audio: {
+      bg: { src: "audio/bg/grad__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/city__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "grad" },
+  },
+  "place.village": {
+    id: "place.village",
+    emoji: "🏡",
+    labels: { bg: "село", en: "village" },
+    audio: {
+      bg: { src: "audio/bg/selo__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/village__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "selo" },
+  },
 };
 
 export const fruitsUnit: Unit = {
@@ -1011,6 +1134,71 @@ export const weatherUnit: Unit = {
 };
 
 // Every unit on the map. Add new units here as they're built.
+export const citiesUnit: Unit = {
+  id: "unit.cities",
+  theme: { bg: "Градове", en: "Cities" },
+  host: "krali_marko",
+  guardian: "zmey",
+  lessons: [
+    {
+      id: "unit.cities.l1",
+      title: { bg: "Градове 1", en: "Cities 1" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "find_on_map",
+          prompt: "city.sofia",
+          choices: ["city.plovdiv", "city.varna", "city.burgas"],
+        },
+        {
+          type: "find_on_map",
+          prompt: "city.varna",
+          choices: ["city.sofia", "city.plovdiv", "city.burgas"],
+        },
+        { type: "say_it", prompt: "city.plovdiv" },
+        {
+          type: "find_on_map",
+          prompt: "city.veliko",
+          choices: ["city.sofia", "city.varna", "city.burgas"],
+        },
+        {
+          type: "match_pairs",
+          prompt: "city.sofia",
+          choices: ["city.varna", "city.burgas", "city.plovdiv"],
+        },
+      ],
+    },
+    {
+      id: "unit.places.l1",
+      title: { bg: "Места 1", en: "Places 1" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "place.sea",
+          choices: ["place.mountain", "place.river", "place.forest"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "place.mountain",
+          choices: ["place.sea", "place.city", "place.village"],
+        },
+        { type: "say_it", prompt: "place.forest" },
+        {
+          type: "match_pairs",
+          prompt: "place.sea",
+          choices: ["place.mountain", "place.city", "place.village"],
+        },
+        {
+          type: "odd_one_out",
+          prompt: "animal.fish",
+          choices: ["place.sea", "place.mountain", "place.forest"],
+        },
+      ],
+    },
+  ],
+};
+
 export const UNITS: Unit[] = [
   fruitsUnit,
   animalsUnit,
@@ -1019,6 +1207,7 @@ export const UNITS: Unit[] = [
   familyUnit,
   bodyUnit,
   weatherUnit,
+  citiesUnit,
 ];
 
 // ---------------------------------------------------------------------------
@@ -1093,6 +1282,28 @@ export function buildOddOneOut(exercise: Exercise, dir: Direction) {
       gloss: v.labels[dir.known],
       audio: v.audio[dir.learning],
     })),
+  };
+}
+
+// find_on_map: hear a city, tap its pin on the map of Bulgaria. The prompt is
+// the target city; choices are the other pins shown. Each carries its map
+// coordinate. City names aren't translated — a place name is the same in both
+// directions — but the audio still follows the language being learned.
+export function buildFindOnMap(exercise: Exercise, dir: Direction) {
+  const items = [VOCAB[exercise.prompt], ...(exercise.choices ?? []).map((id) => VOCAB[id])];
+  return {
+    correctId: exercise.prompt,
+    promptAudio: VOCAB[exercise.prompt].audio[dir.learning],
+    promptLabel: VOCAB[exercise.prompt].labels[dir.learning],
+    pins: items
+      .filter((v) => v.map)
+      .map((v) => ({
+        id: v.id,
+        label: v.labels[dir.learning],
+        audio: v.audio[dir.learning],
+        x: v.map!.x,
+        y: v.map!.y,
+      })),
   };
 }
 

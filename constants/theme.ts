@@ -14,6 +14,9 @@ export const Colors = {
   tintGreen: "#E7F5EC",
   // Crisp white for the martenitsa's Pizho doll (the app "white" is cream).
   martenitsaWhite: "#FFFFFF",
+  // Map of Bulgaria (find_on_map): soft land + Black Sea.
+  mapLand: "#E4EFD9",
+  mapSea: "#BFE0EF",
 } as const;
 
 export const Spacing = {

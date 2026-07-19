@@ -81,9 +81,21 @@ words; review lessons consolidate. Characters host per their role (see
 |--------|-------|-------|
 | Weather 1 | sun, rain, cloud, snow | ✅ |
 
+### Unit 8 — Cities & Places · Градове и места  (host: Krali Marko 🗡️)
+| Lesson | Words | Notes |
+|--------|-------|-------|
+| Cities 1 | Sofia, Plovdiv, Varna, Burgas, Veliko Tarnovo | ✅ `find_on_map` |
+| Places 1 | sea, mountain, river, forest, city, village | ✅ |
+
 ### Alphabet track  (host: Kuker 🔔) — direction-specific
 - Browse: tap any letter to hear it (Latin for →English, Cyrillic for →Bulgarian).
 - **Practice** (`letter_sound`): hear a letter, tap it. 5 rounds.
+
+### find_on_map — a map you tap
+A stylized map of Bulgaria (land + the Black Sea on the east edge) with city
+pins at their real relative positions. Hear a city, tap where it is. Pins are
+sized by the map's measured pixels, so they land accurately on every screen.
+Positive-only: a wrong tap gently reveals and speaks the right city.
 
 ## Planned next (not yet built)
 
