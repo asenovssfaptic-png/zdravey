@@ -30,7 +30,7 @@ import { existsSync, mkdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { ALPHABET, TTS_LANG_FOR_SCRIPT, VOCAB } from "../content/content-model.ts";
+import { ALPHABET, PRAISE, TTS_LANG_FOR_SCRIPT, VOCAB } from "../content/content-model.ts";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const ASSETS = join(ROOT, "assets");
@@ -49,6 +49,9 @@ for (const [script, letters] of Object.entries(ALPHABET)) {
   for (const letter of letters) {
     clips.push({ src: letter.audio.src, lang, text: letter.char });
   }
+}
+for (const [lang, praise] of Object.entries(PRAISE)) {
+  clips.push({ src: praise.audio.src, lang, text: praise.text });
 }
 
 function fetchTts(text, lang, outPath) {
