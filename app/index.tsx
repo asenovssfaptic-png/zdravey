@@ -5,11 +5,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { CHARACTERS } from "@/characters/characters";
 import { CharacterBubble } from "@/components/CharacterBubble";
 import { Martenitsa } from "@/components/Martenitsa";
-import { Colors, FontSizes, Radii, Spacing } from "@/constants/theme";
-import type { Lesson, Unit } from "@/content/content-model";
+import { Colors, FontSizes, Radii, Spacing, TouchTarget } from "@/constants/theme";
+import type { LangCode, Lesson, Unit } from "@/content/content-model";
 import { UNITS, VOCAB } from "@/content/content-model";
 import { useDirection } from "@/lib/direction";
 import { useProgress } from "@/lib/progress";
+
+const FLAG: Record<LangCode, string> = { bg: "🇧🇬", en: "🇬🇧" };
 
 // A few representative emoji for a lesson tile, pulled from the vocab it uses.
 function lessonEmojis(lesson: Lesson): string {
@@ -33,49 +35,61 @@ export default function HomeScreen() {
   const { martenitsi } = useProgress();
   const babaMarta = CHARACTERS.baba_marta;
 
-  const greeting =
-    direction.known === "bg" ? "Здравей! Хайде да учим!" : "Hello! Let's learn!";
+  const greeting = direction.known === "bg" ? "Здравей! Хайде да учим!" : "Hello! Let's learn!";
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View
-        style={styles.martenitsaPill}
-        accessibilityRole="text"
-        accessibilityLabel={
-          direction.known === "bg" ? `Мартеници: ${martenitsi}` : `Martenitsi: ${martenitsi}`
-        }
-      >
-        <Martenitsa size={26} />
-        <Text style={styles.martenitsaNumber}>{martenitsi}</Text>
+      <View style={styles.headerRow}>
+        <View
+          style={styles.martenitsaPill}
+          accessibilityRole="text"
+          accessibilityLabel={
+            direction.known === "bg" ? `Мартеници: ${martenitsi}` : `Martenitsi: ${martenitsi}`
+          }
+        >
+          <Martenitsa size={26} />
+          <Text style={styles.martenitsaNumber}>{martenitsi}</Text>
+        </View>
+
+        {/* Visible, tappable language switch (opens parent setup). */}
+        <Pressable
+          onPress={() => router.push("/parent-setup")}
+          accessibilityRole="button"
+          accessibilityLabel={direction.known === "bg" ? "Смени езика" : "Change language"}
+          style={({ pressed }) => [styles.langPill, pressed && styles.pressed]}
+        >
+          <Text style={styles.langText}>
+            {FLAG[direction.known]} → {FLAG[direction.learning]}
+          </Text>
+          <Text style={styles.gearEmoji}>⚙️</Text>
+        </Pressable>
       </View>
 
-      <Pressable
-        onLongPress={() => router.push("/parent-setup")}
-        delayLongPress={1200}
-        accessibilityRole="button"
-        accessibilityLabel="Parent settings"
-        style={({ pressed }) => [styles.gearButton, pressed && styles.pressed]}
-      >
-        <Text style={styles.gearEmoji}>⚙️</Text>
-      </Pressable>
-
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <CharacterBubble character={babaMarta} text={greeting} />
 
         {UNITS.map((unit) => (
-          <UnitSection key={unit.id} unit={unit} knownLang={direction.known} onOpen={(id) => router.push(`/lesson/${id}`)} />
+          <UnitSection
+            key={unit.id}
+            unit={unit}
+            knownLang={direction.known}
+            onOpen={(id) => router.push(`/lesson/${id}`)}
+          />
         ))}
 
+        <Text style={styles.sectionTitle}>{direction.known === "bg" ? "Азбука" : "Alphabet"}</Text>
         <Pressable
           onPress={() => router.push("/alphabet")}
           accessibilityRole="button"
           accessibilityLabel={direction.known === "bg" ? "Азбука" : "Alphabet"}
-          style={({ pressed }) => [styles.alphabetTile, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.tile, styles.alphabetTile, pressed && styles.pressed]}
         >
-          <Text style={styles.alphabetGlyphs}>
+          <Text style={[styles.tileEmoji, styles.alphabetGlyphs]}>
             {direction.learning === "bg" ? "Абв" : "Abc"}
           </Text>
-          <Text style={styles.alphabetLabel}>{direction.known === "bg" ? "Азбука" : "Alphabet"}</Text>
+          <Text style={[styles.tileLabel, styles.alphabetLabel]}>
+            {direction.known === "bg" ? "Докосни, за да чуеш буквите" : "Tap to hear the letters"}
+          </Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -88,15 +102,19 @@ function UnitSection({
   onOpen,
 }: {
   unit: Unit;
-  knownLang: "bg" | "en";
+  knownLang: LangCode;
   onOpen: (lessonId: string) => void;
 }) {
   const { isLessonComplete } = useProgress();
+  const host = CHARACTERS[unit.host];
   return (
     <View style={styles.unitSection}>
-      <Text style={styles.title}>{unit.theme[knownLang]}</Text>
+      <Text style={styles.sectionTitle}>
+        {host.emoji} {unit.theme[knownLang]}
+      </Text>
       {unit.lessons.map((lesson) => {
         const done = isLessonComplete(lesson.id);
+        const boss = lesson.boss === true;
         return (
           <Pressable
             key={lesson.id}
@@ -104,15 +122,17 @@ function UnitSection({
             accessibilityRole="button"
             accessibilityLabel={lesson.title[knownLang]}
             accessibilityState={{ selected: done }}
-            style={({ pressed }) => [styles.unitTile, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.tile,
+              boss && styles.tileBoss,
+              pressed && styles.pressed,
+            ]}
           >
-            {done && (
-            <View style={styles.doneBadge}>
-              <Martenitsa size={30} />
-            </View>
-          )}
-            <Text style={styles.unitEmoji}>{lessonEmojis(lesson)}</Text>
-            <Text style={styles.unitLabel}>{lesson.title[knownLang]}</Text>
+            <Text style={styles.tileEmoji}>{boss ? "🗡️" : lessonEmojis(lesson)}</Text>
+            <Text style={styles.tileLabel} numberOfLines={2}>
+              {lesson.title[knownLang]}
+            </Text>
+            {done && <Martenitsa size={26} />}
           </Pressable>
         );
       })}
@@ -125,77 +145,73 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
   },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.sm,
+  },
+  scroll: {
+    flex: 1,
+  },
   content: {
     padding: Spacing.lg,
-    gap: Spacing.xl,
-    paddingTop: 76, // clear the absolutely-positioned martenitsa pill / gear
+    paddingTop: Spacing.sm,
+    gap: Spacing.md,
   },
-  title: {
+  sectionTitle: {
     fontSize: FontSizes.title,
     fontWeight: "800",
     color: Colors.darkRed,
-    textAlign: "center",
+    marginTop: Spacing.md,
   },
   unitSection: {
-    gap: Spacing.md,
-  },
-  unitTile: {
-    backgroundColor: Colors.red,
-    borderRadius: Radii.lg,
-    paddingVertical: Spacing.xl,
-    alignItems: "center",
     gap: Spacing.sm,
   },
-  pressed: {
-    transform: [{ scale: 0.97 }],
+  // Compact horizontal lesson tile — many fit per screen so the whole path
+  // (and that there's more below) is obvious at a glance.
+  tile: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    minHeight: TouchTarget.min,
+    backgroundColor: Colors.red,
+    borderRadius: Radii.lg,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
   },
-  unitEmoji: {
-    fontSize: FontSizes.huge,
+  tileBoss: {
+    backgroundColor: Colors.darkRed,
   },
-  unitLabel: {
+  tileEmoji: {
+    fontSize: 30,
+    minWidth: 132,
+  },
+  tileLabel: {
+    flex: 1,
     fontSize: FontSizes.label,
     fontWeight: "700",
     color: Colors.white,
   },
   alphabetTile: {
     backgroundColor: Colors.white,
-    borderRadius: Radii.lg,
     borderWidth: 3,
     borderColor: Colors.red,
-    paddingVertical: Spacing.lg,
-    alignItems: "center",
-    gap: Spacing.xs,
   },
   alphabetGlyphs: {
-    fontSize: FontSizes.huge,
     fontWeight: "800",
     color: Colors.red,
+    minWidth: 84,
   },
   alphabetLabel: {
-    fontSize: FontSizes.label,
-    fontWeight: "700",
     color: Colors.darkRed,
   },
-  gearButton: {
-    position: "absolute",
-    top: Spacing.lg,
-    right: Spacing.lg,
-    zIndex: 1,
-    width: 48,
-    height: 48,
-    borderRadius: Radii.round,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  gearEmoji: {
-    fontSize: 24,
-    opacity: 0.5,
+  pressed: {
+    transform: [{ scale: 0.98 }],
   },
   martenitsaPill: {
-    position: "absolute",
-    top: Spacing.lg,
-    left: Spacing.lg,
-    zIndex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.xs,
@@ -211,9 +227,24 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: Colors.darkRed,
   },
-  doneBadge: {
-    position: "absolute",
-    top: Spacing.sm,
-    right: Spacing.md,
+  langPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    backgroundColor: Colors.white,
+    borderRadius: Radii.round,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    borderWidth: 2,
+    borderColor: Colors.darkRed,
+  },
+  langText: {
+    fontSize: FontSizes.body,
+    fontWeight: "800",
+    color: Colors.text,
+  },
+  gearEmoji: {
+    fontSize: 18,
+    opacity: 0.6,
   },
 });

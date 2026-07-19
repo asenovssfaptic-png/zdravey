@@ -20,7 +20,7 @@ const OPTIONS: DirectionOption[] = [
   },
   {
     direction: { known: "en", learning: "bg" },
-    label: { en: "English-speaking child learning Bulgarian", bg: "English child learning Bulgarian" },
+    label: { en: "English-speaking child learning Bulgarian", bg: "Дете учи български език" },
   },
 ];
 
