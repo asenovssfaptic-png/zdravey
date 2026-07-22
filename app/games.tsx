@@ -43,13 +43,20 @@ export default function GamesScreen() {
           </View>
         </Pressable>
 
-        <View style={[styles.tile, styles.soon]} accessibilityLabel={known === "bg" ? "Скоро" : "Coming soon"}>
+        <Pressable
+          onPress={() => router.push("/game/puzzle")}
+          accessibilityRole="button"
+          accessibilityLabel={known === "bg" ? "Пъзел — подреди картинката" : "Puzzle — put the picture together"}
+          style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
+        >
           <Text style={styles.tileEmoji}>🧩</Text>
           <View style={styles.tileText}>
             <Text style={styles.tileLabel}>{known === "bg" ? "Пъзел" : "Puzzle"}</Text>
-            <Text style={styles.tileSub}>{known === "bg" ? "Скоро" : "Coming soon"}</Text>
+            <Text style={styles.tileSub}>
+              {known === "bg" ? "Подреди картинката" : "Put the picture together"}
+            </Text>
           </View>
-        </View>
+        </Pressable>
 
         <View style={[styles.tile, styles.soon]} accessibilityLabel={known === "bg" ? "Скоро" : "Coming soon"}>
           <Text style={styles.tileEmoji}>🎵</Text>
