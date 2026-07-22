@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CHARACTERS } from "@/characters/characters";
+import { BottomNav } from "@/components/BottomNav";
 import { CharacterBubble } from "@/components/CharacterBubble";
 import { Martenitsa } from "@/components/Martenitsa";
 import { Colors, FontSizes, Radii, Spacing, TouchTarget } from "@/constants/theme";
@@ -92,6 +93,8 @@ export default function HomeScreen() {
           </Text>
         </Pressable>
       </ScrollView>
+
+      <BottomNav />
     </SafeAreaView>
   );
 }
