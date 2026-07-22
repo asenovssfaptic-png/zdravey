@@ -6,13 +6,14 @@ import type { LangCode } from "@/content/content-model";
 import { useDirection } from "@/lib/direction";
 
 interface Tab {
-  path: "/" | "/awards" | "/profile";
+  path: "/" | "/games" | "/awards" | "/profile";
   icon: string;
   label: Record<LangCode, string>;
 }
 
 const TABS: Tab[] = [
   { path: "/", icon: "🏠", label: { bg: "Начало", en: "Home" } },
+  { path: "/games", icon: "🎲", label: { bg: "Игри", en: "Games" } },
   { path: "/awards", icon: "⭐", label: { bg: "Награди", en: "Awards" } },
   { path: "/profile", icon: "👤", label: { bg: "Профил", en: "Profile" } },
 ];
