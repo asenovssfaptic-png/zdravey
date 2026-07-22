@@ -698,6 +698,252 @@ export const VOCAB: Record<string, VocabItem> = {
     },
     transliteration: { bg: "selo" },
   },
+
+  // --- Food (Храна) — Baba Marta's kitchen ---
+  "food.bread": {
+    id: "food.bread",
+    emoji: "🍞",
+    labels: { bg: "хляб", en: "bread" },
+    audio: {
+      bg: { src: "audio/bg/hlyab__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/bread__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "hlyab" },
+  },
+  "food.cheese": {
+    id: "food.cheese",
+    emoji: "🧀",
+    labels: { bg: "сирене", en: "cheese" },
+    audio: {
+      bg: { src: "audio/bg/sirene__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/cheese__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "sirene" },
+  },
+  "food.milk": {
+    id: "food.milk",
+    emoji: "🥛",
+    labels: { bg: "мляко", en: "milk" },
+    audio: {
+      bg: { src: "audio/bg/mlyako__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/milk__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "mlyako" },
+  },
+  "food.egg": {
+    id: "food.egg",
+    emoji: "🥚",
+    labels: { bg: "яйце", en: "egg" },
+    audio: {
+      bg: { src: "audio/bg/yaytse__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/egg__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "yaytse" },
+  },
+  "food.honey": {
+    id: "food.honey",
+    emoji: "🍯",
+    labels: { bg: "мед", en: "honey" },
+    audio: {
+      bg: { src: "audio/bg/med__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/honey__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "med" },
+  },
+  "food.soup": {
+    id: "food.soup",
+    emoji: "🍲",
+    labels: { bg: "супа", en: "soup" },
+    audio: {
+      bg: { src: "audio/bg/supa__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/soup__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "supa" },
+  },
+  "food.banitsa": {
+    id: "food.banitsa",
+    emoji: "🥧",
+    labels: { bg: "баница", en: "banitsa" },
+    audio: {
+      bg: { src: "audio/bg/banitsa__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/banitsa__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "banitsa" },
+  },
+  "food.water": {
+    id: "food.water",
+    emoji: "💧",
+    labels: { bg: "вода", en: "water" },
+    audio: {
+      bg: { src: "audio/bg/voda__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/water__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "voda" },
+  },
+
+  // --- Home (Вкъщи) — Kuma Lisa's cottage ---
+  "home.house": {
+    id: "home.house",
+    emoji: "🏠",
+    labels: { bg: "къща", en: "house" },
+    audio: {
+      bg: { src: "audio/bg/kashta__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/house__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "kashta" },
+  },
+  "home.door": {
+    id: "home.door",
+    emoji: "🚪",
+    labels: { bg: "врата", en: "door" },
+    audio: {
+      bg: { src: "audio/bg/vrata__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/door__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "vrata" },
+  },
+  "home.window": {
+    id: "home.window",
+    emoji: "🪟",
+    labels: { bg: "прозорец", en: "window" },
+    audio: {
+      bg: { src: "audio/bg/prozorets__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/window__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "prozorets" },
+  },
+  "home.chair": {
+    id: "home.chair",
+    emoji: "🪑",
+    labels: { bg: "стол", en: "chair" },
+    audio: {
+      bg: { src: "audio/bg/stol__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/chair__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "stol" },
+  },
+  "home.bed": {
+    id: "home.bed",
+    emoji: "🛏️",
+    labels: { bg: "легло", en: "bed" },
+    audio: {
+      bg: { src: "audio/bg/leglo__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/bed__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "leglo" },
+  },
+  "home.lamp": {
+    id: "home.lamp",
+    emoji: "💡",
+    labels: { bg: "лампа", en: "lamp" },
+    audio: {
+      bg: { src: "audio/bg/lampa__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/lamp__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "lampa" },
+  },
+  "home.key": {
+    id: "home.key",
+    emoji: "🔑",
+    labels: { bg: "ключ", en: "key" },
+    audio: {
+      bg: { src: "audio/bg/klyuch__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/key__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "klyuch" },
+  },
+  "home.clock": {
+    id: "home.clock",
+    emoji: "🕐",
+    labels: { bg: "часовник", en: "clock" },
+    audio: {
+      bg: { src: "audio/bg/chasovnik__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/clock__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "chasovnik" },
+  },
+
+  // --- Clothes (Дрехи) — Kuker's dressing-up trunk ---
+  "clothes.shirt": {
+    id: "clothes.shirt",
+    emoji: "👕",
+    labels: { bg: "риза", en: "shirt" },
+    audio: {
+      bg: { src: "audio/bg/riza__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/shirt__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "riza" },
+  },
+  "clothes.shoes": {
+    id: "clothes.shoes",
+    emoji: "👟",
+    labels: { bg: "обувки", en: "shoes" },
+    audio: {
+      bg: { src: "audio/bg/obuvki__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/shoes__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "obuvki" },
+  },
+  "clothes.hat": {
+    id: "clothes.hat",
+    emoji: "🧢",
+    labels: { bg: "шапка", en: "hat" },
+    audio: {
+      bg: { src: "audio/bg/shapka__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/hat__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "shapka" },
+  },
+  "clothes.socks": {
+    id: "clothes.socks",
+    emoji: "🧦",
+    labels: { bg: "чорапи", en: "socks" },
+    audio: {
+      bg: { src: "audio/bg/chorapi__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/socks__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "chorapi" },
+  },
+  "clothes.dress": {
+    id: "clothes.dress",
+    emoji: "👗",
+    labels: { bg: "рокля", en: "dress" },
+    audio: {
+      bg: { src: "audio/bg/roklya__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/dress__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "roklya" },
+  },
+  "clothes.coat": {
+    id: "clothes.coat",
+    emoji: "🧥",
+    labels: { bg: "палто", en: "coat" },
+    audio: {
+      bg: { src: "audio/bg/palto__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/coat__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "palto" },
+  },
+  "clothes.gloves": {
+    id: "clothes.gloves",
+    emoji: "🧤",
+    labels: { bg: "ръкавици", en: "gloves" },
+    audio: {
+      bg: { src: "audio/bg/rakavitsi__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/gloves__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "rakavitsi" },
+  },
+  "clothes.scarf": {
+    id: "clothes.scarf",
+    emoji: "🧣",
+    labels: { bg: "шал", en: "scarf" },
+    audio: {
+      bg: { src: "audio/bg/shal__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/scarf__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "shal" },
+  },
 };
 
 export const fruitsUnit: Unit = {
@@ -1199,6 +1445,267 @@ export const citiesUnit: Unit = {
   ],
 };
 
+export const foodUnit: Unit = {
+  id: "unit.food",
+  theme: { bg: "Храна", en: "Food" },
+  host: "baba_marta",
+  guardian: "zmey",
+  lessons: [
+    {
+      id: "unit.food.l1",
+      title: { bg: "Храна 1", en: "Food 1" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "food.bread",
+          choices: ["food.cheese", "food.milk", "food.egg"],
+          hint: {
+            bg: "Слушай първия звук: b-b-bread.",
+            en: "Listen for the first sound: х-х-хляб.",
+          },
+        },
+        { type: "say_it", prompt: "food.milk" },
+        {
+          type: "pick_picture",
+          prompt: "food.cheese",
+          choices: ["food.bread", "food.milk", "food.egg"],
+        },
+        {
+          type: "match_pairs",
+          prompt: "food.bread",
+          choices: ["food.cheese", "food.milk", "food.egg"],
+        },
+      ],
+    },
+    {
+      id: "unit.food.l2",
+      title: { bg: "Храна 2", en: "Food 2" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "food.banitsa",
+          choices: ["food.honey", "food.soup", "food.water"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "food.soup",
+          choices: ["food.honey", "food.banitsa", "food.water"],
+        },
+        { type: "say_it", prompt: "food.water" },
+        {
+          type: "match_pairs",
+          prompt: "food.honey",
+          choices: ["food.soup", "food.banitsa", "food.water"],
+        },
+      ],
+    },
+    {
+      id: "unit.food.review",
+      title: { bg: "Юнашки изпит — Храна", en: "Hero's Challenge — Food" },
+      reward: "martenitsa",
+      boss: true,
+      exercises: [
+        {
+          type: "match_pairs",
+          prompt: "food.bread",
+          choices: ["food.milk", "food.honey", "food.soup"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "food.banitsa",
+          choices: ["food.cheese", "food.egg", "food.water"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "food.milk",
+          choices: ["food.bread", "food.soup", "food.honey"],
+        },
+        {
+          type: "odd_one_out",
+          prompt: "animal.cat",
+          choices: ["food.bread", "food.milk", "food.honey"],
+        },
+      ],
+    },
+  ],
+};
+
+export const homeUnit: Unit = {
+  id: "unit.home",
+  theme: { bg: "Вкъщи", en: "Home" },
+  host: "kuma_lisa",
+  guardian: "zmey",
+  lessons: [
+    {
+      id: "unit.home.l1",
+      title: { bg: "Вкъщи 1", en: "Home 1" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "home.house",
+          choices: ["home.door", "home.window", "home.chair"],
+          hint: {
+            bg: "Слушай първия звук: h-h-house.",
+            en: "Слушай: к-к-къща.",
+          },
+        },
+        { type: "say_it", prompt: "home.door" },
+        {
+          type: "pick_picture",
+          prompt: "home.window",
+          choices: ["home.house", "home.door", "home.chair"],
+        },
+        {
+          type: "match_pairs",
+          prompt: "home.house",
+          choices: ["home.door", "home.window", "home.chair"],
+        },
+      ],
+    },
+    {
+      id: "unit.home.l2",
+      title: { bg: "Вкъщи 2", en: "Home 2" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "home.bed",
+          choices: ["home.lamp", "home.key", "home.clock"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "home.clock",
+          choices: ["home.bed", "home.lamp", "home.key"],
+        },
+        { type: "say_it", prompt: "home.key" },
+        {
+          type: "match_pairs",
+          prompt: "home.bed",
+          choices: ["home.lamp", "home.key", "home.clock"],
+        },
+      ],
+    },
+    {
+      id: "unit.home.review",
+      title: { bg: "Юнашки изпит — Вкъщи", en: "Hero's Challenge — Home" },
+      reward: "martenitsa",
+      boss: true,
+      exercises: [
+        {
+          type: "match_pairs",
+          prompt: "home.house",
+          choices: ["home.bed", "home.lamp", "home.clock"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "home.key",
+          choices: ["home.door", "home.window", "home.chair"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "home.lamp",
+          choices: ["home.house", "home.bed", "home.clock"],
+        },
+        {
+          type: "odd_one_out",
+          prompt: "food.bread",
+          choices: ["home.house", "home.door", "home.window"],
+        },
+      ],
+    },
+  ],
+};
+
+export const clothesUnit: Unit = {
+  id: "unit.clothes",
+  theme: { bg: "Дрехи", en: "Clothes" },
+  host: "kuker",
+  guardian: "zmey",
+  lessons: [
+    {
+      id: "unit.clothes.l1",
+      title: { bg: "Дрехи 1", en: "Clothes 1" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "clothes.shirt",
+          choices: ["clothes.shoes", "clothes.hat", "clothes.socks"],
+          hint: {
+            bg: "Слушай първия звук: sh-sh-shirt.",
+            en: "Слушай: р-р-риза.",
+          },
+        },
+        { type: "say_it", prompt: "clothes.hat" },
+        {
+          type: "pick_picture",
+          prompt: "clothes.shoes",
+          choices: ["clothes.shirt", "clothes.hat", "clothes.socks"],
+        },
+        {
+          type: "match_pairs",
+          prompt: "clothes.shirt",
+          choices: ["clothes.shoes", "clothes.hat", "clothes.socks"],
+        },
+      ],
+    },
+    {
+      id: "unit.clothes.l2",
+      title: { bg: "Дрехи 2", en: "Clothes 2" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "clothes.dress",
+          choices: ["clothes.coat", "clothes.gloves", "clothes.scarf"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "clothes.scarf",
+          choices: ["clothes.dress", "clothes.coat", "clothes.gloves"],
+        },
+        { type: "say_it", prompt: "clothes.coat" },
+        {
+          type: "match_pairs",
+          prompt: "clothes.dress",
+          choices: ["clothes.coat", "clothes.gloves", "clothes.scarf"],
+        },
+      ],
+    },
+    {
+      id: "unit.clothes.review",
+      title: { bg: "Юнашки изпит — Дрехи", en: "Hero's Challenge — Clothes" },
+      reward: "martenitsa",
+      boss: true,
+      exercises: [
+        {
+          type: "match_pairs",
+          prompt: "clothes.shirt",
+          choices: ["clothes.dress", "clothes.coat", "clothes.socks"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "clothes.gloves",
+          choices: ["clothes.shoes", "clothes.hat", "clothes.scarf"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "clothes.hat",
+          choices: ["clothes.shirt", "clothes.dress", "clothes.coat"],
+        },
+        {
+          type: "odd_one_out",
+          prompt: "animal.dog",
+          choices: ["clothes.shirt", "clothes.hat", "clothes.socks"],
+        },
+      ],
+    },
+  ],
+};
+
 export const UNITS: Unit[] = [
   fruitsUnit,
   animalsUnit,
@@ -1207,6 +1714,9 @@ export const UNITS: Unit[] = [
   familyUnit,
   bodyUnit,
   weatherUnit,
+  foodUnit,
+  homeUnit,
+  clothesUnit,
   citiesUnit,
 ];
 
