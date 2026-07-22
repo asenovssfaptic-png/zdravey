@@ -81,7 +81,28 @@ words; review lessons consolidate. Characters host per their role (see
 |--------|-------|-------|
 | Weather 1 | sun, rain, cloud, snow | ✅ |
 
-### Unit 8 — Cities & Places · Градове и места  (host: Krali Marko 🗡️)
+### Unit 8 — Food · Храна  (host: Baba Marta 👵)
+| Lesson | Words | Notes |
+|--------|-------|-------|
+| Food 1 | bread, cheese, milk, egg | ✅ |
+| Food 2 | honey, soup, banitsa, water | ✅ баница = a cultural favorite |
+| Hero's Challenge — Food | mixed review + odd-one-out | ✅ `boss` |
+
+### Unit 9 — Home · Вкъщи  (host: Kuma Lisa 🦊)
+| Lesson | Words | Notes |
+|--------|-------|-------|
+| Home 1 | house, door, window, chair | ✅ |
+| Home 2 | bed, lamp, key, clock | ✅ |
+| Hero's Challenge — Home | mixed review + odd-one-out | ✅ `boss` |
+
+### Unit 10 — Clothes · Дрехи  (host: Kuker 🔔)
+| Lesson | Words | Notes |
+|--------|-------|-------|
+| Clothes 1 | shirt, shoes, hat, socks | ✅ |
+| Clothes 2 | dress, coat, gloves, scarf | ✅ |
+| Hero's Challenge — Clothes | mixed review + odd-one-out | ✅ `boss` |
+
+### Unit 11 — Cities & Places · Градове и места  (host: Krali Marko 🗡️)
 | Lesson | Words | Notes |
 |--------|-------|-------|
 | Cities 1 | Sofia, Plovdiv, Varna, Burgas, Veliko Tarnovo | ✅ `find_on_map` |
