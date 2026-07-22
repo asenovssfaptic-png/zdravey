@@ -92,8 +92,49 @@ const BACKGROUNDS = [
   },
 ];
 
+// Painted Bulgarian landmark scenes for the jigsaw puzzle game. Square, rich
+// but friendly — the finished picture IS the reward (docs/art-direction.md §5).
+const PUZZLES = [
+  {
+    name: "rila_monastery",
+    label: { bg: "Рилски манастир", en: "Rila Monastery" },
+    prompt:
+      "Rila Monastery in the Bulgarian mountains, iconic striped arched colonnades and red-and-white painted facade, green domes, forested peaks behind, sunny cheerful",
+  },
+  {
+    name: "nesebar",
+    label: { bg: "Несебър", en: "Nesebar" },
+    prompt:
+      "the old seaside town of Nesebar on the Black Sea, little stone-and-wood houses with red roofs, an old stone church, blue sea and boats, sunny",
+  },
+  {
+    name: "belogradchik",
+    label: { bg: "Белоградчишки скали", en: "Belogradchik Rocks" },
+    prompt:
+      "the Belogradchik rock formations, huge warm-red sandstone rocks and towers with green trees, a little fortress, dramatic but friendly, blue sky",
+  },
+  {
+    name: "rose_valley",
+    label: { bg: "Розовата долина", en: "Rose Valley" },
+    prompt:
+      "the Bulgarian Rose Valley, rolling fields of blooming pink roses, a woman in folk costume gathering roses in a basket, mountains behind, warm morning",
+  },
+  {
+    name: "plovdiv",
+    label: { bg: "Стария Пловдив", en: "Old Plovdiv" },
+    prompt:
+      "the old town of Plovdiv, colorful revival-era houses with bay windows on a cobbled hill street, warm cheerful colors",
+  },
+  {
+    name: "pirin_lake",
+    label: { bg: "Пирин", en: "Pirin" },
+    prompt:
+      "a clear blue glacial lake high in the Pirin mountains, pine trees and rocky peaks reflected in the water, wildflowers, peaceful sunny day",
+  },
+];
+
 const only = process.argv.filter(
-  (a) => a.startsWith("vocab:") || a === "char" || a === "bg",
+  (a) => a.startsWith("vocab:") || a === "char" || a === "bg" || a === "puzzle",
 );
 function wants(kind) {
   return only.length === 0 || only.includes(kind);
@@ -122,6 +163,10 @@ for (const [id, v] of Object.entries(VOCAB)) {
 for (const bg of BACKGROUNDS) {
   if (!wants("bg")) continue;
   jobs.push({ file: join(IMG, "bg", `${bg.name}.jpg`), prompt: `${bg.prompt}, ${STYLE}`, w: bg.w, h: bg.h });
+}
+for (const pz of PUZZLES) {
+  if (!wants("puzzle")) continue;
+  jobs.push({ file: join(IMG, "puzzle", `${pz.name}.jpg`), prompt: `${pz.prompt}, ${STYLE}`, w: 768, h: 768 });
 }
 
 // Stable per-file seed so re-runs are reproducible.
@@ -181,6 +226,11 @@ const bgEntries = BACKGROUNDS.map((bg) => ({ name: bg.name, req: fileFor("bg", `
   .map((e) => `  ${JSON.stringify(e.name)}: require(${JSON.stringify(e.req)}),`)
   .join("\n");
 
+const puzzleEntries = PUZZLES.map((pz) => ({ name: pz.name, req: fileFor("puzzle", `${pz.name}.jpg`) }))
+  .filter((e) => e.req)
+  .map((e) => `  ${JSON.stringify(e.name)}: require(${JSON.stringify(e.req)}),`)
+  .join("\n");
+
 const banner =
   "// AUTO-GENERATED registry — painted art from scripts/generate-art.mjs.\n" +
   "// Components fall back to emoji/avatars for any id NOT listed here.\n" +
@@ -193,12 +243,15 @@ writeFileSync(
     `export const VOCAB_IMAGES: Record<string, ImageSourcePropType> = {\n${vocabEntries}\n};\n\n` +
     `export const CHARACTER_IMAGES: Record<string, ImageSourcePropType> = {\n${charEntries}\n};\n\n` +
     `export const BACKGROUNDS: Record<string, ImageSourcePropType> = {\n${bgEntries}\n};\n\n` +
+    `export const PUZZLE_IMAGES: Record<string, ImageSourcePropType> = {\n${puzzleEntries}\n};\n\n` +
     `export function vocabImage(id?: string): ImageSourcePropType | null {\n` +
     `  return (id && VOCAB_IMAGES[id]) || null;\n}\n\n` +
     `export function characterImage(id?: string): ImageSourcePropType | null {\n` +
     `  return (id && CHARACTER_IMAGES[id]) || null;\n}\n\n` +
     `export function background(name: string): ImageSourcePropType | null {\n` +
-    `  return BACKGROUNDS[name] || null;\n}\n`,
+    `  return BACKGROUNDS[name] || null;\n}\n\n` +
+    `export function puzzleImage(name: string): ImageSourcePropType | null {\n` +
+    `  return PUZZLE_IMAGES[name] || null;\n}\n`,
 );
 
 console.log(`\nDone. Generated ${made}, skipped ${skipped}. Rewrote lib/images.ts.`);

@@ -57,6 +57,15 @@ export const BACKGROUNDS: Record<string, ImageSourcePropType> = {
   "shevitsa_border": require("../assets/img/bg/shevitsa_border.jpg"),
 };
 
+export const PUZZLE_IMAGES: Record<string, ImageSourcePropType> = {
+  "rila_monastery": require("../assets/img/puzzle/rila_monastery.jpg"),
+  "nesebar": require("../assets/img/puzzle/nesebar.jpg"),
+  "belogradchik": require("../assets/img/puzzle/belogradchik.jpg"),
+  "rose_valley": require("../assets/img/puzzle/rose_valley.jpg"),
+  "plovdiv": require("../assets/img/puzzle/plovdiv.jpg"),
+  "pirin_lake": require("../assets/img/puzzle/pirin_lake.jpg"),
+};
+
 export function vocabImage(id?: string): ImageSourcePropType | null {
   return (id && VOCAB_IMAGES[id]) || null;
 }
@@ -67,4 +76,8 @@ export function characterImage(id?: string): ImageSourcePropType | null {
 
 export function background(name: string): ImageSourcePropType | null {
   return BACKGROUNDS[name] || null;
+}
+
+export function puzzleImage(name: string): ImageSourcePropType | null {
+  return PUZZLE_IMAGES[name] || null;
 }
