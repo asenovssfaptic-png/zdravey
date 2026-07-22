@@ -99,10 +99,15 @@ re-invent a character.
 - **No new inline-drawn art in components.** Painted PNGs live in
   `assets/img/{char,vocab,ui,bg}` (@1x/@2x/@3x; WebP/JPEG for full-bleed
   backgrounds) and load via `require()` so Expo/RN picks the density.
-- **Current state:** painted PNGs are **not generated yet**. The app uses
-  **emoji / theme-drawn placeholders** (incl. the View-drawn `Martenitsa`). The
-  registry `lib/images.ts` swaps a painted asset in the moment it's added — drop
-  the PNG in `assets/img/...` and add one `require()` line, no component change.
+- **Current state:** painted **placeholders are generated** for the folklore
+  characters and object vocab (fruits/animals/places/family/body) by
+  `scripts/generate-art.mjs` (`npm run generate:art`, via the free
+  pollinations.ai endpoint) and registered in `lib/images.ts`. Abstract vocab
+  (colors/numbers/cities) and UI still use emoji / theme-drawn placeholders
+  (incl. the View-drawn `Martenitsa`). Components fall back to emoji for any id
+  not in the registry. Drop a hand-approved master at the same path to replace
+  a placeholder — no component change. Generated art is JPEG (no alpha) on a
+  cream ground; approved PNG masters with transparency supersede it.
 
 ## Screens
 
