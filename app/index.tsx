@@ -6,6 +6,7 @@ import { CHARACTERS } from "@/characters/characters";
 import { BottomNav } from "@/components/BottomNav";
 import { CharacterBubble } from "@/components/CharacterBubble";
 import { Martenitsa } from "@/components/Martenitsa";
+import { ScreenBackground } from "@/components/ScreenBackground";
 import { Colors, FontSizes, Radii, Spacing, TouchTarget } from "@/constants/theme";
 import type { LangCode, Lesson, Unit } from "@/content/content-model";
 import { UNITS, VOCAB } from "@/content/content-model";
@@ -39,6 +40,7 @@ export default function HomeScreen() {
   const greeting = direction.known === "bg" ? "Здравей! Хайде да учим!" : "Hello! Let's learn!";
 
   return (
+    <ScreenBackground scene="village">
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerRow}>
         <View
@@ -96,6 +98,7 @@ export default function HomeScreen() {
 
       <BottomNav />
     </SafeAreaView>
+    </ScreenBackground>
   );
 }
 
@@ -146,7 +149,7 @@ function UnitSection({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: "transparent",
   },
   headerRow: {
     flexDirection: "row",

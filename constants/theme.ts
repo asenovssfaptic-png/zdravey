@@ -17,6 +17,8 @@ export const Colors = {
   // Map of Bulgaria (find_on_map): soft land + Black Sea.
   mapLand: "#E4EFD9",
   mapSea: "#BFE0EF",
+  // Cream scrim laid over painted scene backgrounds so text/tiles stay legible.
+  scrim: "rgba(241,239,232,0.74)",
 } as const;
 
 export const Spacing = {

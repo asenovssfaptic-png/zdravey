@@ -5,6 +5,7 @@ import { CHARACTERS } from "@/characters/characters";
 import { BottomNav } from "@/components/BottomNav";
 import { CharacterBubble } from "@/components/CharacterBubble";
 import { Martenitsa } from "@/components/Martenitsa";
+import { ScreenBackground } from "@/components/ScreenBackground";
 import { Colors, FontSizes, Radii, Spacing } from "@/constants/theme";
 import { useDirection } from "@/lib/direction";
 import { useProgress } from "@/lib/progress";
@@ -18,6 +19,7 @@ export default function AwardsScreen() {
   const babaMarta = CHARACTERS.baba_marta;
 
   return (
+    <ScreenBackground scene="festival">
     <SafeAreaView style={styles.safeArea}>
       <Text style={styles.title}>{known === "bg" ? "Награди" : "Awards"}</Text>
 
@@ -59,11 +61,12 @@ export default function AwardsScreen() {
 
       <BottomNav />
     </SafeAreaView>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.white },
+  safeArea: { flex: 1, backgroundColor: "transparent" },
   title: {
     fontSize: FontSizes.title,
     fontWeight: "800",

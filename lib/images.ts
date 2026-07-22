@@ -50,10 +50,21 @@ export const CHARACTER_IMAGES: Record<string, ImageSourcePropType> = {
   "kuma_lisa": require("../assets/img/char/kuma_lisa.jpg"),
 };
 
+export const BACKGROUNDS: Record<string, ImageSourcePropType> = {
+  "village": require("../assets/img/bg/village.jpg"),
+  "meadow": require("../assets/img/bg/meadow.jpg"),
+  "festival": require("../assets/img/bg/festival.jpg"),
+  "shevitsa_border": require("../assets/img/bg/shevitsa_border.jpg"),
+};
+
 export function vocabImage(id?: string): ImageSourcePropType | null {
   return (id && VOCAB_IMAGES[id]) || null;
 }
 
 export function characterImage(id?: string): ImageSourcePropType | null {
   return (id && CHARACTER_IMAGES[id]) || null;
+}
+
+export function background(name: string): ImageSourcePropType | null {
+  return BACKGROUNDS[name] || null;
 }
