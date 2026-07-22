@@ -115,6 +115,7 @@ function TileWithAudio({
   return (
     <Tile
       emoji={tile.emoji}
+      vocabId={tile.id}
       main={tile.main}
       gloss={tile.gloss}
       state={state}

@@ -1,11 +1,13 @@
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Image, Pressable, StyleSheet, Text } from "react-native";
 
 import { Colors, FontSizes, Radii, Spacing, TouchTarget } from "@/constants/theme";
+import { vocabImage } from "@/lib/images";
 
 export type TileState = "idle" | "correct" | "gentle" | "disabled";
 
 interface TileProps {
   emoji?: string;
+  vocabId?: string; // resolves a painted illustration if one exists (else emoji)
   main: string; // learning-language word, shown big
   gloss: string; // known-language gloss, shown smaller
   state: TileState;
@@ -15,7 +17,8 @@ interface TileProps {
 // One exercise type per component: this is the pick_picture answer tile.
 // Tapping it both plays the word's own audio and registers the pick —
 // there is no separate "listen" affordance to teach kids to look for.
-export function Tile({ emoji, main, gloss, state, onPress }: TileProps) {
+export function Tile({ emoji, vocabId, main, gloss, state, onPress }: TileProps) {
+  const painted = vocabImage(vocabId);
   return (
     <Pressable
       onPress={onPress}
@@ -30,7 +33,11 @@ export function Tile({ emoji, main, gloss, state, onPress }: TileProps) {
         pressed && state !== "disabled" && styles.pressed,
       ]}
     >
-      <Text style={styles.emoji}>{emoji}</Text>
+      {painted ? (
+        <Image source={painted} style={styles.image} resizeMode="contain" accessibilityIgnoresInvertColors />
+      ) : (
+        <Text style={styles.emoji}>{emoji}</Text>
+      )}
       <Text style={styles.main}>{main}</Text>
       <Text style={styles.gloss}>{gloss}</Text>
     </Pressable>
@@ -65,6 +72,10 @@ const styles = StyleSheet.create({
   },
   emoji: {
     fontSize: FontSizes.huge,
+  },
+  image: {
+    width: 88,
+    height: 88,
   },
   main: {
     fontSize: FontSizes.label,
