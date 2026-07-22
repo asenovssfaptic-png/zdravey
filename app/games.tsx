@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { CHARACTERS } from "@/characters/characters";
 import { BottomNav } from "@/components/BottomNav";
 import { CharacterBubble } from "@/components/CharacterBubble";
+import { ScreenBackground } from "@/components/ScreenBackground";
 import { Colors, FontSizes, Radii, Spacing, TouchTarget } from "@/constants/theme";
 import { useDirection } from "@/lib/direction";
 
@@ -17,6 +18,7 @@ export default function GamesScreen() {
   const hitar = CHARACTERS.hitar_petar;
 
   return (
+    <ScreenBackground scene="festival">
     <SafeAreaView style={styles.safeArea}>
       <Text style={styles.title}>{known === "bg" ? "Игри" : "Games"}</Text>
 
@@ -60,11 +62,12 @@ export default function GamesScreen() {
 
       <BottomNav />
     </SafeAreaView>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.white },
+  safeArea: { flex: 1, backgroundColor: "transparent" },
   title: {
     fontSize: FontSizes.title,
     fontWeight: "800",

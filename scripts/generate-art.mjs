@@ -59,12 +59,47 @@ const CHARACTER_SUBJECT = {
     "a friendly Bulgarian festival Kuker mummer, shaggy fur costume, colorful decorated folk mask with wool pom-poms and gentle curled horns, cheerful and celebratory not scary, head and shoulders portrait",
 };
 
-const only = process.argv.filter((a) => a.startsWith("vocab:") || a === "char");
+// Painted scene backgrounds + a folk border. Kept soft / low-contrast so text
+// and tiles stay readable over them (docs/art-direction.md §5).
+const BACKGROUNDS = [
+  {
+    name: "village",
+    w: 896,
+    h: 1216,
+    prompt:
+      "a cozy storybook Bulgarian village in a rose valley, winding dirt path past little folk cottages with red-tiled roofs, blooming rose bushes, Balkan mountains and soft clouds, warm morning light, soft and low-contrast, calm and inviting",
+  },
+  {
+    name: "meadow",
+    w: 896,
+    h: 1216,
+    prompt:
+      "a sunlit flowering mountain meadow with tall grass, wildflowers, slender birch trees and distant soft hills, gentle soft-focus, peaceful, low-contrast pastel",
+  },
+  {
+    name: "festival",
+    w: 896,
+    h: 1216,
+    prompt:
+      "a joyful Bulgarian spring festival village square, red-and-white martenitsi and bunting strung between blossoming trees, folk decorations, sunny happy atmosphere, soft low-contrast",
+  },
+  {
+    name: "shevitsa_border",
+    w: 1024,
+    h: 128,
+    prompt:
+      "a seamless horizontal Bulgarian shevitsa cross-stitch embroidery border strip, geometric folk motifs in poppy red and dark red on cream linen, symmetrical, tileable, flat, centered",
+  },
+];
+
+const only = process.argv.filter(
+  (a) => a.startsWith("vocab:") || a === "char" || a === "bg",
+);
 function wants(kind) {
   return only.length === 0 || only.includes(kind);
 }
 
-// Build the work list: {file, prompt, seed}.
+// Build the work list: {file, prompt, w?, h?}.
 const jobs = [];
 for (const [id, c] of Object.entries(CHARACTERS)) {
   if (!wants("char")) continue;
@@ -83,6 +118,10 @@ for (const [id, v] of Object.entries(VOCAB)) {
     file: join(IMG, "vocab", `${id.replace(/\./g, "_")}.jpg`),
     prompt: `a single ${v.labels.en}, centered, simple clean shapes, soft cream background, readable as a small icon, ${STYLE}`,
   });
+}
+for (const bg of BACKGROUNDS) {
+  if (!wants("bg")) continue;
+  jobs.push({ file: join(IMG, "bg", `${bg.name}.jpg`), prompt: `${bg.prompt}, ${STYLE}`, w: bg.w, h: bg.h });
 }
 
 // Stable per-file seed so re-runs are reproducible.
@@ -103,7 +142,7 @@ for (const job of jobs) {
   const url =
     "https://image.pollinations.ai/prompt/" +
     encodeURIComponent(job.prompt) +
-    `?width=512&height=512&nologo=true&model=flux&seed=${seedOf(job.file)}`;
+    `?width=${job.w ?? 512}&height=${job.h ?? 512}&nologo=true&model=flux&seed=${seedOf(job.file)}`;
   const name = job.file.replace(IMG + "/", "");
   process.stdout.write(`ART  ${name} ... `);
   try {
@@ -137,6 +176,11 @@ const charEntries = Object.keys(CHARACTERS)
   .map((e) => `  ${JSON.stringify(e.id)}: require(${JSON.stringify(e.req)}),`)
   .join("\n");
 
+const bgEntries = BACKGROUNDS.map((bg) => ({ name: bg.name, req: fileFor("bg", `${bg.name}.jpg`) }))
+  .filter((e) => e.req)
+  .map((e) => `  ${JSON.stringify(e.name)}: require(${JSON.stringify(e.req)}),`)
+  .join("\n");
+
 const banner =
   "// AUTO-GENERATED registry — painted art from scripts/generate-art.mjs.\n" +
   "// Components fall back to emoji/avatars for any id NOT listed here.\n" +
@@ -148,10 +192,13 @@ writeFileSync(
   `import type { ImageSourcePropType } from "react-native";\n\n${banner}\n` +
     `export const VOCAB_IMAGES: Record<string, ImageSourcePropType> = {\n${vocabEntries}\n};\n\n` +
     `export const CHARACTER_IMAGES: Record<string, ImageSourcePropType> = {\n${charEntries}\n};\n\n` +
+    `export const BACKGROUNDS: Record<string, ImageSourcePropType> = {\n${bgEntries}\n};\n\n` +
     `export function vocabImage(id?: string): ImageSourcePropType | null {\n` +
     `  return (id && VOCAB_IMAGES[id]) || null;\n}\n\n` +
     `export function characterImage(id?: string): ImageSourcePropType | null {\n` +
-    `  return (id && CHARACTER_IMAGES[id]) || null;\n}\n`,
+    `  return (id && CHARACTER_IMAGES[id]) || null;\n}\n\n` +
+    `export function background(name: string): ImageSourcePropType | null {\n` +
+    `  return BACKGROUNDS[name] || null;\n}\n`,
 );
 
 console.log(`\nDone. Generated ${made}, skipped ${skipped}. Rewrote lib/images.ts.`);

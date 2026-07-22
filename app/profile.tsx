@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { BottomNav } from "@/components/BottomNav";
 import { Martenitsa } from "@/components/Martenitsa";
+import { ScreenBackground } from "@/components/ScreenBackground";
 import { Colors, FontSizes, Radii, Spacing, TouchTarget } from "@/constants/theme";
 import { UNITS } from "@/content/content-model";
 import { useDirection } from "@/lib/direction";
@@ -21,6 +22,7 @@ export default function ProfileScreen() {
   const totalLessons = UNITS.reduce((n, u) => n + u.lessons.length, 0);
 
   return (
+    <ScreenBackground scene="meadow">
     <SafeAreaView style={styles.safeArea}>
       <Text style={styles.title}>{known === "bg" ? "Моят профил" : "My Profile"}</Text>
 
@@ -60,6 +62,7 @@ export default function ProfileScreen() {
 
       <BottomNav />
     </SafeAreaView>
+    </ScreenBackground>
   );
 }
 
@@ -84,7 +87,7 @@ function Row({
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.white },
+  safeArea: { flex: 1, backgroundColor: "transparent" },
   title: {
     fontSize: FontSizes.title,
     fontWeight: "800",
