@@ -60,6 +60,16 @@ export function Celebration({
         </Animated.View>
       </Pressable>
 
+      <Text
+        style={styles.stars}
+        accessibilityLabel={known === "bg" ? "Събра 3 звезди" : "You got 3 stars"}
+      >
+        ⭐⭐⭐
+      </Text>
+      <Text style={styles.starsCaption}>
+        {known === "bg" ? "Събра 3 звезди!" : "You got 3 stars!"}
+      </Text>
+
       <View style={styles.countRow}>
         {Array.from({ length: Math.min(martenitsi, 6) }).map((_, i) => (
           <Martenitsa key={i} size={30} />
@@ -103,6 +113,14 @@ const styles = StyleSheet.create({
   },
   medal: {
     fontSize: 72,
+  },
+  stars: {
+    fontSize: 40,
+  },
+  starsCaption: {
+    fontSize: FontSizes.label,
+    fontWeight: "800",
+    color: Colors.gold,
   },
   homeButton: {
     flexDirection: "row",

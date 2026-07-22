@@ -8,6 +8,11 @@ import type { ReactNode } from "react";
 
 const STORAGE_KEY = "zdravey.progress";
 
+// Each finished lesson is worth this many stars (positive-only: full stars for
+// completing — the board's "Събра 3 звезди!"). Total stars derive from the set
+// of completed lessons, so they can only ever go up.
+export const STARS_PER_LESSON = 3;
+
 interface ProgressState {
   // Lesson ids the child has finished at least once. One martenitsa each.
   completedLessons: string[];
@@ -16,6 +21,7 @@ interface ProgressState {
 interface ProgressContextValue {
   completedLessons: Set<string>;
   martenitsi: number;
+  stars: number;
   isLessonComplete: (lessonId: string) => boolean;
   completeLesson: (lessonId: string) => void;
 }
@@ -51,6 +57,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     () => ({
       completedLessons: completed,
       martenitsi: completed.size,
+      stars: completed.size * STARS_PER_LESSON,
       isLessonComplete: (lessonId: string) => completed.has(lessonId),
       completeLesson,
     }),
