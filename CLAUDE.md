@@ -4,8 +4,9 @@ A kids' language-learning app for **Bulgarian ↔ English**, aimed at **ages 5+*
 Think "Duolingo for Bulgarian," but built for young children and grounded in
 Bulgarian folklore. Ships as **one codebase → website + mobile**.
 
-> Keep this file lean. Detailed data shapes live in `content-model.ts`.
-> If you correct me twice about the same project fact, add it here.
+> Keep this file lean. Data shapes → `content/content-model.ts`. Curriculum →
+> `LESSON_PLAN.md`. Visual style → `docs/art-direction.md`. Asset export specs →
+> `docs/asset-pipeline.md`.
 
 ## What we're building
 
@@ -24,12 +25,11 @@ Bulgarian folklore. Ships as **one codebase → website + mobile**.
 ## Platforms & stack
 
 - **Expo (React Native + React Native Web)** — one TypeScript codebase for
-  iOS, Android, and web. Use the latest stable Expo SDK (check, don't assume).
-- **Navigation:** Expo Router.
+  iOS, Android, and web. Expo Router for navigation.
 - **Audio:** `expo-audio` (playback + recording). Audio is core, not an afterthought.
-- **Storage:** local only for MVP — Expo/AsyncStorage on mobile, same API on web.
-  No backend, no accounts, no network calls in the MVP. Content is bundled.
-- **Language:** TypeScript, functional components + hooks.
+- **Storage:** local only for MVP — AsyncStorage (same API on web). No backend,
+  no accounts, no network calls at runtime; content + audio are bundled.
+- **Language:** TypeScript strict, functional components + hooks.
 
 ## Architecture: bidirectional by design (most important rule)
 
@@ -38,7 +38,7 @@ Bulgarian folklore. Ships as **one codebase → website + mobile**.
 - **Never** hardcode which language is prompt vs answer. Read `Direction` and pull
   `labels[dir.known]` / `labels[dir.learning]` off the item.
 - **Never** duplicate content per direction or per language.
-- One exercise component must render both directions with no forking.
+- One exercise component renders both directions with no forking.
 - The alphabet track is the only direction-specific content: Latin ABC for
   bg→en, Cyrillic for en→bg.
 
@@ -46,48 +46,73 @@ Bulgarian folklore. Ships as **one codebase → website + mobile**.
 
 - **Audio-first.** Every prompt, word, and button has sound. A kid can complete a
   lesson without reading.
-- **Positive-only. NO hearts, NO streaks-you-can-lose, NO timers, NO failure states.**
-  Wrong answers bounce back gently and show the right one. Rewards only.
-  Progress = collecting *martenitsi*. This is a hard rule — do not add Duolingo-style
+- **Positive-only. NO hearts, NO losable streaks, NO timers, NO failure states.**
+  Wrong answers gently dim/shake and reveal (and speak) the right one. Rewards only.
+  Rewards = **stars** per lesson plus a growing collection of **martenitsi** from
+  Baba Marta — both only ever go up, never taken away. Hard rule; no Duolingo-style
   pressure mechanics.
 - **Short sessions** (~3–4 min / lesson). One instruction on screen at a time.
 - **Huge tap targets**, generous spacing, minimal text.
-- **Culturally Bulgarian:** martenitsa red/white theme, folk characters, real
-  Bulgarian children's-song hooks where possible.
+- **Culturally Bulgarian:** martenitsa red/white theme, folk characters, shevitsa
+  motifs, real Bulgarian children's-song hooks where possible.
 
 ## Characters (use sparingly — a rotating guest, not a crowd)
 
 - **Pizho & Penda** — main mascots, the martenitsa dolls (white boy / red girl).
-  They are NOT animals; keep them as yarn dolls.
+  NOT animals; yarn dolls. They *are* the martenitsa reward.
 - **Baba Marta** — daily greeter, hands out martenitsi (rewards), seasonal events.
-- **Kuma Lisa** — clever fox, the hint helper; tips teach a *strategy* (first sound,
-  eliminate a distractor), never just reveal the answer.
+- **Kuma Lisa** — clever fox, the hint helper; tips teach a *strategy*, never just
+  reveal the answer.
 - **Hitar Petar** — trick/riddle bonus rounds (odd-one-out).
 - **Samodiva** — hosts nature-themed units (animals, plants, colors, weather).
-- **Krali Marko** — end-of-unit review challenge ("юнашки изпит").
+- **Krali Marko** — end-of-unit review challenge ("юнашки изпит" / Hero's Challenge).
 - **Zmey** — friendly guardian dragon at a unit's treasure/reward.
-- **Kuker** — pronunciation ("say it out loud") and festival/celebration moments.
+- **Kuker** — pronunciation ("say it out loud"), the alphabet, festival moments.
 
-Each character has one job; don't let them all appear at once. Give each a
-signature sound (Baba Marta's jingle, Kuker's bells, Kuma Lisa's "пссст").
+Each character has one job; don't let them all appear at once. Character art is
+locked to the reference sheets in `docs/art-direction.md` — reuse those, don't
+re-invent a character.
 
 ## Content model
 
-- Source of truth: `content-model.ts` (types + sample `fruitsUnit`).
+- Source of truth: `content/content-model.ts` (types + `VOCAB` + `UNITS`).
+  Curriculum/pedagogy: `LESSON_PLAN.md`.
 - Hierarchy: `Unit` (map node, hosted by a character) → `Lesson` (3–4 min) →
-  `Exercise[]`.
-- Exercise types (5+ appropriate): `pick_picture` (workhorse), `match_pairs`,
-  `say_it`, `odd_one_out`, `letter_sound`.
-- To add content: add `VocabItem`s to `VOCAB`, then reference their ids in a
-  `Unit`. Never write English/Bulgarian strings inline in components — always
-  read them from the vocab item via the current `Direction`.
+  `Exercise[]`. A lesson with `boss: true` is Krali Marko's Hero's Challenge.
+- Exercise types: `pick_picture` (workhorse), `match_pairs`, `say_it`,
+  `odd_one_out`, `letter_sound` (alphabet), `find_on_map` (tap a city on the map
+  of Bulgaria).
+- To add content: add `VocabItem`s to `VOCAB`, reference their ids in a `Unit`,
+  then run `npm run generate:audio`. Never write BG/EN strings inline in
+  components — read them from the vocab item via the current `Direction`.
 - **Audio path convention:** `audio/{lang}/{word}__{voiceId}.mp3`
   (e.g. `audio/bg/yabalka__baba.mp3`). `voiceId` = `baba | mama | dyado | default`.
+  Placeholder clips are TTS-generated by `scripts/generate-audio.mjs`; real
+  family recordings replace them later, untouched by the generator.
 
-## Screens (MVP set)
+## Art & assets (finalized style — see docs/)
 
-Home/learning path · Lesson (`pick_picture`) · Celebration/reward ·
-Alphabet track · Parent setup (direction + record family voices).
+- Target look is **hand-painted raster** in the Bulgarian folk-storybook style
+  (gouache/watercolor, shevitsa borders, martenitsa motifs). Generation prompts
+  and palette: `docs/art-direction.md`. Export/format/density/naming specs:
+  `docs/asset-pipeline.md`. The approved master style board is the reference.
+- **No new inline-drawn art in components.** Painted PNGs live in
+  `assets/img/{char,vocab,ui,bg}` (@1x/@2x/@3x; WebP/JPEG for full-bleed
+  backgrounds) and load via `require()` so Expo/RN picks the density.
+- **Current state:** painted PNGs are **not generated yet**. The app uses
+  **emoji / theme-drawn placeholders** (incl. the View-drawn `Martenitsa`). The
+  registry `lib/images.ts` swaps a painted asset in the moment it's added — drop
+  the PNG in `assets/img/...` and add one `require()` line, no component change.
+
+## Screens
+
+- **Core learning (built):** Home / adventure path · Lesson (6 exercise types,
+  audio-first) · Celebration/reward · Alphabet track + practice · Parent setup
+  (direction).
+- **Planned (from the master board):** child profile · games (пъзел/памет/музика,
+  supplementary — never a replacement for the vocab loop) · parental controls
+  (time limit, content, sound) · settings (sound, music, language, help, about) ·
+  bottom nav (Начало · Уроци · Игри · Награди · Профил).
 
 ## Child safety & ethics (hard rules)
 
@@ -101,30 +126,38 @@ Alphabet track · Parent setup (direction + record family voices).
 ## Suggested project layout
 
 ```
-/app            Expo Router routes (screens)
-/components     reusable UI (Tile, AudioButton, ProgressBar, CharacterBubble)
-/characters     character assets + metadata
-/content        content-model.ts + unit/vocab data
-/assets/audio   bg/ and en/ recordings
-/lib            direction, storage, audio helpers
+/app              Expo Router routes (screens)
+/components       reusable UI (Tile, AudioButton, ProgressBar, CharacterBubble, …)
+/characters       character metadata
+/content          content-model.ts + unit/vocab data
+/lib              direction, storage, audio, images helpers
+/assets/img/char  character PNGs, per pose/expression (@1x/2x/3x)
+/assets/img/vocab vocabulary item PNGs (@1x/2x/3x)
+/assets/img/ui    buttons, frames, martenitsa, stars (@1x/2x/3x)
+/assets/img/bg    backgrounds/scenes (WebP/JPEG, 16:9 + 9:16)
+/assets/audio     bg/ and en/ recordings
+/docs             art-direction.md, asset-pipeline.md
 ```
 
 ## Conventions
 
 - TypeScript strict. Functional components, hooks, no class components.
-- Colors/spacing via a shared theme (martenitsa palette: red `#E24B4A`,
-  dark red `#A32D2D`, white `#F1EFE8`). No hardcoded hex scattered in components.
-- Accessibility: label every interactive element; audio for every prompt.
+- Colors/spacing via the shared theme (`constants/theme.ts`; martenitsa palette:
+  red `#E24B4A`, dark red `#A32D2D`, cream `#F1EFE8`). No hardcoded hex in
+  components.
+- Accessibility: WCAG AA contrast (≥4.5:1 for text); `accessibilityLabel` on every
+  image/control; audio for every prompt; never rely on color alone.
 - Keep components small; one exercise type per component.
+- Asset naming + export densities: follow `docs/asset-pipeline.md`.
 
 ## Commands
 
-> New project — update these once scaffolded.
-
 ```
-npx create-expo-app@latest        # scaffold
-npx expo start                    # dev (press w for web, i/a for simulators)
-npx expo start --web              # web only
+npm run web            # dev (web)
+npm run typecheck      # tsc --noEmit
+npm run lint           # expo lint
+npm run build:web      # static web export (dist/)
+npm run generate:audio # TTS placeholder clips + refresh the audio require-map
 ```
 
 ## Do NOT
@@ -134,4 +167,5 @@ npx expo start --web              # web only
 - Put required information in text with no audio.
 - Introduce a backend, accounts, ads, tracking, or external links in the MVP.
 - Add scary imagery or the folklore villains.
+- Inline-draw NEW art in components — use painted PNGs via `lib/images.ts`.
 - Overload a screen — one instruction, big targets, minimal words.

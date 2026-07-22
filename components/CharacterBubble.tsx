@@ -1,7 +1,8 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 
 import type { CharacterMeta } from "@/characters/characters";
 import { Colors, FontSizes, Radii, Spacing } from "@/constants/theme";
+import { characterImage } from "@/lib/images";
 
 interface CharacterBubbleProps {
   character: CharacterMeta;
@@ -9,11 +10,21 @@ interface CharacterBubbleProps {
 }
 
 export function CharacterBubble({ character, text }: CharacterBubbleProps) {
+  const painted = characterImage(character.id);
   return (
     <View style={styles.row}>
-      <View style={[styles.avatar, { backgroundColor: character.color }]}>
-        <Text style={styles.avatarEmoji}>{character.emoji}</Text>
-      </View>
+      {painted ? (
+        <Image
+          source={painted}
+          style={styles.avatar}
+          resizeMode="cover"
+          accessibilityIgnoresInvertColors
+        />
+      ) : (
+        <View style={[styles.avatar, { backgroundColor: character.color }]}>
+          <Text style={styles.avatarEmoji}>{character.emoji}</Text>
+        </View>
+      )}
       <View style={styles.bubble}>
         <Text style={styles.bubbleText}>{text}</Text>
       </View>
