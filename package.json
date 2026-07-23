@@ -45,7 +45,8 @@
     "typecheck": "tsc --noEmit",
     "build:web": "expo export --platform web",
     "generate:audio": "node --experimental-strip-types scripts/generate-audio.mjs",
-    "generate:art": "node --experimental-strip-types scripts/generate-art.mjs"
+    "generate:art": "node --experimental-strip-types scripts/generate-art.mjs",
+    "generate:notes": "node scripts/generate-notes.mjs"
   },
   "private": true
 }
