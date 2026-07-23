@@ -1052,6 +1052,112 @@ export const VOCAB: Record<string, VocabItem> = {
     },
     transliteration: { bg: "balon" },
   },
+
+  // --- Family 2 ---
+  "family.brother": {
+    id: "family.brother",
+    emoji: "👦",
+    labels: { bg: "брат", en: "brother" },
+    audio: {
+      bg: { src: "audio/bg/brat__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/brother__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "brat" },
+  },
+  "family.sister": {
+    id: "family.sister",
+    emoji: "👧",
+    labels: { bg: "сестра", en: "sister" },
+    audio: {
+      bg: { src: "audio/bg/sestra__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/sister__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "sestra" },
+  },
+  "family.baby": {
+    id: "family.baby",
+    emoji: "👶",
+    labels: { bg: "бебе", en: "baby" },
+    audio: {
+      bg: { src: "audio/bg/bebe__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/baby__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "bebe" },
+  },
+
+  // --- Body 2 ---
+  "body.ear": {
+    id: "body.ear",
+    emoji: "👂",
+    labels: { bg: "ухо", en: "ear" },
+    audio: {
+      bg: { src: "audio/bg/uho__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/ear__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "uho" },
+  },
+  "body.leg": {
+    id: "body.leg",
+    emoji: "🦵",
+    labels: { bg: "крак", en: "leg" },
+    audio: {
+      bg: { src: "audio/bg/krak__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/leg__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "krak" },
+  },
+  "body.foot": {
+    id: "body.foot",
+    emoji: "🦶",
+    labels: { bg: "стъпало", en: "foot" },
+    audio: {
+      bg: { src: "audio/bg/stapalo__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/foot__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "stapalo" },
+  },
+  "body.hair": {
+    id: "body.hair",
+    emoji: "💇",
+    labels: { bg: "коса", en: "hair" },
+    audio: {
+      bg: { src: "audio/bg/kosa__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/hair__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "kosa" },
+  },
+
+  // --- Weather 2 (stays emoji, like the rest of the weather set) ---
+  "weather.wind": {
+    id: "weather.wind",
+    emoji: "🌬️",
+    labels: { bg: "вятър", en: "wind" },
+    audio: {
+      bg: { src: "audio/bg/vyatar__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/wind__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "vyatar" },
+  },
+  "weather.storm": {
+    id: "weather.storm",
+    emoji: "⛈️",
+    labels: { bg: "буря", en: "storm" },
+    audio: {
+      bg: { src: "audio/bg/burya__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/storm__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "burya" },
+  },
+  "weather.rainbow": {
+    id: "weather.rainbow",
+    emoji: "🌈",
+    labels: { bg: "дъга", en: "rainbow" },
+    audio: {
+      bg: { src: "audio/bg/daga__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/rainbow__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "daga" },
+  },
 };
 
 export const fruitsUnit: Unit = {
@@ -1425,6 +1531,53 @@ export const familyUnit: Unit = {
         },
       ],
     },
+    {
+      id: "unit.family.l2",
+      title: { bg: "Семейство 2", en: "Family 2" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "family.brother",
+          choices: ["family.sister", "family.baby", "family.mother"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "family.sister",
+          choices: ["family.brother", "family.baby", "family.father"],
+        },
+        { type: "say_it", prompt: "family.baby" },
+        { type: "true_false", prompt: "family.sister", claim: "family.brother" },
+        {
+          type: "match_pairs",
+          prompt: "family.brother",
+          choices: ["family.sister", "family.baby", "family.grandma"],
+        },
+      ],
+    },
+    {
+      id: "unit.family.boss",
+      title: { bg: "Юнашки изпит — Семейство", en: "Hero's Challenge — Family" },
+      reward: "martenitsa",
+      boss: true,
+      exercises: [
+        {
+          type: "match_pairs",
+          prompt: "family.mother",
+          choices: ["family.father", "family.brother", "family.sister"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "family.baby",
+          choices: ["family.grandma", "family.grandpa", "family.brother"],
+        },
+        {
+          type: "odd_one_out",
+          prompt: "animal.dog",
+          choices: ["family.mother", "family.brother", "family.baby"],
+        },
+      ],
+    },
   ],
 };
 
@@ -1454,6 +1607,53 @@ export const bodyUnit: Unit = {
           type: "match_pairs",
           prompt: "body.hand",
           choices: ["body.eye", "body.nose", "body.mouth"],
+        },
+      ],
+    },
+    {
+      id: "unit.body.l2",
+      title: { bg: "Тяло 2", en: "Body 2" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "body.ear",
+          choices: ["body.leg", "body.foot", "body.hair"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "body.leg",
+          choices: ["body.ear", "body.foot", "body.hair"],
+        },
+        { type: "say_it", prompt: "body.hair" },
+        { type: "true_false", prompt: "body.foot", claim: "body.foot" },
+        {
+          type: "match_pairs",
+          prompt: "body.ear",
+          choices: ["body.leg", "body.foot", "body.hair"],
+        },
+      ],
+    },
+    {
+      id: "unit.body.boss",
+      title: { bg: "Юнашки изпит — Тяло", en: "Hero's Challenge — Body" },
+      reward: "martenitsa",
+      boss: true,
+      exercises: [
+        {
+          type: "match_pairs",
+          prompt: "body.hand",
+          choices: ["body.ear", "body.leg", "body.hair"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "body.foot",
+          choices: ["body.eye", "body.nose", "body.leg", "body.hair"],
+        },
+        {
+          type: "odd_one_out",
+          prompt: "fruit.apple",
+          choices: ["body.ear", "body.leg", "body.hair"],
         },
       ],
     },
@@ -1491,6 +1691,53 @@ export const weatherUnit: Unit = {
           type: "odd_one_out",
           prompt: "animal.cat",
           choices: ["weather.sun", "weather.rain", "weather.cloud"],
+        },
+      ],
+    },
+    {
+      id: "unit.weather.l2",
+      title: { bg: "Време 2", en: "Weather 2" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "weather.wind",
+          choices: ["weather.storm", "weather.rainbow", "weather.cloud"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "weather.rainbow",
+          choices: ["weather.wind", "weather.storm", "weather.sun"],
+        },
+        { type: "say_it", prompt: "weather.storm" },
+        {
+          type: "match_pairs",
+          prompt: "weather.wind",
+          choices: ["weather.storm", "weather.rainbow", "weather.cloud"],
+        },
+      ],
+    },
+    {
+      id: "unit.weather.boss",
+      title: { bg: "Юнашки изпит — Време", en: "Hero's Challenge — Weather" },
+      reward: "martenitsa",
+      boss: true,
+      exercises: [
+        {
+          type: "match_pairs",
+          prompt: "weather.sun",
+          choices: ["weather.rain", "weather.wind", "weather.rainbow"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "weather.storm",
+          choices: ["weather.snow", "weather.wind", "weather.rainbow", "weather.cloud"],
+        },
+        { type: "true_false", prompt: "weather.rainbow", claim: "weather.rainbow" },
+        {
+          type: "odd_one_out",
+          prompt: "animal.cat",
+          choices: ["weather.wind", "weather.storm", "weather.rainbow"],
         },
       ],
     },
