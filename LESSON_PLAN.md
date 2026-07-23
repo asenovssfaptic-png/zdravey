@@ -32,6 +32,27 @@ Bulgarian to an English child — only the alphabet track differs by direction.
 Review lessons drop steps 1–3 and lean on `match_pairs` + `odd_one_out` across
 the unit's full word set.
 
+## Exercise types (the toolbox)
+
+| Type | What the child does | Host |
+|------|---------------------|------|
+| `pick_picture` | hear a word, tap the matching picture (the workhorse) | unit host |
+| `match_pairs` | match picture ↔ word | unit host |
+| `say_it` | repeat the word aloud (record + play back) | Kuker 🔔 |
+| `odd_one_out` | tap the one that doesn't belong | Hitar Petar |
+| `find_on_map` | hear a city, tap it on the map of Bulgaria | Krali Marko 🗡️ |
+| `story` | a narrated storybook panel — turn the page, hear the tale, tap the spotlight word | the storyteller |
+| `true_false` | he shows a picture + says a word — tap ✓ / ✗ | Hitar Petar |
+| `sequence` | tap the pictures in order (e.g. count 1→5) | unit host |
+
+**Stories & length ramp.** `story` panels frame a lesson in a short Bulgarian
+folk tale: narration plays in the child's known language while an optional
+*spotlight* word is heard in the language being learned. Early units stay short
+(4 steps); later units (Food, Home, Clothes) open and close with a story and run
+longer (~7 steps), mixing in `true_false` and `sequence` so the map grows from
+quick drills into narrated mini-adventures. All new types are audio-first and
+strictly positive-only — no timer, no score, no fail.
+
 ## The map
 
 Units appear on the home path in this order. Each teaching lesson introduces 4
