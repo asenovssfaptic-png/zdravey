@@ -970,6 +970,88 @@ export const VOCAB: Record<string, VocabItem> = {
     },
     transliteration: { bg: "shal" },
   },
+
+  // --- Toys (Играчки) — Penda's toy basket ---
+  "toy.ball": {
+    id: "toy.ball",
+    emoji: "⚽",
+    labels: { bg: "топка", en: "ball" },
+    audio: {
+      bg: { src: "audio/bg/topka__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/ball__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "topka" },
+  },
+  "toy.doll": {
+    id: "toy.doll",
+    emoji: "🪆",
+    labels: { bg: "кукла", en: "doll" },
+    audio: {
+      bg: { src: "audio/bg/kukla__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/doll__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "kukla" },
+  },
+  "toy.car": {
+    id: "toy.car",
+    emoji: "🚗",
+    labels: { bg: "количка", en: "toy car" },
+    audio: {
+      bg: { src: "audio/bg/kolichka__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/toy_car__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "kolichka" },
+  },
+  "toy.kite": {
+    id: "toy.kite",
+    emoji: "🪁",
+    labels: { bg: "хвърчило", en: "kite" },
+    audio: {
+      bg: { src: "audio/bg/hvarchilo__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/kite__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "hvarchilo" },
+  },
+  "toy.teddy": {
+    id: "toy.teddy",
+    emoji: "🧸",
+    labels: { bg: "мече", en: "teddy bear" },
+    audio: {
+      bg: { src: "audio/bg/meche__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/teddy_bear__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "meche" },
+  },
+  "toy.blocks": {
+    id: "toy.blocks",
+    emoji: "🧱",
+    labels: { bg: "кубчета", en: "blocks" },
+    audio: {
+      bg: { src: "audio/bg/kubcheta__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/blocks__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "kubcheta" },
+  },
+  "toy.drum": {
+    id: "toy.drum",
+    emoji: "🥁",
+    labels: { bg: "барабан", en: "drum" },
+    audio: {
+      bg: { src: "audio/bg/baraban__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/drum__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "baraban" },
+  },
+  "toy.balloon": {
+    id: "toy.balloon",
+    emoji: "🎈",
+    labels: { bg: "балон", en: "balloon" },
+    audio: {
+      bg: { src: "audio/bg/balon__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/balloon__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "balon" },
+  },
 };
 
 export const fruitsUnit: Unit = {
@@ -1931,6 +2013,152 @@ export const clothesUnit: Unit = {
   ],
 };
 
+// Toys sits late on the map and steps the difficulty up: story-framed, with
+// 5-choice picks (four distractors) and an ordering game in the harder lesson.
+export const toysUnit: Unit = {
+  id: "unit.toys",
+  theme: { bg: "Играчки", en: "Toys" },
+  host: "penda",
+  guardian: "zmey",
+  lessons: [
+    {
+      id: "unit.toys.l1",
+      title: { bg: "Играчки 1", en: "Toys 1" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "story",
+          prompt: "story.toys.intro",
+          story: {
+            scene: "festival",
+            lines: [
+              {
+                speaker: "penda",
+                text: {
+                  bg: "Аз съм Пенда! Виж кошницата ми с играчки.",
+                  en: "I'm Penda! Look at my basket of toys.",
+                },
+                audio: {
+                  bg: { src: "audio/bg/story/toys_intro_1__default.mp3", voiceId: "default" },
+                  en: { src: "audio/en/story/toys_intro_1__default.mp3", voiceId: "default" },
+                },
+                spotlight: "toy.ball",
+              },
+              {
+                speaker: "pizho",
+                text: { bg: "Аз пък обичам количката!", en: "And I love the toy car!" },
+                audio: {
+                  bg: { src: "audio/bg/story/toys_intro_2__default.mp3", voiceId: "default" },
+                  en: { src: "audio/en/story/toys_intro_2__default.mp3", voiceId: "default" },
+                },
+                spotlight: "toy.car",
+              },
+            ],
+          },
+        },
+        {
+          type: "pick_picture",
+          prompt: "toy.ball",
+          choices: ["toy.doll", "toy.car", "toy.kite"],
+          hint: {
+            bg: "Слушай първия звук: b-b-ball.",
+            en: "Слушай: т-т-топка.",
+          },
+        },
+        { type: "say_it", prompt: "toy.doll" },
+        {
+          type: "pick_picture",
+          prompt: "toy.kite",
+          choices: ["toy.ball", "toy.doll", "toy.car"],
+        },
+        { type: "true_false", prompt: "toy.car", claim: "toy.kite" },
+        {
+          type: "match_pairs",
+          prompt: "toy.ball",
+          choices: ["toy.doll", "toy.car", "toy.kite"],
+        },
+      ],
+    },
+    {
+      id: "unit.toys.l2",
+      title: { bg: "Играчки 2", en: "Toys 2" },
+      reward: "martenitsa",
+      exercises: [
+        // Harder: five tiles (four distractors) drawn from the whole toy set.
+        {
+          type: "pick_picture",
+          prompt: "toy.teddy",
+          choices: ["toy.blocks", "toy.drum", "toy.balloon", "toy.ball"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "toy.drum",
+          choices: ["toy.teddy", "toy.blocks", "toy.balloon", "toy.doll"],
+        },
+        { type: "say_it", prompt: "toy.balloon" },
+        {
+          type: "pick_picture",
+          prompt: "toy.blocks",
+          choices: ["toy.teddy", "toy.drum", "toy.balloon", "toy.kite"],
+        },
+        {
+          type: "match_pairs",
+          prompt: "toy.teddy",
+          choices: ["toy.blocks", "toy.drum", "toy.balloon"],
+        },
+        {
+          type: "story",
+          prompt: "story.toys.outro",
+          story: {
+            scene: "festival",
+            lines: [
+              {
+                speaker: "penda",
+                text: {
+                  bg: "Браво! Знаеш всичките ми играчки. Хайде да играем!",
+                  en: "Bravo! You know all my toys. Let's play!",
+                },
+                audio: {
+                  bg: { src: "audio/bg/story/toys_outro_1__default.mp3", voiceId: "default" },
+                  en: { src: "audio/en/story/toys_outro_1__default.mp3", voiceId: "default" },
+                },
+              },
+            ],
+          },
+        },
+      ],
+    },
+    {
+      id: "unit.toys.boss",
+      title: { bg: "Юнашки изпит — Играчки", en: "Hero's Challenge — Toys" },
+      reward: "martenitsa",
+      boss: true,
+      exercises: [
+        {
+          type: "pick_picture",
+          prompt: "toy.balloon",
+          choices: ["toy.ball", "toy.doll", "toy.drum", "toy.teddy"],
+        },
+        {
+          type: "match_pairs",
+          prompt: "toy.car",
+          choices: ["toy.kite", "toy.blocks", "toy.drum"],
+        },
+        {
+          type: "pick_picture",
+          prompt: "toy.doll",
+          choices: ["toy.teddy", "toy.ball", "toy.balloon", "toy.blocks"],
+        },
+        {
+          type: "odd_one_out",
+          prompt: "food.bread",
+          choices: ["toy.ball", "toy.drum", "toy.kite"],
+        },
+      ],
+    },
+  ],
+};
+
 export const UNITS: Unit[] = [
   fruitsUnit,
   animalsUnit,
@@ -1942,6 +2170,7 @@ export const UNITS: Unit[] = [
   foodUnit,
   homeUnit,
   clothesUnit,
+  toysUnit,
   citiesUnit,
 ];
 
