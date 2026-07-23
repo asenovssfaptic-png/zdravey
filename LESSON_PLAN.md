@@ -91,16 +91,22 @@ words; review lessons consolidate. Characters host per their role (see
 | Lesson | Words | Notes |
 |--------|-------|-------|
 | Family 1 | mother, father, grandma, grandpa | ✅ |
+| Family 2 | brother, sister, baby | ✅ + true_false |
+| Hero's Challenge — Family | mixed review + odd-one-out | ✅ `boss` |
 
 ### Unit 6 — Body · Тяло  (host: Kuker 🔔)
 | Lesson | Words | Notes |
 |--------|-------|-------|
 | Body 1 | hand, eye, nose, mouth | ✅ |
+| Body 2 | ear, leg, foot, hair | ✅ + true_false |
+| Hero's Challenge — Body | mixed review + odd-one-out | ✅ `boss` |
 
 ### Unit 7 — Weather · Време  (host: Samodiva 🌿)
 | Lesson | Words | Notes |
 |--------|-------|-------|
 | Weather 1 | sun, rain, cloud, snow | ✅ |
+| Weather 2 | wind, storm, rainbow | ✅ (emoji art) |
+| Hero's Challenge — Weather | mixed review + odd-one-out | ✅ `boss` |
 
 ### Unit 8 — Food · Храна  (host: Baba Marta 👵)
 | Lesson | Words | Notes |
@@ -123,11 +129,30 @@ words; review lessons consolidate. Characters host per their role (see
 | Clothes 2 | dress, coat, gloves, scarf | ✅ |
 | Hero's Challenge — Clothes | mixed review + odd-one-out | ✅ `boss` |
 
-### Unit 11 — Cities & Places · Градове и места  (host: Krali Marko 🗡️)
+### Unit 11 — Toys · Играчки  (host: Penda 🧵)
+| Lesson | Words | Notes |
+|--------|-------|-------|
+| Toys 1 | ball, doll, toy car, kite | ✅ story-framed + true_false |
+| Toys 2 | teddy bear, blocks, drum, balloon | ✅ **harder: 5-choice picks** |
+| Hero's Challenge — Toys | mixed 5-choice + odd-one-out | ✅ `boss` |
+
+### Unit 12 — Cities & Places · Градове и места  (host: Krali Marko 🗡️)
 | Lesson | Words | Notes |
 |--------|-------|-------|
 | Cities 1 | Sofia, Plovdiv, Varna, Burgas, Veliko Tarnovo | ✅ `find_on_map` |
 | Places 1 | sea, mountain, river, forest, city, village | ✅ |
+
+**Difficulty ramp.** Early units use 4-tile picks; **Toys** (late on the map)
+steps up to 5-tile picks with tighter distractors, and later lessons run longer
+with story framing. See "Exercise types" above.
+
+### Minigames (Игри hub — supplementary, never a replacement for the vocab loop)
+- **Памет** — memory / find-the-pairs.
+- **Пъзел** — jigsaw of painted Bulgarian landmarks.
+- **Музика** — a pentatonic glockenspiel + a grow-only "repeat the tune" echo game.
+- **Нахрани Змея** — feed the dragon the food he names (endless, grow-only fed-count).
+
+All positive-only: no timer, no score, no fail.
 
 ### Alphabet track  (host: Kuker 🔔) — direction-specific
 - Browse: tap any letter to hear it (Latin for →English, Cyrillic for →Bulgarian).
