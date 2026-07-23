@@ -68,6 +68,13 @@ export const VOCAB_IMAGES: Record<string, ImageSourcePropType> = {
   "toy.blocks": require("../assets/img/vocab/toy_blocks.jpg"),
   "toy.drum": require("../assets/img/vocab/toy_drum.jpg"),
   "toy.balloon": require("../assets/img/vocab/toy_balloon.jpg"),
+  "family.brother": require("../assets/img/vocab/family_brother.jpg"),
+  "family.sister": require("../assets/img/vocab/family_sister.jpg"),
+  "family.baby": require("../assets/img/vocab/family_baby.jpg"),
+  "body.ear": require("../assets/img/vocab/body_ear.jpg"),
+  "body.leg": require("../assets/img/vocab/body_leg.jpg"),
+  "body.foot": require("../assets/img/vocab/body_foot.jpg"),
+  "body.hair": require("../assets/img/vocab/body_hair.jpg"),
 };
 
 export const CHARACTER_IMAGES: Record<string, ImageSourcePropType> = {
