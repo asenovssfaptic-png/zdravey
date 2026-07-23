@@ -35,7 +35,7 @@ const STYLE =
 
 // Which vocab categories get a painted illustration. Colors are swatches,
 // numbers are digits, cities are map pins — those stay as-is (emoji/drawn).
-const PAINT_CATEGORIES = ["fruit", "animal", "place", "family", "body", "food", "home", "clothes"];
+const PAINT_CATEGORIES = ["fruit", "animal", "place", "family", "body", "food", "home", "clothes", "toy"];
 
 // Head-and-shoulders bust subjects per character (from art-direction.md §4).
 const CHARACTER_SUBJECT = {
