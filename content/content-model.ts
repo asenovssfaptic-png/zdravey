@@ -52,13 +52,33 @@ export type ExerciseType =
   | "say_it" // repeat after the character (record + playback for a parent)
   | "odd_one_out" // Hitar Petar's trick round
   | "letter_sound" // alphabet track (Latin for bg->en, Cyrillic for en->bg)
-  | "find_on_map"; // hear a city, tap its spot on the map of Bulgaria
+  | "find_on_map" // hear a city, tap its spot on the map of Bulgaria
+  | "story"; // a narrated storybook panel that frames a lesson (no fail)
+
+// A single beat of a story panel: one character says one line. Narration is
+// shown + spoken in the KNOWN language (so the child follows the tale); an
+// optional `spotlight` vocab id surfaces the LEARNING word in context, tappable
+// to hear it. Audio is per-language so the story mirrors in both directions.
+export interface StoryLine {
+  speaker: CharacterId;
+  text: Record<LangCode, string>;
+  audio: Record<LangCode, AudioClip>;
+  spotlight?: string; // optional vocab id to show + hear in the learning language
+}
+
+// A short illustrated story used as a `story` exercise. `scene` names a painted
+// background (see lib/images `background()`); lines play one at a time.
+export interface StoryContent {
+  scene?: string;
+  lines: StoryLine[];
+}
 
 export interface Exercise {
   type: ExerciseType;
-  prompt: string; // vocab id being asked, e.g. "fruit.apple"
+  prompt: string; // vocab id being asked, e.g. "fruit.apple" (or a story id)
   choices?: string[]; // other vocab ids used as distractors
   hint?: Record<LangCode, string>; // Kuma Lisa's tip, shown in the KNOWN language
+  story?: StoryContent; // for type "story": the narrated panel content
 }
 
 // A short (3-4 min) lesson = a handful of exercises + one reward.
@@ -1457,6 +1477,55 @@ export const foodUnit: Unit = {
       reward: "martenitsa",
       exercises: [
         {
+          type: "story",
+          prompt: "story.food.intro",
+          story: {
+            scene: "village",
+            lines: [
+              {
+                speaker: "baba_marta",
+                text: {
+                  bg: "Здравейте, деца! Аз съм Баба Марта. Хайде да сготвим нещо вкусно!",
+                  en: "Hello, children! I am Baba Marta. Let's cook something tasty!",
+                },
+                audio: {
+                  bg: { src: "audio/bg/story/food_intro_1__default.mp3", voiceId: "default" },
+                  en: { src: "audio/en/story/food_intro_1__default.mp3", voiceId: "default" },
+                },
+              },
+              {
+                speaker: "pizho",
+                text: { bg: "Ура! Първо ни трябва хляб.", en: "Hooray! First we need bread." },
+                audio: {
+                  bg: { src: "audio/bg/story/food_intro_2__default.mp3", voiceId: "default" },
+                  en: { src: "audio/en/story/food_intro_2__default.mp3", voiceId: "default" },
+                },
+                spotlight: "food.bread",
+              },
+              {
+                speaker: "penda",
+                text: { bg: "И малко сирене за баницата!", en: "And some cheese for the banitsa!" },
+                audio: {
+                  bg: { src: "audio/bg/story/food_intro_3__default.mp3", voiceId: "default" },
+                  en: { src: "audio/en/story/food_intro_3__default.mp3", voiceId: "default" },
+                },
+                spotlight: "food.cheese",
+              },
+              {
+                speaker: "baba_marta",
+                text: {
+                  bg: "Чудесно! Хайде да намерим всичко в кухнята.",
+                  en: "Wonderful! Let's find everything in the kitchen.",
+                },
+                audio: {
+                  bg: { src: "audio/bg/story/food_intro_4__default.mp3", voiceId: "default" },
+                  en: { src: "audio/en/story/food_intro_4__default.mp3", voiceId: "default" },
+                },
+              },
+            ],
+          },
+        },
+        {
           type: "pick_picture",
           prompt: "food.bread",
           choices: ["food.cheese", "food.milk", "food.egg"],
@@ -1475,6 +1544,37 @@ export const foodUnit: Unit = {
           type: "match_pairs",
           prompt: "food.bread",
           choices: ["food.cheese", "food.milk", "food.egg"],
+        },
+        {
+          type: "story",
+          prompt: "story.food.outro",
+          story: {
+            scene: "festival",
+            lines: [
+              {
+                speaker: "baba_marta",
+                text: {
+                  bg: "Браво! Намери всичко. Сега ще хапнем заедно.",
+                  en: "Bravo! You found everything. Now we'll eat together.",
+                },
+                audio: {
+                  bg: { src: "audio/bg/story/food_outro_1__default.mp3", voiceId: "default" },
+                  en: { src: "audio/en/story/food_outro_1__default.mp3", voiceId: "default" },
+                },
+              },
+              {
+                speaker: "penda",
+                text: {
+                  bg: "Благодаря, Бабо Марто! Много е вкусно!",
+                  en: "Thank you, Baba Marta! It's very tasty!",
+                },
+                audio: {
+                  bg: { src: "audio/bg/story/food_outro_2__default.mp3", voiceId: "default" },
+                  en: { src: "audio/en/story/food_outro_2__default.mp3", voiceId: "default" },
+                },
+              },
+            ],
+          },
         },
       ],
     },

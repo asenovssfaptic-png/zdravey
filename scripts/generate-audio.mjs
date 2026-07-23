@@ -30,7 +30,7 @@ import { existsSync, mkdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { ALPHABET, CHALLENGE, PRAISE, TTS_LANG_FOR_SCRIPT, VOCAB } from "../content/content-model.ts";
+import { ALPHABET, CHALLENGE, PRAISE, TTS_LANG_FOR_SCRIPT, UNITS, VOCAB } from "../content/content-model.ts";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const ASSETS = join(ROOT, "assets");
@@ -56,6 +56,19 @@ for (const [lang, praise] of Object.entries(PRAISE)) {
 for (const [lang, c] of Object.entries(CHALLENGE)) {
   clips.push({ src: c.introAudio.src, lang, text: c.intro });
   clips.push({ src: c.passAudio.src, lang, text: c.pass });
+}
+// Narrated story-panel lines (type: "story"), spoken in each language.
+for (const unit of UNITS) {
+  for (const lesson of unit.lessons) {
+    for (const ex of lesson.exercises) {
+      if (!ex.story) continue;
+      for (const line of ex.story.lines) {
+        for (const lang of Object.keys(line.audio)) {
+          clips.push({ src: line.audio[lang].src, lang, text: line.text[lang] });
+        }
+      }
+    }
+  }
 }
 
 function fetchTts(text, lang, outPath) {
