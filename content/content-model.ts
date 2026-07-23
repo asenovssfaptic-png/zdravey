@@ -54,7 +54,8 @@ export type ExerciseType =
   | "letter_sound" // alphabet track (Latin for bg->en, Cyrillic for en->bg)
   | "find_on_map" // hear a city, tap its spot on the map of Bulgaria
   | "story" // a narrated storybook panel that frames a lesson (no fail)
-  | "true_false"; // Hitar Petar shows a picture + says a word: does it match?
+  | "true_false" // Hitar Petar shows a picture + says a word: does it match?
+  | "sequence"; // tap the pictures in order (e.g. count 1→5) — `choices` is the order
 
 // A single beat of a story panel: one character says one line. Narration is
 // shown + spoken in the KNOWN language (so the child follows the tale); an
@@ -77,7 +78,7 @@ export interface StoryContent {
 export interface Exercise {
   type: ExerciseType;
   prompt: string; // vocab id being asked, e.g. "fruit.apple" (or a story id)
-  choices?: string[]; // other vocab ids used as distractors
+  choices?: string[]; // distractor vocab ids — or, for `sequence`, the correct order
   hint?: Record<LangCode, string>; // Kuma Lisa's tip, shown in the KNOWN language
   story?: StoryContent; // for type "story": the narrated panel content
   // For type "true_false": the word Hitar Petar CLAIMS the picture (`prompt`)
@@ -1255,6 +1256,12 @@ export const numbersUnit: Unit = {
           type: "pick_picture",
           prompt: "num.five",
           choices: ["num.two", "num.three", "num.four"],
+        },
+        {
+          // Order the numbers 1 → 5 (a counting "story").
+          type: "sequence",
+          prompt: "seq.numbers.1to5",
+          choices: ["num.one", "num.two", "num.three", "num.four", "num.five"],
         },
       ],
     },
