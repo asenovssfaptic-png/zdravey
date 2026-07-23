@@ -1661,6 +1661,39 @@ export const homeUnit: Unit = {
       reward: "martenitsa",
       exercises: [
         {
+          type: "story",
+          prompt: "story.home.intro",
+          story: {
+            scene: "meadow",
+            lines: [
+              {
+                speaker: "kuma_lisa",
+                text: {
+                  bg: "Здравейте! Аз съм Кума Лиса. Заповядайте в моята къща!",
+                  en: "Hello! I'm Kuma Lisa. Welcome to my house!",
+                },
+                audio: {
+                  bg: { src: "audio/bg/story/home_intro_1__default.mp3", voiceId: "default" },
+                  en: { src: "audio/en/story/home_intro_1__default.mp3", voiceId: "default" },
+                },
+                spotlight: "home.house",
+              },
+              {
+                speaker: "kuma_lisa",
+                text: {
+                  bg: "Влез през вратата и седни на стола.",
+                  en: "Come in through the door and sit on the chair.",
+                },
+                audio: {
+                  bg: { src: "audio/bg/story/home_intro_2__default.mp3", voiceId: "default" },
+                  en: { src: "audio/en/story/home_intro_2__default.mp3", voiceId: "default" },
+                },
+                spotlight: "home.door",
+              },
+            ],
+          },
+        },
+        {
           type: "pick_picture",
           prompt: "home.house",
           choices: ["home.door", "home.window", "home.chair"],
@@ -1675,10 +1708,32 @@ export const homeUnit: Unit = {
           prompt: "home.window",
           choices: ["home.house", "home.door", "home.chair"],
         },
+        // Kuma Lisa (the clever one) tries a little trick.
+        { type: "true_false", prompt: "home.chair", claim: "home.window" },
         {
           type: "match_pairs",
           prompt: "home.house",
           choices: ["home.door", "home.window", "home.chair"],
+        },
+        {
+          type: "story",
+          prompt: "story.home.outro",
+          story: {
+            scene: "meadow",
+            lines: [
+              {
+                speaker: "kuma_lisa",
+                text: {
+                  bg: "Браво! Вече познаваш моя дом. Заповядай пак!",
+                  en: "Well done! Now you know my home. Come again!",
+                },
+                audio: {
+                  bg: { src: "audio/bg/story/home_outro_1__default.mp3", voiceId: "default" },
+                  en: { src: "audio/en/story/home_outro_1__default.mp3", voiceId: "default" },
+                },
+              },
+            ],
+          },
         },
       ],
     },
@@ -1748,6 +1803,38 @@ export const clothesUnit: Unit = {
       reward: "martenitsa",
       exercises: [
         {
+          type: "story",
+          prompt: "story.clothes.intro",
+          story: {
+            scene: "festival",
+            lines: [
+              {
+                speaker: "kuker",
+                text: {
+                  bg: "Днес е празник! Кукер се облича за хорото.",
+                  en: "Today is a festival! Kuker is dressing up for the dance.",
+                },
+                audio: {
+                  bg: { src: "audio/bg/story/clothes_intro_1__default.mp3", voiceId: "default" },
+                  en: { src: "audio/en/story/clothes_intro_1__default.mp3", voiceId: "default" },
+                },
+              },
+              {
+                speaker: "kuker",
+                text: {
+                  bg: "Първо ризата, после шапката!",
+                  en: "First the shirt, then the hat!",
+                },
+                audio: {
+                  bg: { src: "audio/bg/story/clothes_intro_2__default.mp3", voiceId: "default" },
+                  en: { src: "audio/en/story/clothes_intro_2__default.mp3", voiceId: "default" },
+                },
+                spotlight: "clothes.shirt",
+              },
+            ],
+          },
+        },
+        {
           type: "pick_picture",
           prompt: "clothes.shirt",
           choices: ["clothes.shoes", "clothes.hat", "clothes.socks"],
@@ -1762,10 +1849,31 @@ export const clothesUnit: Unit = {
           prompt: "clothes.shoes",
           choices: ["clothes.shirt", "clothes.hat", "clothes.socks"],
         },
+        { type: "true_false", prompt: "clothes.socks", claim: "clothes.socks" },
         {
           type: "match_pairs",
           prompt: "clothes.shirt",
           choices: ["clothes.shoes", "clothes.hat", "clothes.socks"],
+        },
+        {
+          type: "story",
+          prompt: "story.clothes.outro",
+          story: {
+            scene: "festival",
+            lines: [
+              {
+                speaker: "kuker",
+                text: {
+                  bg: "Готово! Кукер е облечен. Хайде на хорото!",
+                  en: "Ready! Kuker is dressed. Let's go to the dance!",
+                },
+                audio: {
+                  bg: { src: "audio/bg/story/clothes_outro_1__default.mp3", voiceId: "default" },
+                  en: { src: "audio/en/story/clothes_outro_1__default.mp3", voiceId: "default" },
+                },
+              },
+            ],
+          },
         },
       ],
     },
