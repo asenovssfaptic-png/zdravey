@@ -53,7 +53,8 @@ export type ExerciseType =
   | "odd_one_out" // Hitar Petar's trick round
   | "letter_sound" // alphabet track (Latin for bg->en, Cyrillic for en->bg)
   | "find_on_map" // hear a city, tap its spot on the map of Bulgaria
-  | "story"; // a narrated storybook panel that frames a lesson (no fail)
+  | "story" // a narrated storybook panel that frames a lesson (no fail)
+  | "true_false"; // Hitar Petar shows a picture + says a word: does it match?
 
 // A single beat of a story panel: one character says one line. Narration is
 // shown + spoken in the KNOWN language (so the child follows the tale); an
@@ -79,6 +80,10 @@ export interface Exercise {
   choices?: string[]; // other vocab ids used as distractors
   hint?: Record<LangCode, string>; // Kuma Lisa's tip, shown in the KNOWN language
   story?: StoryContent; // for type "story": the narrated panel content
+  // For type "true_false": the word Hitar Petar CLAIMS the picture (`prompt`)
+  // shows. The statement is true when `claim` === `prompt`. Omit for a truthful
+  // claim about `prompt` itself.
+  claim?: string;
 }
 
 // A short (3-4 min) lesson = a handful of exercises + one reward.
@@ -1015,6 +1020,8 @@ export const fruitsUnit: Unit = {
           choices: ["fruit.orange", "fruit.watermelon", "fruit.lemon"],
         },
         { type: "say_it", prompt: "fruit.lemon" },
+        // Hitar Petar's trick: he shows a watermelon but calls it a lemon (false).
+        { type: "true_false", prompt: "fruit.watermelon", claim: "fruit.lemon" },
         {
           type: "match_pairs",
           prompt: "fruit.orange",
@@ -1103,6 +1110,8 @@ export const animalsUnit: Unit = {
           choices: ["animal.cow", "animal.sheep", "animal.pig"],
         },
         { type: "say_it", prompt: "animal.pig" },
+        // A truthful claim this time — the child confirms with ✓.
+        { type: "true_false", prompt: "animal.horse", claim: "animal.horse" },
         {
           type: "match_pairs",
           prompt: "animal.cow",
@@ -1594,6 +1603,7 @@ export const foodUnit: Unit = {
           choices: ["food.honey", "food.banitsa", "food.water"],
         },
         { type: "say_it", prompt: "food.water" },
+        { type: "true_false", prompt: "food.honey", claim: "food.water" },
         {
           type: "match_pairs",
           prompt: "food.honey",
