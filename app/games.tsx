@@ -72,6 +72,21 @@ export default function GamesScreen() {
             </Text>
           </View>
         </Pressable>
+
+        <Pressable
+          onPress={() => router.push("/game/feed")}
+          accessibilityRole="button"
+          accessibilityLabel={known === "bg" ? "Нахрани Змея" : "Feed the Zmey"}
+          style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
+        >
+          <Text style={styles.tileEmoji}>🐉</Text>
+          <View style={styles.tileText}>
+            <Text style={styles.tileLabel}>{known === "bg" ? "Нахрани Змея" : "Feed the Zmey"}</Text>
+            <Text style={styles.tileSub}>
+              {known === "bg" ? "Дай му вкусотии" : "Give him treats"}
+            </Text>
+          </View>
+        </Pressable>
       </ScrollView>
 
       <BottomNav />
