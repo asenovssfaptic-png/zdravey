@@ -12,6 +12,7 @@ import { OddOneOut } from "@/components/exercises/OddOneOut";
 import { PickPicture } from "@/components/exercises/PickPicture";
 import { SayIt } from "@/components/exercises/SayIt";
 import { StoryPanel } from "@/components/exercises/StoryPanel";
+import { TrueFalse } from "@/components/exercises/TrueFalse";
 import type { ExerciseProps } from "@/components/exercises/types";
 import { ProgressBar } from "@/components/ProgressBar";
 import { Colors, FontSizes, Spacing } from "@/constants/theme";
@@ -29,6 +30,7 @@ const EXERCISE_COMPONENTS: Partial<Record<ExerciseType, (props: ExerciseProps) =
   odd_one_out: OddOneOut,
   find_on_map: FindOnMap,
   story: StoryPanel,
+  true_false: TrueFalse,
 };
 
 // Pre-render one static HTML page per lesson so deep-links/refreshes resolve
