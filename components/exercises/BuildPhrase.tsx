@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { AudioButton } from "@/components/AudioButton";
@@ -33,9 +33,16 @@ export function BuildPhrase({ exercise, host, onDone }: ExerciseProps) {
   const player = useClipPlayer(phrase?.audio[learning] ?? { src: "", voiceId: "default" });
   const sfx = useSfx();
   const done = placed >= target.length && target.length > 0;
+  const empty = !phrase || target.length === 0;
 
-  if (!phrase || target.length === 0) {
-    onDone();
+  // Defensive: a phrase-less exercise auto-advances — do it in an effect, not
+  // during render (which would setState the parent mid-render).
+  useEffect(() => {
+    if (empty) onDone();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (empty) {
     return <View style={styles.container} />;
   }
 

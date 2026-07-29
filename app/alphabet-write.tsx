@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { PanResponder, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -52,7 +52,16 @@ function WriteContent() {
   const [index, setIndex] = useState(0);
   const [points, setPoints] = useState<Pt[]>([]);
   const [wins, setWins] = useState(0);
+  const [busy, setBusy] = useState(false); // true during the celebrate→advance window
+  const doneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const letter = letters[index];
+
+  useEffect(
+    () => () => {
+      if (doneTimer.current) clearTimeout(doneTimer.current);
+    },
+    [],
+  );
 
   // The ink surface. `last` is a closure variable (not a React ref) so nothing
   // reads a ref during render; created once via a useState initializer.
@@ -81,13 +90,16 @@ function WriteContent() {
   }
 
   function done() {
+    if (busy) return; // ignore repeat taps while the celebration is running
+    setBusy(true);
     sfx.play("success");
     play(PRAISE[known].audio);
     setWins((w) => w + 1);
-    setTimeout(() => {
+    doneTimer.current = setTimeout(() => {
       setIndex((i) => (i + 1) % letters.length);
       pan.reset();
       setPoints([]);
+      setBusy(false);
     }, 900);
   }
 
@@ -113,9 +125,9 @@ function WriteContent() {
 
       <View style={styles.boardWrap}>
         <View style={[styles.board, { width: board, height: board }]} {...pan.handlers}>
-          <Text style={[styles.guide, { fontSize: board * 0.72 }]} pointerEvents="none">
-            {letter.char}
-          </Text>
+          <View style={styles.guideWrap} pointerEvents="none">
+            <Text style={[styles.guide, { fontSize: board * 0.72 }]}>{letter.char}</Text>
+          </View>
           {points.map((pt, i) => (
             <View key={i} style={[styles.ink, { left: pt.x - DOT / 2, top: pt.y - DOT / 2 }]} pointerEvents="none" />
           ))}
@@ -144,9 +156,10 @@ function WriteContent() {
         </Pressable>
         <Pressable
           onPress={done}
+          disabled={busy}
           accessibilityRole="button"
           accessibilityLabel={known === "bg" ? "Готово" : "Done"}
-          style={({ pressed }) => [styles.ctrl, styles.ctrlDone, pressed && styles.faded]}
+          style={({ pressed }) => [styles.ctrl, styles.ctrlDone, (pressed || busy) && styles.faded]}
         >
           <Text style={styles.ctrlDoneText}>{known === "bg" ? "Готово ✓" : "Done ✓"}</Text>
         </Pressable>
@@ -169,12 +182,11 @@ const styles = StyleSheet.create({
     borderColor: Colors.gold,
     overflow: "hidden",
   },
+  // Flex-centred wrapper centres the glyph on every platform (textAlignVertical
+  // is Android-only, so relying on it left the guide top-aligned on web/iOS).
+  guideWrap: { ...StyleSheet.absoluteFill, alignItems: "center", justifyContent: "center" },
   guide: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
     textAlign: "center",
-    textAlignVertical: "center",
     fontWeight: "800",
     color: Colors.textMuted,
     opacity: 0.3,

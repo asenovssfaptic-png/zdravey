@@ -62,8 +62,9 @@ function BalloonContent() {
   }
 
   const [{ items, target }, setRound] = useState(makeRound);
-  const [popped, setPopped] = useState<string | null>(null);
-  const [wobble, setWobble] = useState<string | null>(null);
+  const [nonce, setNonce] = useState(0); // bumps every round so the announce
+  const [popped, setPopped] = useState<string | null>(null); // effect re-runs even
+  const [wobble, setWobble] = useState<string | null>(null); // when the target repeats
   const [count, setCount] = useState(0);
   const [wins, setWins] = useState(0);
 
@@ -80,12 +81,13 @@ function BalloonContent() {
     return () => anim.stop();
   }, [bob]);
 
-  // Say the target word whenever a fresh round floats in.
+  // Say the target word whenever a fresh round floats in — keyed on the round
+  // nonce (not the target string) so a repeated target is still announced.
   useEffect(() => {
     const t = setTimeout(() => say(target), 300);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [target]);
+  }, [nonce]);
 
   function tap(id: string) {
     if (popped) return;
@@ -98,6 +100,7 @@ function BalloonContent() {
       setTimeout(() => {
         setPopped(null);
         setRound(makeRound());
+        setNonce((n) => n + 1);
       }, 700);
     } else {
       setWobble(id);

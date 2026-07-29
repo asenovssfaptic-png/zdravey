@@ -19,10 +19,12 @@ export function Pop({
   scaleTo?: number;
 }) {
   const [scale] = useState(() => new Animated.Value(1));
-  const prev = useRef(pop);
+  // null sentinel: a child that mounts already at pop=true still bounces once
+  // (e.g. a word chip that only appears after it's placed).
+  const prev = useRef<boolean | null>(null);
 
   useEffect(() => {
-    if (pop && !prev.current) {
+    if (pop && prev.current !== true) {
       scale.stopAnimation();
       Animated.sequence([
         Animated.timing(scale, {

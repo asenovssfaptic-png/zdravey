@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from "react";
 import { Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { CHARACTERS } from "@/characters/characters";
@@ -16,6 +17,8 @@ import { mapImage } from "@/lib/images";
 const SPOT = 84;
 const PAD = Spacing.lg;
 const TRAIL_H = 44; // vertical gap between spots the dotted trail climbs
+const DEFAULT_LANE = 360; // server + first-client render width (before measure)
+const emptySubscribe = () => () => {};
 // Horizontal weave: fractions of the lane the successive spots sit at.
 const WEAVE = [0.5, 0.74, 0.5, 0.26];
 
@@ -30,7 +33,8 @@ interface Spot {
 // so the flowing label to its right always has room.
 function leftFor(i: number, lane: number): number {
   const x = WEAVE[i % WEAVE.length];
-  return Math.max(0, Math.min(lane * 0.4, x * 0.55 * lane));
+  // Keep spots in the left ~28% so even the longest boss titles fit beside them.
+  return Math.max(0, Math.min(lane * 0.28, x * 0.42 * lane));
 }
 
 function buildSpots(): Spot[] {
@@ -54,8 +58,17 @@ export function AdventurePath({
   onOpen: (lessonId: string) => void;
   onAlphabet: () => void;
 }) {
+  // The home screen is NOT mount-gated, so it renders during static export
+  // where the window width is 0. Use a stable default until mounted so the
+  // server render and the first client render agree (no hydration mismatch),
+  // then switch to the measured viewport width.
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
   const { width } = useWindowDimensions();
-  const lane = Math.min(width, 520) - PAD * 2;
+  const lane = (mounted ? Math.min(width, 520) : DEFAULT_LANE) - PAD * 2;
   const spots = buildSpots();
   // The hero stands at the first unfinished spot (or past the end if all done).
   const current = spots.findIndex((s) => !isDone(s.lesson.id));
