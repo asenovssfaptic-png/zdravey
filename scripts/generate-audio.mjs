@@ -61,6 +61,12 @@ for (const [lang, c] of Object.entries(CHALLENGE)) {
 for (const unit of UNITS) {
   for (const lesson of unit.lessons) {
     for (const ex of lesson.exercises) {
+      // Build-a-phrase: the spoken full phrase per language.
+      if (ex.phrase) {
+        for (const lang of Object.keys(ex.phrase.audio)) {
+          clips.push({ src: ex.phrase.audio[lang].src, lang, text: ex.phrase.text[lang] });
+        }
+      }
       if (!ex.story) continue;
       for (const line of ex.story.lines) {
         for (const lang of Object.keys(line.audio)) {

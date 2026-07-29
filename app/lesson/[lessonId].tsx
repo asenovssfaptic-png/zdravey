@@ -7,6 +7,7 @@ import { CHARACTERS } from "@/characters/characters";
 import { BossIntro } from "@/components/BossIntro";
 import { Celebration } from "@/components/Celebration";
 import { FindOnMap } from "@/components/exercises/FindOnMap";
+import { BuildPhrase } from "@/components/exercises/BuildPhrase";
 import { MatchPairs } from "@/components/exercises/MatchPairs";
 import { OddOneOut } from "@/components/exercises/OddOneOut";
 import { PickPicture } from "@/components/exercises/PickPicture";
@@ -33,6 +34,7 @@ const EXERCISE_COMPONENTS: Partial<Record<ExerciseType, (props: ExerciseProps) =
   story: StoryPanel,
   true_false: TrueFalse,
   sequence: SequenceOrder,
+  build_phrase: BuildPhrase,
 };
 
 // Pre-render one static HTML page per lesson so deep-links/refreshes resolve

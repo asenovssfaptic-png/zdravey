@@ -55,7 +55,8 @@ export type ExerciseType =
   | "find_on_map" // hear a city, tap its spot on the map of Bulgaria
   | "story" // a narrated storybook panel that frames a lesson (no fail)
   | "true_false" // Hitar Petar shows a picture + says a word: does it match?
-  | "sequence"; // tap the pictures in order (e.g. count 1→5) — `choices` is the order
+  | "sequence" // tap the pictures in order (e.g. count 1→5) — `choices` is the order
+  | "build_phrase"; // tap word-tiles in order to build a phrase/sentence
 
 // A single beat of a story panel: one character says one line. Narration is
 // shown + spoken in the KNOWN language (so the child follows the tale); an
@@ -75,6 +76,16 @@ export interface StoryContent {
   lines: StoryLine[];
 }
 
+// A phrase/sentence used by `build_phrase`: the child taps the word tiles of the
+// LEARNING language in order to build it, guided by the KNOWN-language meaning.
+// `tokens` is the phrase split into tappable words per language; `audio` is the
+// spoken full phrase per language.
+export interface PhraseContent {
+  text: Record<LangCode, string>;
+  tokens: Record<LangCode, string[]>;
+  audio: Record<LangCode, AudioClip>;
+}
+
 export interface Exercise {
   type: ExerciseType;
   prompt: string; // vocab id being asked, e.g. "fruit.apple" (or a story id)
@@ -85,6 +96,7 @@ export interface Exercise {
   // shows. The statement is true when `claim` === `prompt`. Omit for a truthful
   // claim about `prompt` itself.
   claim?: string;
+  phrase?: PhraseContent; // for type "build_phrase": the sentence to assemble
 }
 
 // A short (3-4 min) lesson = a handful of exercises + one reward.
@@ -1157,6 +1169,38 @@ export const VOCAB: Record<string, VocabItem> = {
       en: { src: "audio/en/rainbow__default.mp3", voiceId: "default" },
     },
     transliteration: { bg: "daga" },
+  },
+
+  // --- Greetings (Поздрави) — spoken phrases for say_it + build_phrase ---
+  "greet.hello": {
+    id: "greet.hello",
+    emoji: "👋",
+    labels: { bg: "Здравей", en: "Hello" },
+    audio: {
+      bg: { src: "audio/bg/zdravey__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/hello__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "zdravey" },
+  },
+  "greet.thankyou": {
+    id: "greet.thankyou",
+    emoji: "🙏",
+    labels: { bg: "Благодаря", en: "Thank you" },
+    audio: {
+      bg: { src: "audio/bg/blagodarya__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/thank_you__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "blagodarya" },
+  },
+  "greet.goodbye": {
+    id: "greet.goodbye",
+    emoji: "👋",
+    labels: { bg: "Довиждане", en: "Goodbye" },
+    audio: {
+      bg: { src: "audio/bg/dovizhdane__default.mp3", voiceId: "default" },
+      en: { src: "audio/en/goodbye__default.mp3", voiceId: "default" },
+    },
+    transliteration: { bg: "dovizhdane" },
   },
 };
 
@@ -2406,6 +2450,127 @@ export const toysUnit: Unit = {
   ],
 };
 
+// Phrases sits late on the path (medium difficulty): the child assembles whole
+// greetings and sentences from word tiles, plus says them aloud. Pizho & Penda
+// host their own little talking region.
+export const phrasesUnit: Unit = {
+  id: "unit.phrases",
+  theme: { bg: "Изрази", en: "Phrases" },
+  host: "pizho",
+  guardian: "zmey",
+  lessons: [
+    {
+      id: "unit.phrases.l1",
+      title: { bg: "Поздрави", en: "Greetings" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "build_phrase",
+          prompt: "phr.hello_penda",
+          phrase: {
+            text: { bg: "Здравей, Пенда!", en: "Hello, Penda!" },
+            tokens: { bg: ["Здравей,", "Пенда!"], en: ["Hello,", "Penda!"] },
+            audio: {
+              bg: { src: "audio/bg/phrase/hello_penda__default.mp3", voiceId: "default" },
+              en: { src: "audio/en/phrase/hello_penda__default.mp3", voiceId: "default" },
+            },
+          },
+        },
+        { type: "say_it", prompt: "greet.hello" },
+        {
+          type: "build_phrase",
+          prompt: "phr.good_morning",
+          phrase: {
+            text: { bg: "Добро утро!", en: "Good morning!" },
+            tokens: { bg: ["Добро", "утро!"], en: ["Good", "morning!"] },
+            audio: {
+              bg: { src: "audio/bg/phrase/good_morning__default.mp3", voiceId: "default" },
+              en: { src: "audio/en/phrase/good_morning__default.mp3", voiceId: "default" },
+            },
+          },
+        },
+        { type: "say_it", prompt: "greet.thankyou" },
+      ],
+    },
+    {
+      id: "unit.phrases.l2",
+      title: { bg: "Изречения", en: "Sentences" },
+      reward: "martenitsa",
+      exercises: [
+        {
+          type: "build_phrase",
+          prompt: "phr.i_am_hero",
+          phrase: {
+            text: { bg: "Аз съм юнак.", en: "I am a hero." },
+            tokens: { bg: ["Аз", "съм", "юнак."], en: ["I", "am", "a", "hero."] },
+            audio: {
+              bg: { src: "audio/bg/phrase/i_am_hero__default.mp3", voiceId: "default" },
+              en: { src: "audio/en/phrase/i_am_hero__default.mp3", voiceId: "default" },
+            },
+          },
+        },
+        {
+          type: "build_phrase",
+          prompt: "phr.i_love_marten",
+          phrase: {
+            text: { bg: "Обичам мартеници.", en: "I love martenitsi." },
+            tokens: { bg: ["Обичам", "мартеници."], en: ["I", "love", "martenitsi."] },
+            audio: {
+              bg: { src: "audio/bg/phrase/i_love_marten__default.mp3", voiceId: "default" },
+              en: { src: "audio/en/phrase/i_love_marten__default.mp3", voiceId: "default" },
+            },
+          },
+        },
+        {
+          type: "build_phrase",
+          prompt: "phr.this_is_cat",
+          phrase: {
+            text: { bg: "Това е котка.", en: "This is a cat." },
+            tokens: { bg: ["Това", "е", "котка."], en: ["This", "is", "a", "cat."] },
+            audio: {
+              bg: { src: "audio/bg/phrase/this_is_cat__default.mp3", voiceId: "default" },
+              en: { src: "audio/en/phrase/this_is_cat__default.mp3", voiceId: "default" },
+            },
+          },
+        },
+      ],
+    },
+    {
+      id: "unit.phrases.boss",
+      title: { bg: "Юнашки изпит — Изрази", en: "Hero's Challenge — Phrases" },
+      reward: "martenitsa",
+      boss: true,
+      exercises: [
+        {
+          type: "build_phrase",
+          prompt: "phr.thank_you",
+          phrase: {
+            text: { bg: "Благодаря ти!", en: "Thank you!" },
+            tokens: { bg: ["Благодаря", "ти!"], en: ["Thank", "you!"] },
+            audio: {
+              bg: { src: "audio/bg/phrase/thank_you__default.mp3", voiceId: "default" },
+              en: { src: "audio/en/phrase/thank_you__default.mp3", voiceId: "default" },
+            },
+          },
+        },
+        {
+          type: "build_phrase",
+          prompt: "phr.i_am_hero",
+          phrase: {
+            text: { bg: "Аз съм юнак.", en: "I am a hero." },
+            tokens: { bg: ["Аз", "съм", "юнак."], en: ["I", "am", "a", "hero."] },
+            audio: {
+              bg: { src: "audio/bg/phrase/i_am_hero__default.mp3", voiceId: "default" },
+              en: { src: "audio/en/phrase/i_am_hero__default.mp3", voiceId: "default" },
+            },
+          },
+        },
+        { type: "say_it", prompt: "greet.goodbye" },
+      ],
+    },
+  ],
+};
+
 export const UNITS: Unit[] = [
   fruitsUnit,
   animalsUnit,
@@ -2418,6 +2583,7 @@ export const UNITS: Unit[] = [
   homeUnit,
   clothesUnit,
   toysUnit,
+  phrasesUnit,
   citiesUnit,
 ];
 
