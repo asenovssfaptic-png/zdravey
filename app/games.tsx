@@ -87,6 +87,21 @@ export default function GamesScreen() {
             </Text>
           </View>
         </Pressable>
+
+        <Pressable
+          onPress={() => router.push("/game/balloon")}
+          accessibilityRole="button"
+          accessibilityLabel={known === "bg" ? "Балони — спукай балона" : "Balloons — pop the balloon"}
+          style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
+        >
+          <Text style={styles.tileEmoji}>🎈</Text>
+          <View style={styles.tileText}>
+            <Text style={styles.tileLabel}>{known === "bg" ? "Балони" : "Balloons"}</Text>
+            <Text style={styles.tileSub}>
+              {known === "bg" ? "Спукай балона, който чуеш" : "Pop the balloon you hear"}
+            </Text>
+          </View>
+        </Pressable>
       </ScrollView>
 
       <BottomNav />
