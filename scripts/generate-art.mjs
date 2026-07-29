@@ -133,8 +133,35 @@ const PUZZLES = [
   },
 ];
 
+// Painted map/adventure props for the hero's journey path. Square, centered on
+// a soft cream ground so they read inside the round spot markers.
+const MAP = [
+  {
+    name: "hero",
+    prompt:
+      "two martenitsa pom-pom dolls side by side: each is two round balls of wool yarn stacked like pom-poms (head and body) — the left one pure WHITE yarn, the right one pure RED yarn — with thin yarn string arms and legs ending in tassels, two tiny round black bead eyes and a small stitched smile, completely featureless otherwise: NO nose, NO snout, NO whiskers, NO ears, NO muzzle, NOT animals, not cats, not bears — handmade folk yarn ornaments; they hold a tiny rolled folk map and a little walking stick, cheerful explorers, centered on a plain soft cream background",
+  },
+  {
+    name: "signpost",
+    prompt:
+      "a charming little wooden folk signpost waymarker on a grassy mound with a small red arrow board and carved shevitsa pattern, a couple of wildflowers at its base, centered",
+  },
+  {
+    name: "treasure",
+    prompt:
+      "a small friendly folk treasure chest, warm carved wood with red-and-white martenitsa ribbons and a soft golden glow spilling out, a little pile of gold coins, cheerful not scary, centered",
+  },
+  {
+    name: "land_banner",
+    w: 1024,
+    h: 512,
+    prompt:
+      "a storybook map of a friendly Bulgarian folk land seen from above: a winding golden path threading past rose valleys, little red-roofed villages, green Balkan mountains, a monastery, the Black Sea on one edge, and a festival square, warm and inviting, hand-drawn treasure-map feel",
+  },
+];
+
 const only = process.argv.filter(
-  (a) => a.startsWith("vocab:") || a === "char" || a === "bg" || a === "puzzle",
+  (a) => a.startsWith("vocab:") || a === "char" || a === "bg" || a === "puzzle" || a === "map",
 );
 function wants(kind) {
   return only.length === 0 || only.includes(kind);
@@ -167,6 +194,10 @@ for (const bg of BACKGROUNDS) {
 for (const pz of PUZZLES) {
   if (!wants("puzzle")) continue;
   jobs.push({ file: join(IMG, "puzzle", `${pz.name}.jpg`), prompt: `${pz.prompt}, ${STYLE}`, w: 768, h: 768 });
+}
+for (const m of MAP) {
+  if (!wants("map")) continue;
+  jobs.push({ file: join(IMG, "ui", `${m.name}.jpg`), prompt: `${m.prompt}, ${STYLE}`, w: m.w ?? 640, h: m.h ?? 640 });
 }
 
 // Stable per-file seed so re-runs are reproducible.
@@ -231,6 +262,11 @@ const puzzleEntries = PUZZLES.map((pz) => ({ name: pz.name, req: fileFor("puzzle
   .map((e) => `  ${JSON.stringify(e.name)}: require(${JSON.stringify(e.req)}),`)
   .join("\n");
 
+const mapEntries = MAP.map((m) => ({ name: m.name, req: fileFor("ui", `${m.name}.jpg`) }))
+  .filter((e) => e.req)
+  .map((e) => `  ${JSON.stringify(e.name)}: require(${JSON.stringify(e.req)}),`)
+  .join("\n");
+
 const banner =
   "// AUTO-GENERATED registry — painted art from scripts/generate-art.mjs.\n" +
   "// Components fall back to emoji/avatars for any id NOT listed here.\n" +
@@ -244,6 +280,7 @@ writeFileSync(
     `export const CHARACTER_IMAGES: Record<string, ImageSourcePropType> = {\n${charEntries}\n};\n\n` +
     `export const BACKGROUNDS: Record<string, ImageSourcePropType> = {\n${bgEntries}\n};\n\n` +
     `export const PUZZLE_IMAGES: Record<string, ImageSourcePropType> = {\n${puzzleEntries}\n};\n\n` +
+    `export const MAP_IMAGES: Record<string, ImageSourcePropType> = {\n${mapEntries}\n};\n\n` +
     `export function vocabImage(id?: string): ImageSourcePropType | null {\n` +
     `  return (id && VOCAB_IMAGES[id]) || null;\n}\n\n` +
     `export function characterImage(id?: string): ImageSourcePropType | null {\n` +
@@ -251,7 +288,9 @@ writeFileSync(
     `export function background(name: string): ImageSourcePropType | null {\n` +
     `  return BACKGROUNDS[name] || null;\n}\n\n` +
     `export function puzzleImage(name: string): ImageSourcePropType | null {\n` +
-    `  return PUZZLE_IMAGES[name] || null;\n}\n`,
+    `  return PUZZLE_IMAGES[name] || null;\n}\n\n` +
+    `export function mapImage(name: string): ImageSourcePropType | null {\n` +
+    `  return MAP_IMAGES[name] || null;\n}\n`,
 );
 
 console.log(`\nDone. Generated ${made}, skipped ${skipped}. Rewrote lib/images.ts.`);
