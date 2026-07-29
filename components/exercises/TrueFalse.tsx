@@ -5,11 +5,13 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { CHARACTERS } from "@/characters/characters";
 import { AudioButton } from "@/components/AudioButton";
 import { CharacterBubble } from "@/components/CharacterBubble";
+import { Pop } from "@/components/Pop";
 import { Colors, FontSizes, Radii, Spacing, TouchTarget } from "@/constants/theme";
 import { VOCAB } from "@/content/content-model";
 import { useClipPlayer } from "@/lib/audio";
 import { useDirection } from "@/lib/direction";
 import { vocabImage } from "@/lib/images";
+import { useSfx } from "@/lib/sfx";
 
 import { REVEAL_DELAY_MS, type ExerciseProps } from "./types";
 
@@ -35,6 +37,7 @@ export function TrueFalse({ exercise, onDone }: ExerciseProps) {
   // REAL name so a pre-reader always hears the truth.
   const claimPlayer = useClipPlayer(claimed.audio[learning]);
   const truthPlayer = useClipPlayer(picture.audio[learning]);
+  const sfx = useSfx();
 
   useEffect(() => {
     claimPlayer.play();
@@ -43,6 +46,7 @@ export function TrueFalse({ exercise, onDone }: ExerciseProps) {
 
   useEffect(() => {
     if (!resolved) return;
+    if (gotItRight) sfx.play("pop");
     const say = setTimeout(truthPlayer.play, 350);
     const advance = setTimeout(onDone, REVEAL_DELAY_MS);
     return () => {
@@ -134,16 +138,18 @@ function ChoiceButton({
   }
   const textColor = onLight ? Colors.darkRed : Colors.white;
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ selected }}
-      style={({ pressed }) => [styles.button, stateStyle, pressed && !resolved && styles.pressed]}
-    >
-      <Text style={[styles.buttonIcon, { color: textColor }]}>{kind === "yes" ? "✓" : "✗"}</Text>
-      <Text style={[styles.buttonText, { color: textColor }]}>{label}</Text>
-    </Pressable>
+    <Pop pop={resolved && correct && selected} style={styles.popWrap}>
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        accessibilityState={{ selected }}
+        style={({ pressed }) => [styles.button, stateStyle, pressed && !resolved && styles.pressed]}
+      >
+        <Text style={[styles.buttonIcon, { color: textColor }]}>{kind === "yes" ? "✓" : "✗"}</Text>
+        <Text style={[styles.buttonText, { color: textColor }]}>{label}</Text>
+      </Pressable>
+    </Pop>
   );
 }
 
@@ -167,9 +173,9 @@ const styles = StyleSheet.create({
   verdictGood: { color: Colors.correct },
   verdictGentle: { color: Colors.darkRed },
   buttons: { flexDirection: "row", gap: Spacing.lg, justifyContent: "center" },
+  popWrap: { flex: 1, maxWidth: 160 },
   button: {
-    flex: 1,
-    maxWidth: 160,
+    width: "100%",
     minHeight: TouchTarget.min + 24,
     borderRadius: Radii.lg,
     alignItems: "center",

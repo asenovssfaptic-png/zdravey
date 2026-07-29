@@ -8,6 +8,7 @@ import { Spacing } from "@/constants/theme";
 import { buildOddOneOut } from "@/content/content-model";
 import { useClipPlayer } from "@/lib/audio";
 import { useDirection } from "@/lib/direction";
+import { useSfx } from "@/lib/sfx";
 import { useShuffled } from "@/lib/shuffle";
 
 import { REVEAL_DELAY_MS, type ExerciseProps } from "./types";
@@ -25,12 +26,15 @@ export function OddOneOut({ exercise, onDone }: ExerciseProps) {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const resolved = selectedId !== null;
+  const gotIt = resolved && selectedId === built.correctId;
 
   const correctTile = built.tiles.find((t) => t.id === built.correctId)!;
   const correctPlayer = useClipPlayer(correctTile.audio);
+  const sfx = useSfx();
 
   useEffect(() => {
     if (!resolved) return;
+    if (gotIt) sfx.play("pop");
     // Speak the odd one out on reveal so the correction isn't silent.
     const say = setTimeout(correctPlayer.play, 350);
     const advance = setTimeout(onDone, REVEAL_DELAY_MS);
@@ -61,6 +65,7 @@ export function OddOneOut({ exercise, onDone }: ExerciseProps) {
               key={tile.id}
               tile={tile}
               state={state}
+              win={gotIt && tile.id === built.correctId}
               onPick={() => !resolved && setSelectedId(tile.id)}
             />
           );
@@ -73,10 +78,12 @@ export function OddOneOut({ exercise, onDone }: ExerciseProps) {
 function TileWithAudio({
   tile,
   state,
+  win,
   onPick,
 }: {
   tile: ReturnType<typeof buildOddOneOut>["tiles"][number];
   state: TileState;
+  win?: boolean;
   onPick: () => void;
 }) {
   const { play } = useClipPlayer(tile.audio);
@@ -87,6 +94,7 @@ function TileWithAudio({
       main={tile.main}
       gloss={tile.gloss}
       state={state}
+      win={win}
       onPress={() => {
         play();
         onPick();

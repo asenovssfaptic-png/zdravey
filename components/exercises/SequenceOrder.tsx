@@ -3,11 +3,13 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { AudioButton } from "@/components/AudioButton";
 import { CharacterBubble } from "@/components/CharacterBubble";
+import { Pop } from "@/components/Pop";
 import { Colors, FontSizes, Radii, Spacing } from "@/constants/theme";
 import { VOCAB } from "@/content/content-model";
 import { useOnDemandPlayer } from "@/lib/audio";
 import { useDirection } from "@/lib/direction";
 import { vocabImage } from "@/lib/images";
+import { useSfx } from "@/lib/sfx";
 import { shuffled } from "@/lib/shuffle";
 
 import { REVEAL_DELAY_MS, type ExerciseProps } from "./types";
@@ -28,6 +30,7 @@ export function SequenceOrder({ exercise, host, onDone }: ExerciseProps) {
   const [placed, setPlaced] = useState(0); // how many are correctly in place
   const [wrongId, setWrongId] = useState<string | null>(null);
   const player = useOnDemandPlayer();
+  const sfx = useSfx();
 
   const done = placed >= order.length && order.length > 0;
 
@@ -45,6 +48,8 @@ export function SequenceOrder({ exercise, host, onDone }: ExerciseProps) {
     if (id === order[placed]) {
       setWrongId(null);
       setPlaced((n) => n + 1);
+      // Brighter chime when the last one lands; a pop for each placement.
+      sfx.play(placed + 1 >= order.length ? "success" : "pop");
     } else {
       // Gentle nudge — no penalty, just a visual wiggle for ~500ms.
       setWrongId(id);
@@ -76,9 +81,11 @@ export function SequenceOrder({ exercise, host, onDone }: ExerciseProps) {
           const id = placedIds[i];
           const isNext = i === placed && !done;
           return (
-            <View key={i} style={[styles.slot, isNext && styles.slotNext, id && styles.slotFilled]}>
-              {id ? <SlotImage id={id} /> : <Text style={styles.slotNum}>{i + 1}</Text>}
-            </View>
+            <Pop key={i} pop={i === placed - 1}>
+              <View style={[styles.slot, isNext && styles.slotNext, id && styles.slotFilled]}>
+                {id ? <SlotImage id={id} /> : <Text style={styles.slotNum}>{i + 1}</Text>}
+              </View>
+            </Pop>
           );
         })}
       </View>

@@ -3,10 +3,12 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { AudioButton } from "@/components/AudioButton";
 import { CharacterBubble } from "@/components/CharacterBubble";
+import { Pop } from "@/components/Pop";
 import { Colors, FontSizes, Radii, Spacing } from "@/constants/theme";
 import { buildFindOnMap } from "@/content/content-model";
 import { useClipPlayer, useOnDemandPlayer } from "@/lib/audio";
 import { useDirection } from "@/lib/direction";
+import { useSfx } from "@/lib/sfx";
 
 import { REVEAL_DELAY_MS, type ExerciseProps } from "./types";
 
@@ -19,8 +21,10 @@ export function FindOnMap({ exercise, host, onDone }: ExerciseProps) {
 
   const prompt = useClipPlayer(built.promptAudio);
   const pinPlayer = useOnDemandPlayer();
+  const sfx = useSfx();
   const [picked, setPicked] = useState<string | null>(null);
   const resolved = picked !== null;
+  const gotIt = resolved && picked === built.correctId;
   // Measure the rendered map so pins are positioned in real pixels — percentage
   // top/left don't resolve reliably against an aspectRatio height on web.
   const [mapSize, setMapSize] = useState({ w: 0, h: 0 });
@@ -32,6 +36,7 @@ export function FindOnMap({ exercise, host, onDone }: ExerciseProps) {
 
   useEffect(() => {
     if (!resolved) return;
+    if (gotIt) sfx.play("pop");
     const correct = built.pins.find((p) => p.id === built.correctId);
     const say = correct ? setTimeout(() => pinPlayer.play(correct.audio), 350) : undefined;
     const advance = setTimeout(onDone, REVEAL_DELAY_MS);
@@ -85,17 +90,19 @@ export function FindOnMap({ exercise, host, onDone }: ExerciseProps) {
                 accessibilityLabel={pin.label}
                 style={[styles.pin, { left: pin.x * mapSize.w, top: pin.y * mapSize.h }]}
               >
-                <View
-                  style={[
-                    styles.pinDot,
-                    !resolved && styles.pinIdle,
-                    resolved && isCorrect && styles.pinCorrect,
-                    resolved && !isCorrect && pin.id === picked && styles.pinWrong,
-                    resolved && !isCorrect && pin.id !== picked && styles.pinDim,
-                  ]}
-                >
-                  <Text style={styles.pinIcon}>📍</Text>
-                </View>
+                <Pop pop={gotIt && isCorrect}>
+                  <View
+                    style={[
+                      styles.pinDot,
+                      !resolved && styles.pinIdle,
+                      resolved && isCorrect && styles.pinCorrect,
+                      resolved && !isCorrect && pin.id === picked && styles.pinWrong,
+                      resolved && !isCorrect && pin.id !== picked && styles.pinDim,
+                    ]}
+                  >
+                    <Text style={styles.pinIcon}>📍</Text>
+                  </View>
+                </Pop>
                 <Text style={styles.pinLabel} numberOfLines={1}>
                   {pin.label}
                 </Text>
