@@ -130,7 +130,10 @@ function MusicContent() {
     playNote(note);
     setFlash(note);
     setTimeout(() => setFlash((f) => (f === note ? null : f)), 220);
-    if (listening) return; // free-play taps during listening don't count
+    // Bars still sound during listening/celebration (free instrument), but those
+    // taps don't count — so re-tapping during the celebrate window can't re-fire
+    // the win (duplicate chime / sparkle / inflated count).
+    if (listening || celebrate) return;
 
     if (note === tune[pos]) {
       const nextPos = pos + 1;
@@ -142,6 +145,9 @@ function MusicContent() {
         sfx.play("success");
         if (tune.length < MAX_LEN) {
           timers.current.push(setTimeout(grow, 1100));
+        } else {
+          // At max length there's no grow to clear it — unlock after a beat.
+          timers.current.push(setTimeout(() => setCelebrate(false), 1500));
         }
       } else {
         setPos(nextPos);

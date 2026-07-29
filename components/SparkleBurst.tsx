@@ -38,7 +38,13 @@ export function SparkleBurst({
   const opacity = t.interpolate({ inputRange: [0, 0.12, 0.7, 1], outputRange: [0, 1, 1, 0] });
 
   return (
-    <View style={[styles.wrap, { width: size, height: size }]} pointerEvents="none">
+    <View
+      style={[styles.wrap, { width: size, height: size }]}
+      pointerEvents="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
+
       {PARTICLES.map((emoji, i) => {
         const angle = (i / PARTICLES.length) * Math.PI * 2;
         const dx = Math.cos(angle) * distance;

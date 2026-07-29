@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { CharacterBubble } from "@/components/CharacterBubble";
@@ -28,6 +28,9 @@ export function MatchPairs({ exercise, host, onDone }: ExerciseProps) {
   const [wrong, setWrong] = useState<{ picture?: string; word?: string }>({});
   const [justMatched, setJustMatched] = useState<string | null>(null);
   const sfx = useSfx();
+  // Track the mismatch-clear timer so a second mismatch doesn't cut the first's
+  // flash short, and so it never fires after unmount.
+  const wrongTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const allMatched = matched.size === items.length;
 
@@ -37,6 +40,10 @@ export function MatchPairs({ exercise, host, onDone }: ExerciseProps) {
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allMatched]);
+
+  useEffect(() => () => {
+    if (wrongTimer.current) clearTimeout(wrongTimer.current);
+  }, []);
 
   function select(side: Side, id: string) {
     if (matched.has(id)) return;
@@ -63,7 +70,8 @@ export function MatchPairs({ exercise, host, onDone }: ExerciseProps) {
       const wordId = side === "word" ? id : pick.id;
       setWrong({ picture: pictureId, word: wordId });
       setPick(null);
-      setTimeout(() => setWrong({}), 500);
+      if (wrongTimer.current) clearTimeout(wrongTimer.current);
+      wrongTimer.current = setTimeout(() => setWrong({}), 500);
     }
   }
 

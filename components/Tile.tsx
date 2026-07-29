@@ -53,12 +53,14 @@ export function Tile({ emoji, vocabId, main, gloss, state, onPress, win }: TileP
 
 const styles = StyleSheet.create({
   // The flex item in the grid (so the whole card can scale without disturbing
-  // layout — the pop transform lives on this wrapper).
+  // layout — the pop transform lives on this wrapper). The row stretches every
+  // wrapper to the tallest card's height…
   wrap: {
     flexBasis: "45%",
   },
   tile: {
     width: "100%",
+    flex: 1, // …and the tile fills that height, keeping cards equal per row.
     minHeight: TouchTarget.min * 1.4,
     backgroundColor: Colors.white,
     borderRadius: Radii.lg,
