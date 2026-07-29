@@ -9,6 +9,7 @@ import { Colors, Radii, Spacing } from "@/constants/theme";
 import { buildPickPicture } from "@/content/content-model";
 import { useClipPlayer } from "@/lib/audio";
 import { useDirection } from "@/lib/direction";
+import { useSfx } from "@/lib/sfx";
 import { useShuffled } from "@/lib/shuffle";
 
 import { REVEAL_DELAY_MS, type ExerciseProps } from "./types";
@@ -24,8 +25,10 @@ export function PickPicture({ exercise, host, onDone }: ExerciseProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showHint, setShowHint] = useState(false);
   const resolved = selectedId !== null;
+  const gotIt = resolved && selectedId === built.correctId;
 
   const promptPlayer = useClipPlayer(built.promptAudio);
+  const sfx = useSfx();
 
   useEffect(() => {
     promptPlayer.play();
@@ -35,6 +38,9 @@ export function PickPicture({ exercise, host, onDone }: ExerciseProps) {
 
   useEffect(() => {
     if (!resolved) return;
+    // A correct pick gets a little "pop" reward chime (positive-only: a wrong
+    // pick gets no reward sound, just the gentle spoken reveal below).
+    if (gotIt) sfx.play("pop");
     // Speak the correct word on reveal so a pre-reader hears the right answer
     // (the green highlight alone is silent). promptAudio is the correct word.
     const say = setTimeout(promptPlayer.play, 350);
@@ -93,6 +99,7 @@ export function PickPicture({ exercise, host, onDone }: ExerciseProps) {
               key={tile.id}
               tile={tile}
               state={state}
+              win={gotIt && tile.id === built.correctId}
               onPick={() => !resolved && setSelectedId(tile.id)}
             />
           );
@@ -105,10 +112,12 @@ export function PickPicture({ exercise, host, onDone }: ExerciseProps) {
 function TileWithAudio({
   tile,
   state,
+  win,
   onPick,
 }: {
   tile: ReturnType<typeof buildPickPicture>["tiles"][number];
   state: TileState;
+  win?: boolean;
   onPick: () => void;
 }) {
   const { play } = useClipPlayer(tile.audio);
@@ -119,6 +128,7 @@ function TileWithAudio({
       main={tile.main}
       gloss={tile.gloss}
       state={state}
+      win={win}
       onPress={() => {
         play();
         onPick();

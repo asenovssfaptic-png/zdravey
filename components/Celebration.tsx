@@ -4,10 +4,12 @@ import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { CHARACTERS } from "@/characters/characters";
 import { CharacterBubble } from "@/components/CharacterBubble";
 import { Martenitsa } from "@/components/Martenitsa";
+import { SparkleBurst } from "@/components/SparkleBurst";
 import { Colors, FontSizes, Radii, Spacing } from "@/constants/theme";
 import { CHALLENGE, PRAISE } from "@/content/content-model";
 import { useClipPlayer } from "@/lib/audio";
 import { useDirection } from "@/lib/direction";
+import { useSfx } from "@/lib/sfx";
 
 // The reward moment. Baba Marta (who hands out martenitsi) appears and SPEAKS
 // praise so the screen isn't text-only — a pre-reader hears "Браво!" and can
@@ -30,9 +32,11 @@ export function Celebration({
   const host = boss ? CHARACTERS.krali_marko : CHARACTERS.baba_marta;
   const rewardAudio = boss ? CHALLENGE[known].passAudio : PRAISE[known].audio;
   const praise = useClipPlayer(rewardAudio);
+  const sfx = useSfx();
   const [scale] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
+    sfx.play("fanfare"); // big-win chime under the spoken praise
     praise.play();
     Animated.spring(scale, { toValue: 1, friction: 4, tension: 70, useNativeDriver: false }).start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -55,6 +59,7 @@ export function Celebration({
         accessibilityRole="button"
         accessibilityLabel={known === "bg" ? "Мартеница" : "Martenitsa"}
       >
+        <SparkleBurst trigger={1} size={220} distance={110} />
         <Animated.View style={{ transform: [{ scale }] }}>
           <Martenitsa size={130} />
         </Animated.View>

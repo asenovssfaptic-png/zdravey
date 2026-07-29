@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { CharacterBubble } from "@/components/CharacterBubble";
+import { Pop } from "@/components/Pop";
 import { Colors, FontSizes, Radii, Spacing, TouchTarget } from "@/constants/theme";
 import { buildMatchPairs } from "@/content/content-model";
 import { useClipPlayer } from "@/lib/audio";
 import { useDirection } from "@/lib/direction";
+import { useSfx } from "@/lib/sfx";
 import { shuffled } from "@/lib/shuffle";
 
 import { REVEAL_DELAY_MS, type ExerciseProps } from "./types";
@@ -24,6 +26,8 @@ export function MatchPairs({ exercise, host, onDone }: ExerciseProps) {
   const [matched, setMatched] = useState<Set<string>>(new Set());
   const [pick, setPick] = useState<{ side: Side; id: string } | null>(null);
   const [wrong, setWrong] = useState<{ picture?: string; word?: string }>({});
+  const [justMatched, setJustMatched] = useState<string | null>(null);
+  const sfx = useSfx();
 
   const allMatched = matched.size === items.length;
 
@@ -47,8 +51,12 @@ export function MatchPairs({ exercise, host, onDone }: ExerciseProps) {
     }
     if (pick.id === id) {
       // Same concept picked from both columns -> a match.
-      setMatched((prev) => new Set(prev).add(id));
+      const next = new Set(matched).add(id);
+      setMatched(next);
+      setJustMatched(id);
       setPick(null);
+      // A brighter chime when the last pair lands, a little pop otherwise.
+      sfx.play(next.size === items.length ? "success" : "pop");
     } else {
       // Gentle mismatch: flash both, then clear.
       const pictureId = side === "picture" ? id : pick.id;
@@ -75,6 +83,7 @@ export function MatchPairs({ exercise, host, onDone }: ExerciseProps) {
               done={matched.has(item.id)}
               selected={pick?.side === "picture" && pick.id === item.id}
               wrong={wrong.picture === item.id}
+              win={justMatched === item.id}
               onPress={() => select("picture", item.id)}
             />
           ))}
@@ -88,6 +97,7 @@ export function MatchPairs({ exercise, host, onDone }: ExerciseProps) {
               done={matched.has(item.id)}
               selected={pick?.side === "word" && pick.id === item.id}
               wrong={wrong.word === item.id}
+              win={justMatched === item.id}
               onPress={() => select("word", item.id)}
             />
           ))}
@@ -102,34 +112,38 @@ function PictureCell({
   done,
   selected,
   wrong,
+  win,
   onPress,
 }: {
   item: ReturnType<typeof buildMatchPairs>[number];
   done: boolean;
   selected: boolean;
   wrong: boolean;
+  win: boolean;
   onPress: () => void;
 }) {
   const { play } = useClipPlayer(item.audio);
   return (
-    <Pressable
-      onPress={() => {
-        play();
-        onPress();
-      }}
-      disabled={done}
-      accessibilityRole="button"
-      accessibilityLabel={item.gloss}
-      style={({ pressed }) => [
-        styles.cell,
-        selected && styles.cellSelected,
-        done && styles.cellDone,
-        wrong && styles.cellWrong,
-        pressed && !done && styles.pressed,
-      ]}
-    >
-      <Text style={styles.cellEmoji}>{item.emoji}</Text>
-    </Pressable>
+    <Pop pop={win}>
+      <Pressable
+        onPress={() => {
+          play();
+          onPress();
+        }}
+        disabled={done}
+        accessibilityRole="button"
+        accessibilityLabel={item.gloss}
+        style={({ pressed }) => [
+          styles.cell,
+          selected && styles.cellSelected,
+          done && styles.cellDone,
+          wrong && styles.cellWrong,
+          pressed && !done && styles.pressed,
+        ]}
+      >
+        <Text style={styles.cellEmoji}>{item.emoji}</Text>
+      </Pressable>
+    </Pop>
   );
 }
 
@@ -138,30 +152,34 @@ function WordCell({
   done,
   selected,
   wrong,
+  win,
   onPress,
 }: {
   label: string;
   done: boolean;
   selected: boolean;
   wrong: boolean;
+  win: boolean;
   onPress: () => void;
 }) {
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={done}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={({ pressed }) => [
-        styles.cell,
-        selected && styles.cellSelected,
-        done && styles.cellDone,
-        wrong && styles.cellWrong,
-        pressed && !done && styles.pressed,
-      ]}
-    >
-      <Text style={styles.cellWord}>{label}</Text>
-    </Pressable>
+    <Pop pop={win}>
+      <Pressable
+        onPress={onPress}
+        disabled={done}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        style={({ pressed }) => [
+          styles.cell,
+          selected && styles.cellSelected,
+          done && styles.cellDone,
+          wrong && styles.cellWrong,
+          pressed && !done && styles.pressed,
+        ]}
+      >
+        <Text style={styles.cellWord}>{label}</Text>
+      </Pressable>
+    </Pop>
   );
 }
 
