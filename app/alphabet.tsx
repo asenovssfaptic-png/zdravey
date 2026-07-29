@@ -66,15 +66,26 @@ function AlphabetContent() {
         ))}
       </ScrollView>
 
-      <Pressable
-        onPress={() => router.push("/alphabet-practice")}
-        accessibilityRole="button"
-        accessibilityLabel={direction.known === "bg" ? "Упражнение" : "Practice"}
-        style={({ pressed }) => [styles.practiceButton, pressed && styles.pressed]}
-      >
-        <Text style={styles.practiceIcon}>👂</Text>
-        <Text style={styles.practiceText}>{direction.known === "bg" ? "Упражнение" : "Practice"}</Text>
-      </Pressable>
+      <View style={styles.actionRow}>
+        <Pressable
+          onPress={() => router.push("/alphabet-practice")}
+          accessibilityRole="button"
+          accessibilityLabel={direction.known === "bg" ? "Упражнение" : "Practice"}
+          style={({ pressed }) => [styles.practiceButton, pressed && styles.pressed]}
+        >
+          <Text style={styles.practiceIcon}>👂</Text>
+          <Text style={styles.practiceText}>{direction.known === "bg" ? "Упражнение" : "Practice"}</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => router.push("/alphabet-write")}
+          accessibilityRole="button"
+          accessibilityLabel={direction.known === "bg" ? "Пиши буквите" : "Write the letters"}
+          style={({ pressed }) => [styles.practiceButton, styles.writeButton, pressed && styles.pressed]}
+        >
+          <Text style={styles.practiceIcon}>✏️</Text>
+          <Text style={styles.practiceText}>{direction.known === "bg" ? "Пиши" : "Write"}</Text>
+        </Pressable>
+      </View>
     </SafeAreaView>
   );
 }
@@ -148,7 +159,13 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.7,
   },
+  actionRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    marginTop: Spacing.sm,
+  },
   practiceButton: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -156,7 +173,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.gold,
     borderRadius: Radii.lg,
     paddingVertical: Spacing.md,
-    marginTop: Spacing.sm,
+  },
+  writeButton: {
+    backgroundColor: Colors.correct,
   },
   practiceIcon: {
     fontSize: 28,
