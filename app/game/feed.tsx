@@ -11,6 +11,7 @@ import { Colors, FontSizes, Radii, Spacing } from "@/constants/theme";
 import { VOCAB } from "@/content/content-model";
 import { useOnDemandPlayer } from "@/lib/audio";
 import { useDirection } from "@/lib/direction";
+import { useSfx } from "@/lib/sfx";
 import { shuffled } from "@/lib/shuffle";
 
 // Игра — "Нахрани Змея" (Feed the Zmey). The friendly dragon names a food and
@@ -47,6 +48,7 @@ function FeedContent() {
   const learning = direction.learning;
   const zmey = CHARACTERS.zmey;
   const player = useOnDemandPlayer();
+  const sfx = useSfx();
 
   const [fed, setFed] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
@@ -66,6 +68,8 @@ function FeedContent() {
     player.play(VOCAB[id].audio[learning]);
     setPicked(id);
     const correct = id === target;
+    // Reward only a correct feed — every few in a row gets a brighter chime.
+    if (correct) sfx.play((fed + 1) % 5 === 0 ? "success" : "pop");
     // Speak the right word on reveal, then move to a fresh round.
     setTimeout(() => player.play(targetVocab.audio[learning]), 400);
     setTimeout(
@@ -135,6 +139,7 @@ function FeedContent() {
                 main={v.labels[learning]}
                 gloss={v.labels[known]}
                 state={state}
+                win={gotIt && id === target}
                 onPress={() => tap(id)}
               />
             );
