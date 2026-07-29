@@ -105,6 +105,13 @@ export const PUZZLE_IMAGES: Record<string, ImageSourcePropType> = {
   "pirin_lake": require("../assets/img/puzzle/pirin_lake.jpg"),
 };
 
+export const MAP_IMAGES: Record<string, ImageSourcePropType> = {
+  "hero": require("../assets/img/ui/hero.jpg"),
+  "signpost": require("../assets/img/ui/signpost.jpg"),
+  "treasure": require("../assets/img/ui/treasure.jpg"),
+  "land_banner": require("../assets/img/ui/land_banner.jpg"),
+};
+
 export function vocabImage(id?: string): ImageSourcePropType | null {
   return (id && VOCAB_IMAGES[id]) || null;
 }
@@ -119,4 +126,8 @@ export function background(name: string): ImageSourcePropType | null {
 
 export function puzzleImage(name: string): ImageSourcePropType | null {
   return PUZZLE_IMAGES[name] || null;
+}
+
+export function mapImage(name: string): ImageSourcePropType | null {
+  return MAP_IMAGES[name] || null;
 }
