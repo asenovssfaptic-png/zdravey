@@ -6,8 +6,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CHARACTERS } from "@/characters/characters";
 import { CharacterBubble } from "@/components/CharacterBubble";
+import { SparkleBurst } from "@/components/SparkleBurst";
 import { Colors, FontSizes, Radii, Spacing, TouchTarget } from "@/constants/theme";
 import { useDirection } from "@/lib/direction";
+import { useSfx } from "@/lib/sfx";
 
 // Игра — музика ("Повтори мелодията" / Repeat the tune). A gentle glockenspiel:
 // five bright pentatonic bars that always play when tapped (a free instrument),
@@ -75,6 +77,8 @@ function MusicContent() {
   const [flash, setFlash] = useState<string | null>(null);
   const [listening, setListening] = useState(false); // true while the tune auto-plays
   const [celebrate, setCelebrate] = useState(false);
+  const [wins, setWins] = useState(0);
+  const sfx = useSfx();
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const clearTimers = useCallback(() => {
@@ -134,6 +138,8 @@ function MusicContent() {
         // Whole tune echoed — celebrate and (unless maxed) grow it.
         setPos(0);
         setCelebrate(true);
+        setWins((w) => w + 1);
+        sfx.play("success");
         if (tune.length < MAX_LEN) {
           timers.current.push(setTimeout(grow, 1100));
         }
@@ -163,6 +169,7 @@ function MusicContent() {
       </View>
 
       <View style={styles.body}>
+        <SparkleBurst trigger={wins} size={260} distance={120} />
         <CharacterBubble
           character={kuker}
           text={

@@ -1,13 +1,15 @@
 import { useRouter } from "expo-router";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CHARACTERS } from "@/characters/characters";
 import { CharacterBubble } from "@/components/CharacterBubble";
+import { SparkleBurst } from "@/components/SparkleBurst";
 import { Colors, FontSizes, Radii, Spacing } from "@/constants/theme";
 import { puzzleImage } from "@/lib/images";
 import { useDirection } from "@/lib/direction";
+import { useSfx } from "@/lib/sfx";
 import { shuffled } from "@/lib/shuffle";
 
 // Игра — пъзел ("Подреди картинката" / Put the picture together). A gentle
@@ -57,6 +59,7 @@ function PuzzleContent() {
   const known = direction.known;
   const zmey = CHARACTERS.zmey;
   const { width } = useWindowDimensions();
+  const sfx = useSfx();
 
   const board = Math.min(width - Spacing.lg * 2, 330);
   const tile = board / GRID;
@@ -68,6 +71,12 @@ function PuzzleContent() {
 
   const solved = useMemo(() => order.every((v, i) => v === i), [order]);
   const img = puzzleImage(scene.name);
+
+  // A triumphant fanfare when the picture comes together.
+  useEffect(() => {
+    if (solved) sfx.play("fanfare");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [solved]);
 
   function loadScene(s: Scene) {
     setScene(s);
@@ -90,11 +99,14 @@ function PuzzleContent() {
       setSelected(null);
       return;
     }
-    setOrder((prev) => {
-      const next = [...prev];
-      [next[selected], next[slot]] = [next[slot], next[selected]];
-      return next;
-    });
+    const next = [...order];
+    [next[selected], next[slot]] = [next[slot], next[selected]];
+    // Pop a little "click" when a swap lands more pieces in their home slot
+    // (but let the solve fanfare have the final moment to itself).
+    const before = order.reduce((n, v, i) => n + (v === i ? 1 : 0), 0);
+    const after = next.reduce((n, v, i) => n + (v === i ? 1 : 0), 0);
+    if (after < GRID * GRID && after > before) sfx.play("pop");
+    setOrder(next);
     setSelected(null);
   }
 
@@ -136,6 +148,7 @@ function PuzzleContent() {
               style={{ width: board, height: board, borderRadius: Radii.lg }}
               accessibilityLabel={scene.label[known]}
             />
+            <SparkleBurst trigger={1} size={board} distance={board * 0.42} />
           </View>
         ) : (
           <View

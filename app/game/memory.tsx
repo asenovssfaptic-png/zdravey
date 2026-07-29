@@ -5,10 +5,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CHARACTERS } from "@/characters/characters";
 import { CharacterBubble } from "@/components/CharacterBubble";
+import { Pop } from "@/components/Pop";
+import { SparkleBurst } from "@/components/SparkleBurst";
 import { Colors, FontSizes, Radii, Spacing } from "@/constants/theme";
 import { VOCAB } from "@/content/content-model";
 import { useOnDemandPlayer } from "@/lib/audio";
 import { useDirection } from "@/lib/direction";
+import { useSfx } from "@/lib/sfx";
 import { shuffled } from "@/lib/shuffle";
 
 // Игра — памет ("Открий двойките" / Find the pairs). A supplementary memory
@@ -66,6 +69,7 @@ function MemoryContent() {
   const known = direction.known;
   const kuma = CHARACTERS.kuma_lisa;
   const player = useOnDemandPlayer();
+  const sfx = useSfx();
 
   const [deck, setDeck] = useState<Card[]>(() => makeDeck(direction.learning));
   const [flipped, setFlipped] = useState<string[]>([]); // card keys currently face-up (unmatched)
@@ -80,7 +84,11 @@ function MemoryContent() {
     const isPair = a.id === b.id;
     const t = setTimeout(
       () => {
-        if (isPair) setMatched((prev) => new Set(prev).add(a.id));
+        if (isPair) {
+          setMatched((prev) => new Set(prev).add(a.id));
+          // Brighter chime for the final pair, a pop for the rest.
+          sfx.play(matched.size + 1 === PAIRS ? "success" : "pop");
+        }
         setFlipped([]);
       },
       isPair ? 500 : 850,
@@ -119,7 +127,10 @@ function MemoryContent() {
       {done ? (
         <View style={styles.doneWrap}>
           <CharacterBubble character={kuma} text={known === "bg" ? "Браво! Откри всички!" : "Great! You found them all!"} />
-          <Text style={styles.doneEmoji}>🦊🎉</Text>
+          <View>
+            <SparkleBurst trigger={1} size={200} distance={100} />
+            <Text style={styles.doneEmoji}>🦊🎉</Text>
+          </View>
           <Pressable onPress={restart} accessibilityRole="button" style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
             <Text style={styles.buttonText}>{known === "bg" ? "Още веднъж" : "Play again"}</Text>
           </Pressable>
@@ -127,18 +138,20 @@ function MemoryContent() {
       ) : (
         <View style={styles.grid}>
           {deck.map((card) => {
-            const isUp = flipped.includes(card.key) || matched.has(card.id);
+            const isMatched = matched.has(card.id);
+            const isUp = flipped.includes(card.key) || isMatched;
             return (
-              <Pressable
-                key={card.key}
-                testID="memcard"
-                onPress={() => flip(card)}
-                accessibilityRole="button"
-                accessibilityLabel={isUp ? card.id : known === "bg" ? "Карта" : "Card"}
-                style={[styles.card, isUp ? styles.cardUp : styles.cardDown, matched.has(card.id) && styles.cardMatched]}
-              >
-                <Text style={styles.cardFace}>{isUp ? card.emoji : "❓"}</Text>
-              </Pressable>
+              <Pop key={card.key} pop={isMatched}>
+                <Pressable
+                  testID="memcard"
+                  onPress={() => flip(card)}
+                  accessibilityRole="button"
+                  accessibilityLabel={isUp ? card.id : known === "bg" ? "Карта" : "Card"}
+                  style={[styles.card, isUp ? styles.cardUp : styles.cardDown, isMatched && styles.cardMatched]}
+                >
+                  <Text style={styles.cardFace}>{isUp ? card.emoji : "❓"}</Text>
+                </Pressable>
+              </Pop>
             );
           })}
         </View>
