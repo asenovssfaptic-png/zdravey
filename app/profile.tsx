@@ -1,9 +1,11 @@
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { BottomNav } from "@/components/BottomNav";
 import { Martenitsa } from "@/components/Martenitsa";
+import { ParentGate } from "@/components/ParentGate";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { Colors, FontSizes, Radii, Spacing, TouchTarget } from "@/constants/theme";
 import { UNITS } from "@/content/content-model";
@@ -18,6 +20,7 @@ export default function ProfileScreen() {
   const { direction } = useDirection();
   const { martenitsi, stars, completedLessons } = useProgress();
   const known = direction.known;
+  const [gateOpen, setGateOpen] = useState(false);
 
   const totalLessons = UNITS.reduce((n, u) => n + u.lessons.length, 0);
 
@@ -48,7 +51,7 @@ export default function ProfileScreen() {
         </View>
 
         <Pressable
-          onPress={() => router.push("/parent-setup")}
+          onPress={() => setGateOpen(true)}
           accessibilityRole="button"
           accessibilityLabel={known === "bg" ? "Родителски контрол" : "Parent settings"}
           style={({ pressed }) => [styles.parentButton, pressed && styles.pressed]}
@@ -61,6 +64,16 @@ export default function ProfileScreen() {
       </ScrollView>
 
       <BottomNav />
+
+      {gateOpen && (
+        <ParentGate
+          onPass={() => {
+            setGateOpen(false);
+            router.push("/parent-setup");
+          }}
+          onCancel={() => setGateOpen(false)}
+        />
+      )}
     </SafeAreaView>
     </ScreenBackground>
   );
