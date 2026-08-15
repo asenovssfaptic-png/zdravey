@@ -83,6 +83,20 @@ for (const unit of UNITS) {
     lesson.exercises.forEach((ex, i) => {
       const w = `Lesson "${lesson.id}" ex[${i}] (${ex.type})`;
       const choices = ex.choices ?? [];
+
+      // A shown hint MUST be voiced (audio-first): a text-only tip is useless
+      // to the pre-reader it exists to help.
+      if (ex.hint) {
+        if (!ex.hintAudio) {
+          err(w, "has a hint but no hintAudio (run npm run generate:audio)");
+        } else {
+          for (const lang of ["bg", "en"]) {
+            if (!ex.hint[lang]) err(w, `hint missing ${lang} text`);
+            checkClip(`${w}.hintAudio.${lang}`, ex.hintAudio[lang]);
+          }
+        }
+      }
+
       switch (ex.type) {
         case "pick_picture":
         case "match_pairs":

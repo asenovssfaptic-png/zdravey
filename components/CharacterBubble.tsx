@@ -1,15 +1,23 @@
-import { Image, StyleSheet, Text, View } from "react-native";
+import { useEffect } from "react";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { CharacterMeta } from "@/characters/characters";
 import { Colors, FontSizes, Radii, Spacing } from "@/constants/theme";
+import type { AudioClip } from "@/content/content-model";
+import { useClipPlayer } from "@/lib/audio";
 import { characterImage } from "@/lib/images";
 
 interface CharacterBubbleProps {
   character: CharacterMeta;
   text: string;
+  // When set, the bubble speaks: it plays the clip once on mount and shows a
+  // tap-to-replay speaker. Used for audio-first tips/instructions (e.g. Kuma
+  // Lisa's hint) so a pre-reader hears the guidance instead of only seeing it.
+  audio?: AudioClip;
+  audioLabel?: string;
 }
 
-export function CharacterBubble({ character, text }: CharacterBubbleProps) {
+export function CharacterBubble({ character, text, audio, audioLabel }: CharacterBubbleProps) {
   const painted = characterImage(character.id);
   return (
     <View style={styles.row}>
@@ -28,7 +36,30 @@ export function CharacterBubble({ character, text }: CharacterBubbleProps) {
       <View style={styles.bubble}>
         <Text style={styles.bubbleText}>{text}</Text>
       </View>
+      {/* The audio player is only mounted when a clip is supplied, so bubbles on
+          non-mount-gated screens (home/profile) stay free of client-only audio
+          hooks during the static export. */}
+      {audio && <BubbleSpeaker audio={audio} label={audioLabel ?? text} />}
     </View>
+  );
+}
+
+function BubbleSpeaker({ audio, label }: { audio: AudioClip; label: string }) {
+  const { play, isPlaying } = useClipPlayer(audio);
+  // Speak once when the bubble appears (e.g. the moment the hint is opened).
+  useEffect(() => {
+    play();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return (
+    <Pressable
+      onPress={play}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={({ pressed }) => [styles.speaker, isPlaying && styles.speakerOn, pressed && styles.speakerPressed]}
+    >
+      <Text style={styles.speakerIcon}>🔊</Text>
+    </Pressable>
   );
 }
 
@@ -61,4 +92,17 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.body,
     color: Colors.text,
   },
+  speaker: {
+    width: 48,
+    height: 48,
+    borderRadius: Radii.round,
+    backgroundColor: Colors.white,
+    borderWidth: 2,
+    borderColor: Colors.gold,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  speakerOn: { backgroundColor: Colors.tintGold },
+  speakerPressed: { opacity: 0.7 },
+  speakerIcon: { fontSize: 24 },
 });

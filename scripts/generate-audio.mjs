@@ -61,6 +61,12 @@ for (const [lang, c] of Object.entries(CHALLENGE)) {
 for (const unit of UNITS) {
   for (const lesson of unit.lessons) {
     for (const ex of lesson.exercises) {
+      // Kuma Lisa's hint, spoken per language (audio-first tips).
+      if (ex.hintAudio && ex.hint) {
+        for (const lang of Object.keys(ex.hintAudio)) {
+          clips.push({ src: ex.hintAudio[lang].src, lang, text: ex.hint[lang] });
+        }
+      }
       // Build-a-phrase: the spoken full phrase per language.
       if (ex.phrase) {
         for (const lang of Object.keys(ex.phrase.audio)) {
