@@ -108,6 +108,17 @@ for (const unit of UNITS) {
         case "say_it":
           need(w, ex.prompt);
           break;
+        case "spell_word":
+          if (need(w, ex.prompt)) {
+            // Words are spelled letter by letter — both spellings must be a
+            // single, multi-letter token (no spaces) so the tiles line up.
+            for (const lang of ["bg", "en"]) {
+              const label = VOCAB[ex.prompt].labels[lang];
+              if (/\s/.test(label)) err(w, `spell_word "${ex.prompt}" ${lang} label "${label}" has a space`);
+              if ([...label].length < 2) err(w, `spell_word "${ex.prompt}" ${lang} label too short to spell`);
+            }
+          }
+          break;
         case "true_false":
           need(w, ex.prompt);
           if (ex.claim) need(w, ex.claim);
