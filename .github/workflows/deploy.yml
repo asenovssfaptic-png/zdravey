@@ -24,7 +24,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # 22+: the content check runs .ts via --experimental-strip-types.
+          node-version: 22
           cache: npm
 
       - run: npm ci
@@ -34,6 +35,9 @@ jobs:
 
       - name: Lint
         run: npx expo lint
+
+      - name: Content integrity
+        run: npm run check:content
 
       - name: Export web build
         run: npx expo export --platform web
