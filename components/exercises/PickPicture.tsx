@@ -83,7 +83,11 @@ export function PickPicture({ exercise, host, onDone }: ExerciseProps) {
       </View>
 
       {showHint && exercise.hint && (
-        <CharacterBubble character={kumaLisa} text={exercise.hint[direction.known]} />
+        <CharacterBubble
+          character={kumaLisa}
+          text={exercise.hint[direction.known]}
+          audio={exercise.hintAudio?.[direction.known]}
+        />
       )}
 
       <View style={styles.grid}>
