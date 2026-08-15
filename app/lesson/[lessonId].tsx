@@ -13,6 +13,7 @@ import { OddOneOut } from "@/components/exercises/OddOneOut";
 import { PickPicture } from "@/components/exercises/PickPicture";
 import { SayIt } from "@/components/exercises/SayIt";
 import { SequenceOrder } from "@/components/exercises/SequenceOrder";
+import { SpellWord } from "@/components/exercises/SpellWord";
 import { StoryPanel } from "@/components/exercises/StoryPanel";
 import { TrueFalse } from "@/components/exercises/TrueFalse";
 import type { ExerciseProps } from "@/components/exercises/types";
@@ -35,6 +36,7 @@ const EXERCISE_COMPONENTS: Partial<Record<ExerciseType, (props: ExerciseProps) =
   true_false: TrueFalse,
   sequence: SequenceOrder,
   build_phrase: BuildPhrase,
+  spell_word: SpellWord,
 };
 
 // Pre-render one static HTML page per lesson so deep-links/refreshes resolve

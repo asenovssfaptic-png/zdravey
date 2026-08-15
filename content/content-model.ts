@@ -56,7 +56,8 @@ export type ExerciseType =
   | "story" // a narrated storybook panel that frames a lesson (no fail)
   | "true_false" // Hitar Petar shows a picture + says a word: does it match?
   | "sequence" // tap the pictures in order (e.g. count 1→5) — `choices` is the order
-  | "build_phrase"; // tap word-tiles in order to build a phrase/sentence
+  | "build_phrase" // tap word-tiles in order to build a phrase/sentence
+  | "spell_word"; // tap letter-tiles in order to spell a single vocab word
 
 // A single beat of a story panel: one character says one line. Narration is
 // shown + spoken in the KNOWN language (so the child follows the tale); an
@@ -1268,6 +1269,8 @@ export const fruitsUnit: Unit = {
           prompt: "fruit.orange",
           choices: ["fruit.strawberry", "fruit.watermelon", "fruit.lemon"],
         },
+        // Spell the word from letter tiles — a bridge from the alphabet track.
+        { type: "spell_word", prompt: "fruit.apple" },
       ],
     },
     {
@@ -1367,6 +1370,7 @@ export const animalsUnit: Unit = {
           prompt: "color.red",
           choices: ["animal.cow", "animal.horse", "animal.sheep"],
         },
+        { type: "spell_word", prompt: "animal.cat" },
       ],
     },
     {
@@ -2425,6 +2429,7 @@ export const toysUnit: Unit = {
           prompt: "toy.teddy",
           choices: ["toy.blocks", "toy.drum", "toy.balloon"],
         },
+        { type: "spell_word", prompt: "toy.ball" },
         {
           type: "story",
           prompt: "story.toys.outro",
