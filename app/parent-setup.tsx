@@ -24,8 +24,10 @@ const OPTIONS: DirectionOption[] = [
   },
 ];
 
-// Reached only via a long-press on the home screen's gear icon — that hold
-// gesture is the "parent gate" so a young child can't flip this by accident.
+// Reached only after passing the ParentGate arithmetic challenge (see
+// components/ParentGate.tsx) on the home gear pill or the profile button — that
+// grown-up check keeps a young child from flipping the learning direction by
+// accident.
 export default function ParentSetupScreen() {
   const router = useRouter();
   const { direction, setDirection } = useDirection();

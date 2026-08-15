@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -7,6 +8,7 @@ import { AdventurePath } from "@/components/AdventurePath";
 import { BottomNav } from "@/components/BottomNav";
 import { CharacterBubble } from "@/components/CharacterBubble";
 import { Martenitsa } from "@/components/Martenitsa";
+import { ParentGate } from "@/components/ParentGate";
 import { ScreenBackground } from "@/components/ScreenBackground";
 import { Colors, FontSizes, Radii, Spacing } from "@/constants/theme";
 import type { LangCode } from "@/content/content-model";
@@ -20,6 +22,7 @@ export default function HomeScreen() {
   const { direction } = useDirection();
   const { martenitsi, isLessonComplete } = useProgress();
   const babaMarta = CHARACTERS.baba_marta;
+  const [gateOpen, setGateOpen] = useState(false);
 
   const greeting =
     direction.known === "bg" ? "Здравей! Хайде на приключение!" : "Hello! Let's go on an adventure!";
@@ -40,7 +43,7 @@ export default function HomeScreen() {
           </View>
 
           <Pressable
-            onPress={() => router.push("/parent-setup")}
+            onPress={() => setGateOpen(true)}
             accessibilityRole="button"
             accessibilityLabel={direction.known === "bg" ? "Смени езика" : "Change language"}
             style={({ pressed }) => [styles.langPill, pressed && styles.pressed]}
@@ -65,6 +68,16 @@ export default function HomeScreen() {
 
         <BottomNav />
       </SafeAreaView>
+
+      {gateOpen && (
+        <ParentGate
+          onPass={() => {
+            setGateOpen(false);
+            router.push("/parent-setup");
+          }}
+          onCancel={() => setGateOpen(false)}
+        />
+      )}
     </ScreenBackground>
   );
 }
