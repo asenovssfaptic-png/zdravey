@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gamarjoba! — Learn Georgian</title>
+  <meta name="description" content="Gamarjoba! A friendly, positive-only way to learn Georgian words, phrases and the Mkhedruli alphabet. No accounts, no ads — everything stays on your device.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23FFFFFF'/%3E%3Crect x='14' y='2' width='4' height='28' fill='%23DA291C'/%3E%3Crect x='2' y='14' width='28' height='4' fill='%23DA291C'/%3E%3Cpath d='M6 5h2v2h2v2H8v2H6V9H4V7h2z' fill='%23DA291C'/%3E%3Cpath d='M24 5h2v2h2v2h-2v2h-2V9h-2V7h2z' fill='%23DA291C'/%3E%3Cpath d='M6 21h2v2h2v2H8v2H6v-2H4v-2h2z' fill='%23DA291C'/%3E%3Cpath d='M24 21h2v2h2v2h-2v2h-2v-2h-2v-2h2z' fill='%23DA291C'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Reusable inline SVG defs (borjgali ornament) -->
+  <svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+    <symbol id="borjgali" viewBox="0 0 100 100">
+      <g fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round">
+        <path d="M50 50 Q58 30 50 12"/>
+        <path d="M50 50 Q58 30 50 12" transform="rotate(51.43 50 50)"/>
+        <path d="M50 50 Q58 30 50 12" transform="rotate(102.86 50 50)"/>
+        <path d="M50 50 Q58 30 50 12" transform="rotate(154.29 50 50)"/>
+        <path d="M50 50 Q58 30 50 12" transform="rotate(205.71 50 50)"/>
+        <path d="M50 50 Q58 30 50 12" transform="rotate(257.14 50 50)"/>
+        <path d="M50 50 Q58 30 50 12" transform="rotate(308.57 50 50)"/>
+      </g>
+      <circle cx="50" cy="50" r="7" fill="currentColor"/>
+    </symbol>
+  </svg>
+
+  <header class="site-header">
+    <a class="brand" href="#/home" aria-label="Gamarjoba! home">
+      <svg class="borjgali brand-mark" aria-hidden="true" focusable="false"><use href="#borjgali"></use></svg>
+      <span class="wordmark"><span lang="ka" class="ka">გამარჯობა!</span><span class="wordmark-latin"> · Gamarjoba!</span></span>
+    </a>
+    <div class="stat-chips">
+      <span class="chip" id="chip-stars" aria-label="Total stars: 0"><span aria-hidden="true">⭐</span> <span id="stars-val">0</span></span>
+      <span class="chip" id="chip-xp" aria-label="Total XP: 0"><span aria-hidden="true">⚡</span> <span id="xp-val">0</span>&nbsp;XP</span>
+    </div>
+  </header>
+
+  <main id="app"></main>
+
+  <div id="live" aria-live="polite" class="visually-hidden"></div>
+  <div id="toasts" role="status" aria-live="polite"></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
