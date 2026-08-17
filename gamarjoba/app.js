@@ -35,8 +35,21 @@
       lastPracticed: {},    // wordId -> timestamp
       letterCardsOpened: [],// letter ka strings opened at least once
       buildFirstTries: 0,   // build_word first-try count (word-builder badge)
-      practiceSessions: 0   // completed practice sessions (practicer badge)
+      practiceSessions: 0,  // completed practice sessions (practicer badge)
+      /* v2 additions — all monotonic, old saves upgrade via the key-merge below */
+      lettersMeetDone: [],   // group ids whose "Meet the letters" deck was finished
+      lettersTraceDone: [],  // group ids whose tracing step was finished
+      lettersTraced: [],     // individual ka chars ever traced (letter-artist badge)
+      lettersExamStars: {},  // groupId -> best stars 1..3, max-merge only
+      readingCardsDone: [],  // reading step ids
+      readingPracticeDone: [], // reading step ids
+      readingExamStars: {}   // stepId -> best stars 1..3, max-merge only
     };
+  }
+
+  function pushOnce(arr, val) {
+    if (arr.indexOf(val) === -1) { arr.push(val); return true; }
+    return false;
   }
 
   var state = (function loadState() {
@@ -171,13 +184,81 @@
     }
   } catch (e) {}
 
-  function speakBtn(text, label) {
+  /* ------------------------------------------------------------------ *
+   * Bundled MP3 clips — audio/ka/<audioId>.mp3, relative paths only.
+   * MP3-first, speechSynthesis fallback, silent no-op if neither.
+   * window.AUDIO_FILES (audio-map.js) says which clips exist.
+   * ------------------------------------------------------------------ */
+
+  var AUDIO_SET = {};
+  (window.AUDIO_FILES || []).forEach(function (id) { AUDIO_SET[id] = true; });
+
+  var audioCache = {};  // audioId -> HTMLAudioElement
+  var audioBad = {};    // audioId -> true once the file 404s / errors
+  var currentClip = null;
+
+  function playAudio(audioId, kaText) {
+    stopSpeech();
+    if (currentClip) { try { currentClip.pause(); } catch (e) {} }
+    if (!audioId || audioBad[audioId] || !AUDIO_SET[audioId]) { speak(kaText); return; }
+    var a = audioCache[audioId];
+    if (!a) {
+      a = new Audio('audio/ka/' + audioId + '.mp3');
+      a.preload = 'auto';
+      a.addEventListener('error', function () { audioBad[audioId] = true; });
+      audioCache[audioId] = a;
+    }
+    currentClip = a;
+    try {
+      a.currentTime = 0;
+      var p = a.play();
+      if (p && p.catch) { p.catch(function () { /* autoplay blocked: stay quiet */ }); }
+    } catch (e) { speak(kaText); }
+  }
+
+  function letterAudioId(letter) {
+    return (C.audioIds && C.audioIds.letters && C.audioIds.letters[letter.ka]) || null;
+  }
+
+  function playWord(w) { playAudio(w.id, w.ka); }
+  function playLetter(l) { playAudio(letterAudioId(l), l.ka); }
+
+  /* letters have no `id`; anything speakable goes through here */
+  function playItem(item) {
+    if (!item) { return; }
+    var aid = item.id;
+    if (!aid && C.audioIds && C.audioIds.letters && C.audioIds.letters[item.ka]) {
+      aid = C.audioIds.letters[item.ka];
+    }
+    playAudio(aid, item.ka);
+  }
+
+  function playPraise() {
+    var list = C.praise || [];
+    if (!list.length) { return; }
+    var p = list[Math.floor(Math.random() * list.length)];
+    playAudio(p.id, p.ka);
+    return p;
+  }
+
+  /* AudioButton — the one way to put a 🔊 next to a word or letter.
+   * Secondary control: never selects/submits an answer (stopPropagation),
+   * keyboard reachable like any button. */
+  function audioBtn(audioId, kaText, opts) {
+    var cls = 'speak-btn';
+    if (opts && opts.small) { cls += ' speak-btn--sm'; }
+    if (opts && opts.lg) { cls += ' speak-btn--lg'; }
     return h('button', {
-      'class': 'speak-btn',
+      'class': cls,
       type: 'button',
-      'aria-label': label || 'Play audio',
-      onclick: function () { speak(text); }
+      'aria-label': (opts && opts.label) || 'Listen',
+      onclick: function (e) { e.stopPropagation(); playAudio(audioId, kaText); }
     }, [h('span', { 'aria-hidden': 'true', text: '🔊' })]);
+  }
+
+  /* legacy shim — plain speech-only button */
+  function speakBtn(text, label) {
+    return audioBtn(null, text, { label: label });
   }
 
   function sayHint(translit) {
@@ -327,12 +408,16 @@
     'first-crown':       { emoji: '👑', name: 'First crown' },
     'alphabet-explorer': { emoji: '🔤', name: 'Alphabet explorer' },
     'word-builder':      { emoji: '🧱', name: 'Word builder' },
-    'practicer':         { emoji: '🏃', name: 'Practicer' }
+    'practicer':         { emoji: '🏃', name: 'Practicer' },
+    'letter-artist':     { emoji: '✍️', name: 'Letter artist' },
+    'first-reader':      { emoji: '📖', name: 'First reader' }
   };
 
   function totalStars() {
     var t = state.practiceStars || 0;
     Object.keys(state.stars).forEach(function (k) { t += state.stars[k] || 0; });
+    Object.keys(state.lettersExamStars).forEach(function (k) { t += state.lettersExamStars[k] || 0; });
+    Object.keys(state.readingExamStars).forEach(function (k) { t += state.readingExamStars[k] || 0; });
     return t;
   }
 
@@ -423,6 +508,18 @@
       renderLessonRoute(m[1]);
     } else if (hash === '#/alphabet' || hash === '#alphabet') {
       renderAlphabet();
+    } else if (hash === '#/letters') {
+      renderLettersPath();
+    } else if ((m = hash.match(/^#\/letters\/([\w-]+)\/(meet|trace|exam)$/))) {
+      if (m[2] === 'meet') { renderMeet(m[1]); }
+      else if (m[2] === 'trace') { renderTrace(m[1]); }
+      else { startLettersExam(m[1]); }
+    } else if (hash === '#/reading') {
+      renderReadingPath();
+    } else if ((m = hash.match(/^#\/reading\/([\w-]+)\/(cards|practice|exam)$/))) {
+      if (m[2] === 'cards') { renderReadingCards(m[1]); }
+      else if (m[2] === 'practice') { startReadingPractice(m[1]); }
+      else { startReadingExam(m[1]); }
     } else if (hash === '#/practice' || hash === '#practice' || hash === '#/review') {
       renderPractice();
     } else {
@@ -436,7 +533,7 @@
    * Home — adventure path
    * ------------------------------------------------------------------ */
 
-  function entryCard(emoji, kaLabel, enLabel, hash, ariaLabel) {
+  function entryCard(emoji, kaLabel, enLabel, sub, hash, ariaLabel) {
     return h('button', {
       'class': 'entry-card',
       type: 'button',
@@ -446,7 +543,7 @@
       h('span', { 'class': 'entry-emoji', 'aria-hidden': 'true', text: emoji }),
       h('span', {}, [
         kaSpan(kaLabel), ' · ' + enLabel,
-        h('span', { 'class': 'entry-sub', text: hash === '#/alphabet' ? ALL_LETTERS.length + ' letters, one sound each' : 'Mix everything you know' })
+        h('span', { 'class': 'entry-sub', text: sub })
       ]),
       h('span', { 'class': 'chevron', 'aria-hidden': 'true', text: '›' })
     ]);
@@ -466,8 +563,9 @@
     var sec = h('section', { 'class': 'view home', role: 'region', 'aria-label': 'Home' });
     sec.appendChild(h('h1', { text: 'Your Georgian adventure' }));
 
-    sec.appendChild(entryCard('🔤', C.strings.alphabet, 'Alphabet', '#/alphabet', 'Open the Georgian alphabet'));
-    sec.appendChild(entryCard('🧠', C.strings.practice, 'Review', '#/practice', 'Practice everything you have learned'));
+    sec.appendChild(entryCard('🔤', C.strings.letters, 'Letters', 'Read & write all 33 letters, step by step', '#/letters', 'Open the Letters path'));
+    sec.appendChild(entryCard('📖', C.strings.reading, 'Reading', 'Sound out your first Georgian words', '#/reading', 'Open the Reading path'));
+    sec.appendChild(entryCard('🧠', C.strings.practice, 'Review', 'Mix everything you know', '#/practice', 'Practice everything you have learned'));
 
     var path = h('ol', { 'class': 'home-path' });
     C.units.forEach(function (u, i) {
@@ -582,6 +680,13 @@
 
   var exerciseKeyCounter = 0;
 
+  /* exercise types that get one quiet retry after a miss */
+  var RETRY_TYPES = {
+    pick_picture: 1, reverse_pick: 1,
+    hear_pick_letter: 1, letter_to_sound: 1,
+    read_word_pick_picture: 1, picture_pick_word: 1
+  };
+
   function makeEx(type, props) {
     var ex = { type: type, key: 'ex' + (++exerciseKeyCounter), retry: false };
     Object.keys(props).forEach(function (k) { ex[k] = props[k]; });
@@ -627,6 +732,13 @@
     var buildable = items.filter(isBuildable);
     if (buildable.length) {
       exs.push(makeEx('build_word', { word: shuffle(buildable)[0] }));
+    }
+
+    // later units sprinkle in the reading exercises (read the Georgian word)
+    if (C.units.indexOf(unit) >= 3) {
+      var readPool = shuffle(items);
+      exs.push(makeEx('read_word_pick_picture', { word: readPool[0], tiers: tiers }));
+      exs.push(makeEx('picture_pick_word', { word: readPool[readPool.length - 1], tiers: tiers }));
     }
 
     // keep a picture exercise first (friendliest opener), mix the rest
@@ -774,7 +886,7 @@
     // remember practice recency for every word in this exercise
     var words = ex.words || (ex.word ? [ex.word] : []);
     var now = Date.now();
-    words.forEach(function (w) { state.lastPracticed[w.id] = now; });
+    words.forEach(function (w) { if (w && w.id) { state.lastPracticed[w.id] = now; } });
 
     var isPractice = s.cfg.mode === 'practice';
 
@@ -800,8 +912,12 @@
       s.area.classList.add('warn-flash');
       later(s, function () { s.area.classList.remove('warn-flash'); }, 600);
       // quietly re-queue the same item two exercises later for one retry
-      if (!ex.retry && (ex.type === 'pick_picture' || ex.type === 'reverse_pick')) {
-        var clone = makeEx(ex.type, { word: ex.word, tiers: ex.tiers });
+      if (!ex.retry && RETRY_TYPES[ex.type]) {
+        var props = {};
+        Object.keys(ex).forEach(function (k) {
+          if (k !== 'type' && k !== 'key' && k !== 'retry') { props[k] = ex[k]; }
+        });
+        var clone = makeEx(ex.type, props);
         clone.retry = true;
         var at = Math.min(s.idx + 3, s.queue.length);
         s.queue.splice(at, 0, clone);
@@ -842,22 +958,47 @@
   function finishSession(s) {
     s.alive = false;
     s.optionButtons = [];
-    var isPractice = s.cfg.mode === 'practice';
-    var starsEarned;
+    var mode = s.cfg.mode;
+    var isPractice = mode === 'practice';
+    var isReadingPractice = mode === 'reading-practice';
+    var isExam = mode === 'letters-exam' || mode === 'reading-exam';
+    var starsEarned = 0;
+    var slotCount = 3;
+    var acc, prev, bonus;
 
     if (isPractice) {
       state.practiceStars++;
       state.practiceSessions++;
       save();
       starsEarned = 1;
+      slotCount = 1;
       if (state.practiceSessions >= 5) { earnBadge('practicer'); }
+    } else if (isReadingPractice) {
+      pushOnce(state.readingPracticeDone, s.cfg.stepId);
+      save();
+      slotCount = 0; // no stars for reading practice — praise + XP only
+    } else if (isExam) {
+      acc = s.totalOriginal ? s.score / s.totalOriginal : 1;
+      starsEarned = acc >= 0.9 ? 3 : acc >= 0.6 ? 2 : 1; // exams always award at least one star
+      if (mode === 'letters-exam') {
+        prev = state.lettersExamStars[s.cfg.groupId] || 0;
+        state.lettersExamStars[s.cfg.groupId] = Math.max(prev, starsEarned);
+      } else {
+        prev = state.readingExamStars[s.cfg.stepId] || 0;
+        state.readingExamStars[s.cfg.stepId] = Math.max(prev, starsEarned);
+      }
+      save();
+      bonus = 20;
+      s.xpEarned += bonus;
+      addXP(bonus);
+      if (mode === 'reading-exam') { earnBadge('first-reader'); }
     } else {
-      var acc = s.totalOriginal ? s.score / s.totalOriginal : 1;
+      acc = s.totalOriginal ? s.score / s.totalOriginal : 1;
       starsEarned = acc >= 0.9 ? 3 : acc >= 0.6 ? 2 : 1; // finishing always earns at least one star
-      var prev = state.stars[s.cfg.lessonId] || 0;
+      prev = state.stars[s.cfg.lessonId] || 0;
       state.stars[s.cfg.lessonId] = Math.max(prev, starsEarned);
       save();
-      var bonus = 20;
+      bonus = 20;
       s.xpEarned += bonus;
       addXP(bonus);
       earnBadge('first-lesson');
@@ -871,35 +1012,51 @@
       kaSpan(C.strings.excellent), ' · Excellent!'
     ]));
 
-    var slots = h('div', { 'class': 'star-slots', 'aria-label': isPractice
-      ? 'Practice star earned'
-      : starsEarned + ' of 3 stars earned' });
-    var slotCount = isPractice ? 1 : 3;
-    for (var i = 0; i < slotCount; i++) {
-      slots.appendChild(h('span', {
-        'class': 'star-slot' + (i < starsEarned ? ' filled' : ''),
-        'aria-hidden': 'true',
-        text: '★'
-      }));
+    if (slotCount > 0) {
+      var slots = h('div', { 'class': 'star-slots', 'aria-label': isPractice
+        ? 'Practice star earned'
+        : starsEarned + ' of 3 stars earned' });
+      for (var i = 0; i < slotCount; i++) {
+        slots.appendChild(h('span', {
+          'class': 'star-slot' + (i < starsEarned ? ' filled' : ''),
+          'aria-hidden': 'true',
+          text: '★'
+        }));
+      }
+      finish.appendChild(slots);
     }
-    finish.appendChild(slots);
     if (isPractice) {
       finish.appendChild(h('p', { 'class': 'finish-note', text: 'Practice star!' }));
     }
+    if (isReadingPractice) {
+      finish.appendChild(h('p', { 'class': 'finish-note', text: 'Reading practice complete!' }));
+    }
     finish.appendChild(h('p', { 'class': 'xp-line', text: '+' + s.xpEarned + ' XP' }));
+
+    var continueHash = '#/home';
+    if (mode === 'letters-exam') { continueHash = '#/letters'; }
+    if (mode === 'reading-exam' || isReadingPractice) { continueHash = '#/reading'; }
+
+    var redoLabel = 'Redo lesson';
+    if (isPractice) { redoLabel = 'Practice again'; }
+    if (isReadingPractice) { redoLabel = 'Practice again'; }
+    if (isExam) { redoLabel = 'Redo exam'; }
 
     var actions = h('div', { 'class': 'finish-actions' });
     actions.appendChild(h('button', {
       'class': 'btn btn-primary btn-block', type: 'button',
-      onclick: function () { navigate('#/home'); }
+      onclick: function () { navigate(continueHash); }
     }, ['Continue']));
     actions.appendChild(h('button', {
       'class': 'btn btn-secondary btn-block', type: 'button',
       onclick: function () {
         if (isPractice) { startPracticeSession(); }
+        else if (mode === 'letters-exam') { startLettersExam(s.cfg.groupId); }
+        else if (mode === 'reading-exam') { startReadingExam(s.cfg.stepId); }
+        else if (isReadingPractice) { startReadingPractice(s.cfg.stepId); }
         else { renderLessonRoute(s.cfg.lessonId); }
       }
-    }, [isPractice ? 'Practice again' : 'Redo lesson']));
+    }, [redoLabel]));
     finish.appendChild(actions);
 
     s.area.innerHTML = '';
@@ -907,9 +1064,21 @@
     s.fill.style.width = '100%';
     s.bar.setAttribute('aria-valuenow', '100');
     confettiBurst(finish);
-    announce('Excellent! ' + (isPractice
-      ? 'Practice complete. You earned a practice star and ' + s.xpEarned + ' XP.'
-      : 'Lesson complete. You earned ' + starsEarned + (starsEarned === 1 ? ' star' : ' stars') + ' and ' + s.xpEarned + ' XP.'));
+    window.setTimeout(function () {
+      // navigated away before the praise fired? stay quiet
+      if (document.body.contains(finish)) { playPraise(); }
+    }, 600);
+    var announceTail;
+    if (isPractice) {
+      announceTail = 'Practice complete. You earned a practice star and ' + s.xpEarned + ' XP.';
+    } else if (isReadingPractice) {
+      announceTail = 'Reading practice complete. You earned ' + s.xpEarned + ' XP.';
+    } else if (isExam) {
+      announceTail = 'Exam complete. You earned ' + starsEarned + (starsEarned === 1 ? ' star' : ' stars') + ' and ' + s.xpEarned + ' XP.';
+    } else {
+      announceTail = 'Lesson complete. You earned ' + starsEarned + (starsEarned === 1 ? ' star' : ' stars') + ' and ' + s.xpEarned + ' XP.';
+    }
+    announce('Excellent! ' + announceTail);
     var firstBtn = actions.querySelector('button');
     if (firstBtn) { firstBtn.focus(); }
   }
@@ -933,17 +1102,16 @@
     }, 350);
     allButtons.forEach(function (b) { b.disabled = true; });
     markCorrectCard(correctCard);
-    speak(word.ka);
+    playItem(word); // reveal AND speak the right answer
   }
 
   function renderPickPicture(ex, container, onResult, s) {
     var word = ex.word;
-    var withVoice = hasVoice();
-    container.appendChild(h('p', { 'class': 'instruction', text: withVoice ? 'Tap what you hear' : 'Tap the matching picture' }));
+    container.appendChild(h('p', { 'class': 'instruction', text: 'Tap what you hear' }));
 
     var prompt = h('div', { 'class': 'prompt-block' }, [
       h('span', { 'class': 'prompt-ka' }, [kaSpan(word.ka)]),
-      speakBtn(word.ka, 'Hear the word again')
+      audioBtn(word.id, word.ka, { label: 'Hear the word again' })
     ]);
     container.appendChild(prompt);
     container.appendChild(h('p', { 'class': 'translit', text: word.translit }));
@@ -983,7 +1151,7 @@
     });
     container.appendChild(grid);
     if (s) { s.optionButtons = buttons; }
-    speak(word.ka);
+    playWord(word);
   }
 
   function renderReversePick(ex, container, onResult, s) {
@@ -1008,7 +1176,7 @@
         'aria-pressed': 'false',
         onclick: function () {
           if (judged) { return; }
-          speak(opt.ka); // exploring options out loud is free
+          playWord(opt); // exploring options out loud is free
           selected = i;
           buttons.forEach(function (b, j) {
             b.setAttribute('aria-pressed', j === i ? 'true' : 'false');
@@ -1020,7 +1188,10 @@
         h('span', { 'class': 'word-translit', text: opt.translit })
       ]);
       buttons.push(btn);
-      list.appendChild(btn);
+      list.appendChild(h('div', { 'class': 'option-row' }, [
+        btn,
+        audioBtn(opt.id, opt.ka, { small: true, label: 'Hear this word' })
+      ]));
     });
     container.appendChild(list);
 
@@ -1083,7 +1254,7 @@
       if (btn._isKa) {
         if (selLeft) { deselect(selLeft); }
         selLeft = btn;
-        speak(btn._word.ka);
+        playWord(btn._word);
       } else {
         if (selRight) { deselect(selRight); }
         selRight = btn;
@@ -1152,14 +1323,20 @@
     if (s) { s.optionButtons = []; }
   }
 
+  /* renders build_word AND build_syllable — accepts any {id, ka, translit,
+   * en?, emoji?}; syllables (no emoji) get "Build what you hear" + auto audio */
   function renderBuildWord(ex, container, onResult, s) {
     var word = ex.word;
     var letters = String(word.ka).split('');
-    container.appendChild(h('p', { 'class': 'instruction', text: 'Build the word' }));
-    container.appendChild(h('div', { 'class': 'prompt-block' }, [
-      emojiSpan(word.emoji, word.en, 'prompt-emoji'),
-      h('span', { 'class': 'prompt-en', text: word.en })
-    ]));
+    var hasMeaning = !!word.emoji;
+    container.appendChild(h('p', { 'class': 'instruction', text: hasMeaning ? 'Build the word' : 'Build what you hear' }));
+    var promptBits = [];
+    if (hasMeaning) {
+      promptBits.push(emojiSpan(word.emoji, word.en, 'prompt-emoji'));
+      promptBits.push(h('span', { 'class': 'prompt-en', text: word.en }));
+    }
+    promptBits.push(audioBtn(word.id, word.ka, { label: 'Hear it' }));
+    container.appendChild(h('div', { 'class': 'prompt-block' }, promptBits));
     container.appendChild(h('p', { 'class': 'translit', text: word.translit }));
 
     // 2 distractor letters not present in the word
@@ -1196,7 +1373,7 @@
         onResult({
           correct: true,
           firstTry: misplacements === 0 && !usedHint,
-          announce: 'You built it! ' + word.ka + ' — ' + word.en
+          announce: 'You built it! ' + word.ka + (word.en ? ' — ' + word.en : '')
         });
       }
     }
@@ -1249,13 +1426,20 @@
     });
     container.appendChild(tilesRow);
     if (s) { s.optionButtons = []; }
+    if (!hasMeaning) { playWord(word); } // "Build what you hear" — say it up front
   }
 
   var RENDERERS = {
     pick_picture: renderPickPicture,
     reverse_pick: renderReversePick,
     match_pairs: renderMatchPairs,
-    build_word: renderBuildWord
+    build_word: renderBuildWord,
+    build_syllable: renderBuildWord,
+    hear_pick_letter: renderHearPickLetter,
+    letter_to_sound: renderLetterToSound,
+    trace_letter: renderTraceLetter,
+    read_word_pick_picture: renderReadWordPickPicture,
+    picture_pick_word: renderPicturePickWord
   };
 
   /* number keys 1–4 pick answers in option grids */
@@ -1297,7 +1481,10 @@
           h('span', { 'class': 'tile-ka' }, [kaSpan(letter.ka)]),
           h('span', { 'class': 'tile-translit', text: letter.translit })
         ]);
-        grid.appendChild(tile);
+        grid.appendChild(h('div', { 'class': 'tile-wrap' }, [
+          tile,
+          audioBtn(letterAudioId(letter), letter.ka, { small: true, label: 'Hear letter ' + letter.name })
+        ]));
       });
       sec.appendChild(grid);
     });
@@ -1312,6 +1499,13 @@
     return null;
   }
 
+  /* bundled clip for a letter's example word: reuse the matching vocab
+   * item's clip, else the dedicated example clip (audioIds.examples). */
+  function exampleAudioId(exampleKa, vocabMatch) {
+    if (vocabMatch && vocabMatch.id) { return vocabMatch.id; }
+    return (C.audioIds && C.audioIds.examples && C.audioIds.examples[exampleKa]) || null;
+  }
+
   function openLetterDialog(index, returnFocusEl) {
     var backdrop = h('div', { 'class': 'modal-backdrop' });
     var dialog = h('div', { 'class': 'letter-dialog', role: 'dialog', 'aria-modal': 'true' });
@@ -1320,17 +1514,9 @@
 
     var current = index;
 
-    function recordOpened(letter) {
-      if (state.letterCardsOpened.indexOf(letter.ka) === -1) {
-        state.letterCardsOpened.push(letter.ka);
-        save();
-        if (state.letterCardsOpened.length >= 10) { earnBadge('alphabet-explorer'); }
-      }
-    }
-
     function fill() {
       var letter = ALL_LETTERS[current];
-      recordOpened(letter);
+      recordLetterOpened(letter);
       dialog.setAttribute('aria-label', 'Letter ' + letter.name);
       dialog.innerHTML = '';
 
@@ -1351,20 +1537,23 @@
       if (vocabMatch) {
         exampleBits.unshift(emojiSpan(vocabMatch.emoji, ex.en, 'prompt-emoji'));
       }
-      dialog.appendChild(h('div', {}, exampleBits));
+      exampleBits.push(audioBtn(exampleAudioId(ex.ka, vocabMatch), ex.ka, { small: true, label: 'Hear the example word' }));
+      dialog.appendChild(h('div', { 'class': 'example-row' }, exampleBits));
       dialog.appendChild(h('div', { 'class': 'example-en', text: ex.translit + ' — ' + ex.en }));
       dialog.appendChild(sayHint(letter.translit));
 
-      if (hasVoice()) {
-        dialog.appendChild(h('button', {
-          'class': 'btn btn-primary',
-          type: 'button',
-          onclick: function () {
-            speak(letter.ka);
-            window.setTimeout(function () { speak(ex.ka); }, 900);
-          }
-        }, ['🔊 Hear it']));
-      }
+      dialog.appendChild(h('button', {
+        'class': 'btn btn-primary',
+        type: 'button',
+        onclick: function () {
+          playLetter(letter);
+          window.setTimeout(function () {
+            // dialog closed (or moved on) before the example fired? stay quiet
+            if (!document.body.contains(dialog)) { return; }
+            playAudio(exampleAudioId(ex.ka, vocabMatch), ex.ka);
+          }, 900);
+        }
+      }, ['🔊 Hear it']));
 
       var nav = h('div', { 'class': 'dialog-nav' });
       nav.appendChild(h('button', {
@@ -1450,6 +1639,972 @@
       title: 'Practice',
       exercises: buildPracticeExercises()
     });
+  }
+
+  /* ================================================================== *
+   * v2 — Letters path, Reading track, new exercise types
+   * ================================================================== */
+
+  /* ---------- shared lookups ---------- */
+
+  var SYLLABLES = {};
+  var READ_EXTRAS = {};
+  (C.readingTrack ? C.readingTrack.syllables : []).forEach(function (x) { SYLLABLES[x.id] = x; });
+  (C.readingTrack ? C.readingTrack.extras : []).forEach(function (x) { READ_EXTRAS[x.id] = x; });
+  var READ_POOL = (C.readingTrack ? C.readingTrack.extras : []).concat(ALL_WORDS);
+  var LETTER_BY_KA = {};
+  ALL_LETTERS.forEach(function (l) { LETTER_BY_KA[l.ka] = l; });
+
+  function readItem(id) {
+    return C.vocab[id] || READ_EXTRAS[id] || SYLLABLES[id] || null;
+  }
+
+  function itemAudioId(item) {
+    if (!item) { return null; }
+    return item.id || (item.name ? letterAudioId(item) : null);
+  }
+
+  function alphaGroupById(groupId) {
+    for (var i = 0; i < C.alphabet.length; i++) {
+      if (C.alphabet[i].id === groupId) { return C.alphabet[i]; }
+    }
+    return null;
+  }
+
+  function findPathGroup(groupId) {
+    var groups = (C.lettersPath && C.lettersPath.groups) || [];
+    for (var i = 0; i < groups.length; i++) {
+      if (groups[i].groupId === groupId) { return groups[i]; }
+    }
+    return null;
+  }
+
+  function findReadingStep(stepId) {
+    var steps = (C.readingTrack && C.readingTrack.steps) || [];
+    for (var i = 0; i < steps.length; i++) {
+      if (steps[i].id === stepId) { return steps[i]; }
+    }
+    return null;
+  }
+
+  function recordLetterOpened(letter) {
+    if (pushOnce(state.letterCardsOpened, letter.ka)) {
+      save();
+      if (state.letterCardsOpened.length >= 10) { earnBadge('alphabet-explorer'); }
+    }
+  }
+
+  function recordTraced(ka) {
+    if (pushOnce(state.lettersTraced, ka)) {
+      save();
+      if (state.lettersTraced.length >= 10) { earnBadge('letter-artist'); }
+    }
+  }
+
+  function backLink(text, hash) {
+    return h('button', {
+      'class': 'back-link', type: 'button',
+      onclick: function () { navigate(hash); }
+    }, [h('span', { 'aria-hidden': 'true', text: '←' }), ' ' + text]);
+  }
+
+  /* pick n distinct-by-ka items for a letter/syllable, trying tiers in order */
+  function pickByKa(target, n, tiers) {
+    var out = [];
+    var seen = {};
+    seen[target.ka] = true;
+    for (var t = 0; t < tiers.length && out.length < n; t++) {
+      var cand = shuffle(tiers[t] || []);
+      for (var i = 0; i < cand.length && out.length < n; i++) {
+        if (seen[cand[i].ka]) { continue; }
+        seen[cand[i].ka] = true;
+        out.push(cand[i]);
+      }
+    }
+    return out;
+  }
+
+  /* ---------- tracing canvas (shared by trace view + trace_letter) ---------- */
+
+  function makeTraceCanvas(letter) {
+    var strokeCount = 0;
+    var size = Math.max(220, Math.min(300, Math.floor(window.innerWidth * 0.8)));
+    var dpr = window.devicePixelRatio || 1;
+    var canvas = h('canvas', {
+      'class': 'trace-canvas',
+      'aria-label': 'Tracing area for letter ' + letter.ka +
+        ' — draw over the gray letter with your finger or mouse'
+    });
+    canvas.width = Math.round(size * dpr);
+    canvas.height = Math.round(size * dpr);
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    function template() {
+      ctx.clearRect(0, 0, size, size);
+      ctx.save();
+      ctx.fillStyle = 'rgba(43, 35, 32, 0.14)'; // ink at 14% — the faint model glyph
+      ctx.font = Math.round(size * 0.8) + 'px "Noto Sans Georgian", "Sylfaen", system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(letter.ka, size / 2, size / 2 + size * 0.04);
+      ctx.restore();
+    }
+    template();
+
+    var drawing = false;
+    var lx = 0, ly = 0;
+    function pos(e) {
+      var r = canvas.getBoundingClientRect();
+      return [e.clientX - r.left, e.clientY - r.top];
+    }
+    canvas.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      drawing = true;
+      strokeCount++;
+      try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+      var p = pos(e);
+      lx = p[0]; ly = p[1];
+      ctx.strokeStyle = '#DA291C'; // --accent (canvas needs a literal)
+      ctx.lineWidth = 14;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(lx, ly);
+      ctx.lineTo(lx + 0.01, ly + 0.01);
+      ctx.stroke();
+    });
+    canvas.addEventListener('pointermove', function (e) {
+      if (!drawing) { return; }
+      var p = pos(e);
+      ctx.beginPath();
+      ctx.moveTo(lx, ly);
+      ctx.lineTo(p[0], p[1]);
+      ctx.stroke();
+      lx = p[0]; ly = p[1];
+    });
+    function stop() { drawing = false; }
+    canvas.addEventListener('pointerup', stop);
+    canvas.addEventListener('pointercancel', stop);
+
+    return {
+      el: canvas,
+      getStrokeCount: function () { return strokeCount; },
+      clear: function () { strokeCount = 0; template(); }
+    };
+  }
+
+  /* ---------- new exercise renderers ---------- */
+
+  function renderHearPickLetter(ex, container, onResult, s) {
+    var letter = ex.letter;
+    container.appendChild(h('p', { 'class': 'instruction', text: 'Tap the letter you hear' }));
+    container.appendChild(h('div', { 'class': 'prompt-block' }, [
+      audioBtn(letterAudioId(letter), letter.ka, { lg: true, label: 'Play the letter sound again' })
+    ]));
+
+    var options = shuffle([letter].concat(pickByKa(letter, 3, [ex.pool || [], ALL_LETTERS])));
+    var grid = h('div', { 'class': 'letter-choice-grid' });
+    var buttons = [];
+    var answered = false;
+
+    options.forEach(function (opt) {
+      var btn = h('button', {
+        'class': 'letter-choice',
+        type: 'button',
+        'aria-label': 'Letter ' + opt.name + ', ' + opt.translit,
+        onclick: function () {
+          if (answered) { return; }
+          answered = true;
+          if (opt.ka === letter.ka) {
+            buttons.forEach(function (b) { b.disabled = true; });
+            markCorrectCard(btn);
+            onResult({ correct: true, firstTry: true, announce: 'Correct! ' + letter.ka + ' — ' + letter.name });
+          } else {
+            var correctBtn = buttons[options.indexOf(letter)];
+            missTreatment(btn, correctBtn, buttons, letter);
+            onResult({ correct: false, firstTry: false, announce: 'Almost! The answer is ' + letter.ka + ' — ' + letter.name });
+          }
+        }
+      }, [kaSpan(opt.ka)]);
+      buttons.push(btn);
+      grid.appendChild(btn);
+    });
+    container.appendChild(grid);
+    if (s) { s.optionButtons = buttons; }
+    playLetter(letter);
+  }
+
+  function renderLetterToSound(ex, container, onResult, s) {
+    var item = ex.item; // a letter OR a syllable ({ka, translit, name?})
+    var isLetter = !!item.name;
+    container.appendChild(h('p', { 'class': 'instruction', text: 'What sound does it make?' }));
+    container.appendChild(h('div', { 'class': 'prompt-block' }, [
+      h('span', { 'class': 'prompt-ka prompt-ka-xl' }, [kaSpan(item.ka)]),
+      audioBtn(itemAudioId(item), item.ka, { label: 'Hear it' })
+    ]));
+
+    var padTier = isLetter ? ALL_LETTERS : (C.readingTrack ? C.readingTrack.syllables : []);
+    var options = shuffle([item].concat(pickByKa(item, 3, [ex.pool || [], padTier])));
+    var list = h('div', { 'class': 'options-list' });
+    var cards = [];
+    var answered = false;
+
+    options.forEach(function (opt) {
+      var card = h('button', {
+        'class': 'word-card sound-card',
+        type: 'button',
+        'aria-label': opt.translit,
+        onclick: function () {
+          if (answered) { return; }
+          answered = true;
+          if (opt.ka === item.ka) {
+            cards.forEach(function (b) { b.disabled = true; });
+            markCorrectCard(card);
+            onResult({ correct: true, firstTry: true, announce: 'Correct! ' + item.ka + ' — ' + item.translit });
+          } else {
+            var correctCard = cards[options.indexOf(item)];
+            missTreatment(card, correctCard, cards, item);
+            onResult({ correct: false, firstTry: false, announce: 'Almost! ' + item.ka + ' says ' + item.translit });
+          }
+        }
+      }, [h('span', { 'class': 'sound-translit', text: opt.translit })]);
+      cards.push(card);
+      list.appendChild(h('div', { 'class': 'option-row' }, [
+        card,
+        audioBtn(itemAudioId(opt), opt.ka, { small: true, label: 'Hear this option' })
+      ]));
+    });
+    container.appendChild(list);
+    if (s) { s.optionButtons = cards; }
+  }
+
+  function renderTraceLetter(ex, container, onResult, s) {
+    var letter = ex.letter;
+    container.appendChild(h('p', { 'class': 'instruction', text: 'Trace the letter' }));
+    var tc = makeTraceCanvas(letter);
+    container.appendChild(h('div', { 'class': 'trace-card' }, [tc.el]));
+    var done = false;
+    container.appendChild(h('div', { 'class': 'trace-controls' }, [
+      audioBtn(letterAudioId(letter), letter.ka, { label: 'Hear the letter' }),
+      h('button', {
+        'class': 'btn btn-ghost', type: 'button',
+        onclick: function () { tc.clear(); }
+      }, ['Clear']),
+      h('button', {
+        'class': 'btn btn-primary', type: 'button',
+        onclick: function () {
+          if (done) { return; }
+          done = true;
+          if (tc.getStrokeCount() > 0) { recordTraced(letter.ka); }
+          // tracing is doing — always correct, never judged
+          onResult({ correct: true, firstTry: true, announce: 'You wrote ' + letter.ka + '!' });
+        }
+      }, ['Done ✓'])
+    ]));
+    if (s) { s.optionButtons = []; }
+    playLetter(letter);
+  }
+
+  function renderReadWordPickPicture(ex, container, onResult, s) {
+    var word = ex.word;
+    container.appendChild(h('p', { 'class': 'instruction', text: 'Read the word' }));
+
+    var listen = audioBtn(word.id, word.ka, { label: 'Listen — unlocks after you answer' });
+    listen.disabled = true;
+    listen.classList.add('speak-btn--waiting');
+    container.appendChild(h('div', { 'class': 'prompt-block' }, [
+      h('span', { 'class': 'prompt-ka' }, [kaSpan(word.ka)]),
+      listen
+    ]));
+    var translitLine = h('p', { 'class': 'translit', text: word.translit });
+
+    var distractors = pickDistractors(word, 3, ex.tiers);
+    var options = shuffle([word].concat(distractors));
+    var grid = h('div', { 'class': 'options-grid' });
+    var buttons = [];
+    var answered = false;
+
+    function unlock() {
+      listen.disabled = false;
+      listen.classList.remove('speak-btn--waiting');
+      listen.setAttribute('aria-label', 'Hear the word');
+      container.insertBefore(translitLine, grid);
+    }
+
+    options.forEach(function (opt) {
+      var btn = h('button', {
+        'class': 'option-card',
+        type: 'button',
+        'aria-label': opt.en,
+        onclick: function () {
+          if (answered) { return; }
+          answered = true;
+          unlock();
+          if (opt.id === word.id) {
+            buttons.forEach(function (b) { b.disabled = true; });
+            markCorrectCard(btn);
+            playWord(word);
+            onResult({ correct: true, firstTry: true, announce: 'Correct! ' + word.ka + ' — ' + word.en });
+          } else {
+            var correctBtn = buttons[options.indexOf(word)];
+            missTreatment(btn, correctBtn, buttons, word);
+            onResult({ correct: false, firstTry: false, announce: 'Almost! The answer is ' + word.ka + ' — ' + word.en });
+          }
+        }
+      }, [
+        h('span', { 'class': 'option-emoji', 'aria-hidden': 'true', text: opt.emoji }),
+        h('span', { 'class': 'option-caption', text: opt.en })
+      ]);
+      buttons.push(btn);
+      grid.appendChild(btn);
+    });
+    container.appendChild(grid);
+    if (s) { s.optionButtons = buttons; }
+    // no auto-audio, no translit up front — this one is the reading test
+  }
+
+  function renderPicturePickWord(ex, container, onResult, s) {
+    var word = ex.word;
+    container.appendChild(h('p', { 'class': 'instruction', text: 'Which word says it?' }));
+    container.appendChild(h('div', { 'class': 'prompt-block' }, [
+      emojiSpan(word.emoji, word.en, 'prompt-emoji'),
+      h('span', { 'class': 'prompt-en', text: word.en })
+    ]));
+
+    var distractors = pickDistractors(word, 3, ex.tiers);
+    var options = shuffle([word].concat(distractors));
+    var list = h('div', { 'class': 'options-list' });
+    var cards = [];
+    var answered = false;
+
+    options.forEach(function (opt) {
+      var card = h('button', {
+        'class': 'word-card',
+        type: 'button',
+        'aria-label': opt.ka,
+        lang: 'ka',
+        onclick: function () {
+          if (answered) { return; }
+          answered = true;
+          if (opt.id === word.id) {
+            cards.forEach(function (b) { b.disabled = true; });
+            markCorrectCard(card);
+            playWord(word);
+            onResult({ correct: true, firstTry: true, announce: 'Correct! ' + word.ka + ' — ' + word.en });
+          } else {
+            var correctCard = cards[options.indexOf(word)];
+            missTreatment(card, correctCard, cards, word);
+            onResult({ correct: false, firstTry: false, announce: 'Almost! The answer is ' + word.ka + ' — ' + word.en });
+          }
+        }
+      }, [h('span', { 'class': 'word-ka' }, [kaSpan(opt.ka)])]); // Georgian only — the reading variant
+      cards.push(card);
+      list.appendChild(h('div', { 'class': 'option-row' }, [
+        card,
+        audioBtn(opt.id, opt.ka, { small: true, label: 'Hear this word' })
+      ]));
+    });
+    container.appendChild(list);
+    if (s) { s.optionButtons = cards; }
+  }
+
+  /* ---------- exam / practice builders (data-driven from data.js recipes) ---------- */
+
+  function buildLetterExam(pathGroup) {
+    var group = alphaGroupById(pathGroup.groupId);
+    var gi = C.alphabet.indexOf(group);
+    var own = group.letters;
+    var earlier = [];
+    for (var j = 0; j < gi; j++) { earlier = earlier.concat(C.alphabet[j].letters); }
+    var deck = shuffle(own);
+    var oi = 0;
+    function nextOwn() { var l = deck[oi % deck.length]; oi++; return l; }
+
+    var exs = [];
+    pathGroup.steps.exam.recipe.forEach(function (r) {
+      for (var c = 0; c < (r.count || 1); c++) {
+        if (r.type === 'hear_pick_letter' || r.type === 'letter_to_sound') {
+          var fromEarlier = r.from === 'earlier-groups' && earlier.length > 0;
+          var letter = fromEarlier ? shuffle(earlier)[0] : nextOwn();
+          var pool = fromEarlier ? earlier : own;
+          exs.push(makeEx(r.type, r.type === 'hear_pick_letter'
+            ? { letter: letter, pool: pool }
+            : { item: letter, pool: pool }));
+        } else if (r.type === 'trace_letter') {
+          exs.push(makeEx('trace_letter', { letter: nextOwn() }));
+        } else if (r.type === 'build_syllable') {
+          var ids = (r.syllablePool || []).slice();
+          var syl = ids.length ? SYLLABLES[shuffle(ids)[0]] : null;
+          if (syl) { exs.push(makeEx('build_syllable', { word: syl })); }
+          else { exs.push(makeEx('hear_pick_letter', { letter: nextOwn(), pool: own })); }
+        }
+      }
+    });
+    return exs;
+  }
+
+  function earlierStepWords(step) {
+    var idx = C.readingTrack.steps.indexOf(step);
+    var pool = [];
+    for (var j = 0; j < idx; j++) {
+      C.readingTrack.steps[j].items.forEach(function (id) {
+        var it = readItem(id);
+        if (it && it.en) { pool.push(it); }
+      });
+    }
+    return pool;
+  }
+
+  function buildReadingExercises(step, recipe) {
+    var items = step.items.map(readItem).filter(function (x) { return !!x; });
+    var words = items.filter(function (w) { return !!w.en; });
+    var syls = items.filter(function (w) { return !w.en; });
+    var sylPool = syls.length ? syls : (C.readingTrack ? C.readingTrack.syllables : []);
+    var tiers = [words, READ_POOL];
+
+    var wdeck = shuffle(words); var wi = 0;
+    function nextW() { var w = wdeck[wi % wdeck.length]; wi++; return w; }
+    var sdeck = shuffle(sylPool); var si = 0;
+    function nextS() { var x = sdeck[si % sdeck.length]; si++; return x; }
+
+    var chSet = {};
+    sylPool.forEach(function (it) {
+      String(it.ka).split('').forEach(function (ch) {
+        if (LETTER_BY_KA[ch]) { chSet[ch] = true; }
+      });
+    });
+    var stepLetters = Object.keys(chSet).map(function (ch) { return LETTER_BY_KA[ch]; });
+
+    var exs = [];
+    (recipe || []).forEach(function (r) {
+      for (var c = 0; c < (r.count || 1); c++) {
+        if (r.type === 'build_syllable') {
+          var syl = r.syllablePool ? SYLLABLES[shuffle(r.syllablePool.slice())[0]] : nextS();
+          if (syl) { exs.push(makeEx('build_syllable', { word: syl })); }
+        } else if (r.type === 'letter_to_sound') {
+          exs.push(makeEx('letter_to_sound', { item: nextS(), pool: sylPool }));
+        } else if (r.type === 'hear_pick_letter') {
+          var L = stepLetters.length ? shuffle(stepLetters)[0] : shuffle(ALL_LETTERS)[0];
+          exs.push(makeEx('hear_pick_letter', { letter: L, pool: stepLetters }));
+        } else if (r.type === 'read_word_pick_picture') {
+          var w = nextW();
+          if (r.from === 'earlier-steps') {
+            var earlier = earlierStepWords(step);
+            if (earlier.length) { w = shuffle(earlier)[0]; }
+          }
+          exs.push(makeEx('read_word_pick_picture', { word: w, tiers: tiers }));
+        } else if (r.type === 'picture_pick_word') {
+          exs.push(makeEx('picture_pick_word', { word: nextW(), tiers: tiers }));
+        } else if (r.type === 'build_word') {
+          var buildable = words.filter(function (bw) { return /^[ა-ჿ]{2,7}$/.test(bw.ka); });
+          if (buildable.length) { exs.push(makeEx('build_word', { word: shuffle(buildable)[0] })); }
+          else { exs.push(makeEx('picture_pick_word', { word: nextW(), tiers: tiers })); }
+        } else if (r.type === 'match_pairs') {
+          var pw = padPairWords(shuffle(words).slice(0, 5), [ALL_WORDS], 5);
+          if (pw.length >= 3) { exs.push(makeEx('match_pairs', { words: pw })); }
+        }
+      }
+    });
+    return exs;
+  }
+
+  function startLettersExam(groupId) {
+    var pg = findPathGroup(groupId);
+    var group = pg && alphaGroupById(groupId);
+    if (!pg || !group) { renderHome(); return; }
+    startSession({
+      mode: 'letters-exam',
+      groupId: groupId,
+      title: group.title + ' — Letter exam',
+      exercises: buildLetterExam(pg)
+    });
+  }
+
+  function startReadingPractice(stepId) {
+    var step = findReadingStep(stepId);
+    if (!step) { renderHome(); return; }
+    startSession({
+      mode: 'reading-practice',
+      stepId: stepId,
+      title: step.title + ' — Practice',
+      exercises: buildReadingExercises(step, step.practice)
+    });
+  }
+
+  function startReadingExam(stepId) {
+    var step = findReadingStep(stepId);
+    if (!step) { renderHome(); return; }
+    startSession({
+      mode: 'reading-exam',
+      stepId: stepId,
+      title: step.title + ' — Mini exam',
+      exercises: buildReadingExercises(step, step.exam)
+    });
+  }
+
+  /* ---------- path views (Letters & Reading) ---------- */
+
+  /* One node on a step path. Everything is always tappable — done/next are
+   * only highlights, never locks. */
+  function pathNode(opts) {
+    var wrap = h('span', { 'class': 'node-face-wrap', 'aria-hidden': 'true' });
+    wrap.insertAdjacentHTML('beforeend', ringSvg(opts.done ? 1 : 0, opts.done));
+    wrap.appendChild(h('span', { 'class': 'node-face' }, [opts.face]));
+    if (opts.done) { wrap.appendChild(h('span', { 'class': 'check-badge', text: '✓' })); }
+    if (opts.next) { wrap.appendChild(h('span', { 'class': 'next-pill', text: 'Up next' })); }
+    var label = h('span', { 'class': 'node-label' }, [
+      h('span', { 'class': 'node-title', text: opts.title }),
+      typeof opts.sub === 'string' ? h('span', { 'class': 'node-sub', text: opts.sub }) : opts.sub
+    ]);
+    var btn = h('button', {
+      'class': 'node-btn' + (opts.done ? ' done' : '') + (opts.next ? ' next' : ''),
+      type: 'button',
+      'aria-label': opts.aria,
+      onclick: function () { navigate(opts.hash); }
+    }, [wrap, label]);
+    return h('li', { 'class': 'step-node' }, [btn]);
+  }
+
+  function renderLettersPath() {
+    var sec = h('section', { 'class': 'view letters-view', role: 'region', 'aria-label': 'Letters path' });
+    sec.appendChild(backLink('Home', '#/home'));
+    sec.appendChild(h('h1', {}, [kaSpan(C.strings.letters), ' · Letters']));
+    sec.appendChild(h('p', { 'class': 'alpha-intro', text: 'Meet the letters, trace them, then take a friendly exam — group by group, easy to hard.' }));
+    sec.appendChild(h('button', {
+      'class': 'btn btn-ghost', type: 'button',
+      onclick: function () { navigate('#/alphabet'); }
+    }, ['Browse all letters →']));
+
+    var nextFound = false;
+    function claimNext(done) {
+      if (!done && !nextFound) { nextFound = true; return true; }
+      return false;
+    }
+
+    ((C.lettersPath && C.lettersPath.groups) || []).forEach(function (g) {
+      var group = alphaGroupById(g.groupId);
+      if (!group) { return; }
+      sec.appendChild(h('h2', { 'class': 'path-group-title', text: g.order + ' · ' + group.title }));
+      var ol = h('ol', { 'class': 'step-path' });
+
+      var meetDone = state.lettersMeetDone.indexOf(g.groupId) !== -1;
+      var traceDone = state.lettersTraceDone.indexOf(g.groupId) !== -1;
+      var examQs = g.steps.exam.recipe.reduce(function (n, r) { return n + (r.count || 1); }, 0);
+      var examStars = state.lettersExamStars[g.groupId] || 0;
+      var examDone = examStars >= 1;
+      var groupTag = 'group ' + g.order + ', ' + group.title;
+      var meetNext = claimNext(meetDone);
+      var traceNext = claimNext(traceDone);
+      var examNext = claimNext(examDone);
+
+      ol.appendChild(pathNode({
+        face: h('span', { 'class': 'node-glyph' }, [kaSpan(group.letters[0].ka)]),
+        title: g.steps.meet.title,
+        sub: g.steps.meet.sub || group.letters.length + ' letters',
+        done: meetDone, next: meetNext,
+        hash: '#/letters/' + g.groupId + '/meet',
+        aria: g.steps.meet.title + ' — ' + groupTag + (meetDone ? ', completed' : meetNext ? ', up next' : '')
+      }));
+      ol.appendChild(pathNode({
+        face: h('span', { 'class': 'node-emoji', text: '✍️' }),
+        title: g.steps.write.title,
+        sub: g.steps.write.sub || 'Trace each letter',
+        done: traceDone, next: traceNext,
+        hash: '#/letters/' + g.groupId + '/trace',
+        aria: g.steps.write.title + ' — ' + groupTag + (traceDone ? ', completed' : traceNext ? ', up next' : '')
+      }));
+      ol.appendChild(pathNode({
+        face: h('span', { 'class': 'node-emoji', text: '🏅' }),
+        title: g.steps.exam.title,
+        sub: examStars > 0 ? starsRow(examStars) : examQs + ' quick questions',
+        done: examDone, next: examNext,
+        hash: '#/letters/' + g.groupId + '/exam',
+        aria: g.steps.exam.title + ' — ' + groupTag +
+          (examDone ? ', completed, best ' + examStars + ' of 3 stars' : examNext ? ', up next' : '')
+      }));
+      sec.appendChild(ol);
+    });
+
+    setView(sec, 'wide-path');
+  }
+
+  function renderReadingPath() {
+    var sec = h('section', { 'class': 'view reading-view', role: 'region', 'aria-label': 'Reading path' });
+    sec.appendChild(backLink('Home', '#/home'));
+    sec.appendChild(h('h1', {}, [kaSpan(C.strings.reading), ' · Reading']));
+    sec.appendChild(h('p', { 'class': 'alpha-intro', text: 'Sound out real Georgian — from tiny syllables to long, delicious words.' }));
+
+    var nextFound = false;
+    function claimNext(done) {
+      if (!done && !nextFound) { nextFound = true; return true; }
+      return false;
+    }
+
+    ((C.readingTrack && C.readingTrack.steps) || []).forEach(function (step, i) {
+      sec.appendChild(h('h2', { 'class': 'path-group-title', text: (i + 1) + ' · ' + step.title }));
+      var ol = h('ol', { 'class': 'step-path' });
+
+      var cardsDone = state.readingCardsDone.indexOf(step.id) !== -1;
+      var practiceDone = state.readingPracticeDone.indexOf(step.id) !== -1;
+      var examQs = step.exam.reduce(function (n, r) { return n + (r.count || 1); }, 0);
+      var examStars = state.readingExamStars[step.id] || 0;
+      var examDone = examStars >= 1;
+      var cardsNext = claimNext(cardsDone);
+      var practiceNext = claimNext(practiceDone);
+      var examNext = claimNext(examDone);
+
+      ol.appendChild(pathNode({
+        face: h('span', { 'class': 'node-emoji', text: '🃏' }),
+        title: 'Word cards',
+        sub: step.items.length + ' cards',
+        done: cardsDone, next: cardsNext,
+        hash: '#/reading/' + step.id + '/cards',
+        aria: 'Word cards — ' + step.title + (cardsDone ? ', completed' : cardsNext ? ', up next' : '')
+      }));
+      ol.appendChild(pathNode({
+        face: h('span', { 'class': 'node-emoji', text: '🧩' }),
+        title: 'Practice',
+        sub: 'Playful exercises',
+        done: practiceDone, next: practiceNext,
+        hash: '#/reading/' + step.id + '/practice',
+        aria: 'Practice — ' + step.title + (practiceDone ? ', completed' : practiceNext ? ', up next' : '')
+      }));
+      ol.appendChild(pathNode({
+        face: h('span', { 'class': 'node-emoji', text: '🏅' }),
+        title: 'Mini exam',
+        sub: examStars > 0 ? starsRow(examStars) : examQs + ' quick questions',
+        done: examDone, next: examNext,
+        hash: '#/reading/' + step.id + '/exam',
+        aria: 'Mini exam — ' + step.title +
+          (examDone ? ', completed, best ' + examStars + ' of 3 stars' : examNext ? ', up next' : '')
+      }));
+      sec.appendChild(ol);
+    });
+
+    setView(sec, 'wide-path');
+  }
+
+  /* ---------- Meet the letters (deck) ---------- */
+
+  function renderMeet(groupId) {
+    var group = alphaGroupById(groupId);
+    if (!group) { renderHome(); return; }
+    var sec = h('section', { 'class': 'view meet-view', role: 'region', 'aria-label': 'Meet the letters' });
+    sec.appendChild(backLink('Letters', '#/letters'));
+    sec.appendChild(h('h1', { text: group.title + ' · Meet the letters' }));
+    var deck = h('div', { 'class': 'deck-area' });
+    sec.appendChild(deck);
+
+    var current = 0;
+
+    function finish() {
+      var first = pushOnce(state.lettersMeetDone, groupId);
+      save();
+      addXP(first ? 15 : 5);
+      playPraise();
+      toast('Group done! 🎉');
+      navigate('#/letters');
+    }
+
+    /* focusDir ('prev'|'next') — set on user navigation so keyboard focus
+     * lands on the new card's matching control instead of dropping to body */
+    function show(focusDir) {
+      deck.innerHTML = '';
+      var letter = group.letters[current];
+      recordLetterOpened(letter);
+      var ex = letter.example;
+      var vocabMatch = vocabEmojiFor(ex.ka);
+
+      var exampleBits = [];
+      if (vocabMatch) { exampleBits.push(emojiSpan(vocabMatch.emoji, ex.en, 'prompt-emoji')); }
+      exampleBits.push(h('span', { 'class': 'example-ka' }, [kaSpan(ex.ka)]));
+      exampleBits.push(audioBtn(exampleAudioId(ex.ka, vocabMatch), ex.ka, { small: true, label: 'Hear the example word' }));
+
+      deck.appendChild(h('div', { 'class': 'deck-card' }, [
+        h('div', { 'class': 'deck-glyph-row' }, [
+          h('span', { 'class': 'deck-glyph' }, [kaSpan(letter.ka)]),
+          audioBtn(letterAudioId(letter), letter.ka, { label: 'Hear the letter' })
+        ]),
+        h('div', { 'class': 'dialog-name', text: letter.name + ' · ' + letter.translit }),
+        h('div', { 'class': 'dialog-ipa', text: 'sound: /' + letter.ipa + '/' }),
+        h('div', { 'class': 'example-row' }, exampleBits),
+        h('div', { 'class': 'example-en', text: ex.translit + ' — ' + ex.en })
+      ]));
+
+      var nav = h('div', { 'class': 'deck-nav' });
+      var prevBtn = h('button', {
+        'class': 'dialog-arrow', type: 'button',
+        'aria-label': 'Previous letter',
+        disabled: current === 0 ? true : null,
+        onclick: function () { if (current > 0) { current--; show('prev'); } }
+      }, [h('span', { 'aria-hidden': 'true', text: '←' })]);
+      nav.appendChild(prevBtn);
+      nav.appendChild(h('span', { 'class': 'dialog-ipa deck-counter', text: (current + 1) + ' / ' + group.letters.length }));
+      var fwdBtn;
+      if (current < group.letters.length - 1) {
+        fwdBtn = h('button', {
+          'class': 'dialog-arrow', type: 'button',
+          'aria-label': 'Next letter',
+          onclick: function () { current++; show('next'); }
+        }, [h('span', { 'aria-hidden': 'true', text: '→' })]);
+      } else {
+        fwdBtn = h('button', {
+          'class': 'btn btn-primary', type: 'button',
+          onclick: finish
+        }, ['Finish ✓']);
+      }
+      nav.appendChild(fwdBtn);
+      deck.appendChild(nav);
+      if (focusDir) {
+        (focusDir === 'prev' && !prevBtn.disabled ? prevBtn : fwdBtn).focus();
+      }
+      announce('Letter ' + letter.name + ', ' + letter.translit + '. Card ' + (current + 1) + ' of ' + group.letters.length);
+      playLetter(letter);
+    }
+
+    function onKey(e) {
+      if (!document.body.contains(sec)) { document.removeEventListener('keydown', onKey); return; }
+      if (e.key === 'ArrowLeft' && current > 0) { e.preventDefault(); current--; show('prev'); }
+      else if (e.key === 'ArrowRight' && current < group.letters.length - 1) { e.preventDefault(); current++; show('next'); }
+    }
+    document.addEventListener('keydown', onKey);
+
+    setView(sec, '');
+    show();
+  }
+
+  /* ---------- Write it (tracing view) ---------- */
+
+  function renderTrace(groupId) {
+    var group = alphaGroupById(groupId);
+    if (!group) { renderHome(); return; }
+    var sec = h('section', { 'class': 'view trace-view', role: 'region', 'aria-label': 'Write the letters' });
+    sec.appendChild(backLink('Letters', '#/letters'));
+    sec.appendChild(h('h1', { text: group.title + ' · Write it' }));
+    var counter = h('p', { 'class': 'alpha-intro trace-counter' });
+    sec.appendChild(counter);
+    var area = h('div', { 'class': 'trace-area' });
+    sec.appendChild(area);
+
+    var idx = 0;
+
+    function finishTrace() {
+      var first = pushOnce(state.lettersTraceDone, groupId);
+      save();
+      addXP(first ? 15 : 5);
+      counter.textContent = '';
+      area.innerHTML = '';
+      var fin = h('div', { 'class': 'finish' }, [
+        h('p', { 'class': 'finish-title' }, [kaSpan(C.strings.excellent), ' · Excellent!']),
+        h('p', { 'class': 'finish-note', text: 'You traced all ' + group.letters.length + ' letters!' })
+      ]);
+      var actions = h('div', { 'class': 'finish-actions' });
+      actions.appendChild(h('button', {
+        'class': 'btn btn-primary btn-block', type: 'button',
+        onclick: function () { navigate('#/letters'); }
+      }, ['Back to Letters']));
+      actions.appendChild(h('button', {
+        'class': 'btn btn-secondary btn-block', type: 'button',
+        onclick: function () { idx = 0; show(); }
+      }, ['Trace again']));
+      fin.appendChild(actions);
+      area.appendChild(fin);
+      confettiBurst(fin);
+      playPraise();
+      announce('Excellent! You traced all the letters in this group.');
+      var firstBtn = actions.querySelector('button');
+      if (firstBtn) { firstBtn.focus(); }
+    }
+
+    function show() {
+      area.innerHTML = '';
+      var letter = group.letters[idx];
+      counter.textContent = 'Letter ' + (idx + 1) + ' of ' + group.letters.length;
+      var tc = makeTraceCanvas(letter);
+      var card = h('div', { 'class': 'trace-card' }, [tc.el]);
+      area.appendChild(card);
+
+      var doneBtn = h('button', {
+        'class': 'btn btn-primary', type: 'button',
+        onclick: function () {
+          if (doneBtn.disabled) { return; }
+          doneBtn.disabled = true;
+          if (tc.getStrokeCount() > 0) { recordTraced(letter.ka); }
+          var p = playPraise();
+          toast((p ? p.ka + ' ' : '') + 'Beautiful ' + letter.ka + '!');
+          confettiBurst(card);
+          announce('Beautiful ' + letter.ka + '!');
+          window.setTimeout(function () {
+            if (!document.body.contains(sec)) { return; }
+            idx++;
+            if (idx < group.letters.length) { show(); } else { finishTrace(); }
+          }, prefersReducedMotion() ? 400 : 900);
+        }
+      }, ['Done ✓']); // always enabled — skipping the drawing is fine, never judged
+
+      area.appendChild(h('div', { 'class': 'trace-controls' }, [
+        audioBtn(letterAudioId(letter), letter.ka, { label: 'Hear the letter' }),
+        h('button', {
+          'class': 'btn btn-ghost', type: 'button',
+          onclick: function () { tc.clear(); }
+        }, ['Clear']),
+        doneBtn
+      ]));
+      playLetter(letter);
+    }
+
+    setView(sec, '');
+    show();
+  }
+
+  /* ---------- Reading word cards (deck) ---------- */
+
+  var soundToken = 0;
+
+  function soundOut(item, letterBtns) {
+    var token = ++soundToken;
+    var chars = String(item.ka).split('');
+    var reduced = prefersReducedMotion();
+    if (reduced) { letterBtns.forEach(function (b) { b.classList.add('lit'); }); }
+    var i = 0;
+    function step() {
+      if (token !== soundToken) { return; }
+      if (!letterBtns[0] || !document.body.contains(letterBtns[0])) { return; }
+      if (i < chars.length) {
+        if (!reduced) {
+          letterBtns.forEach(function (b, j) { b.classList.toggle('lit', j === i); });
+        }
+        var ch = chars[i];
+        playAudio((C.audioIds.letters && C.audioIds.letters[ch]) || null, ch);
+        i++;
+        window.setTimeout(step, 450);
+      } else {
+        window.setTimeout(function () {
+          if (token !== soundToken) { return; }
+          letterBtns.forEach(function (b) { b.classList.remove('lit'); });
+          playAudio(item.id, item.ka);
+        }, 500);
+      }
+    }
+    step();
+  }
+
+  function renderReadingCards(stepId) {
+    var step = findReadingStep(stepId);
+    if (!step) { renderHome(); return; }
+    var items = step.items.map(readItem).filter(function (x) { return !!x; });
+    var sec = h('section', { 'class': 'view reading-cards-view', role: 'region', 'aria-label': 'Word cards' });
+    sec.appendChild(backLink('Reading', '#/reading'));
+    sec.appendChild(h('h1', { text: step.title + ' · Word cards' }));
+    var deck = h('div', { 'class': 'deck-area' });
+    sec.appendChild(deck);
+
+    var current = 0;
+
+    function finish() {
+      var first = pushOnce(state.readingCardsDone, stepId);
+      save();
+      addXP(first ? 15 : 5);
+      playPraise();
+      toast('Cards done! 🎉');
+      navigate('#/reading');
+    }
+
+    /* focusDir ('prev'|'next') — set on user navigation so keyboard focus
+     * lands on the new card's matching control instead of dropping to body */
+    function show(focusDir) {
+      soundToken++; // cancel any running sound-out
+      deck.innerHTML = '';
+      var item = items[current];
+      var chars = String(item.ka).split('');
+
+      var letterBtns = [];
+      var wordRow = h('div', { 'class': 'read-word', lang: 'ka' });
+      chars.forEach(function (ch) {
+        var known = LETTER_BY_KA[ch];
+        var lb = h('button', {
+          'class': 'read-letter ka',
+          type: 'button',
+          lang: 'ka',
+          'aria-label': 'Letter ' + (known ? known.name + ', ' + known.translit : ch),
+          onclick: function () {
+            soundToken++;
+            letterBtns.forEach(function (b) { b.classList.remove('lit'); });
+            lb.classList.add('lit');
+            playAudio((C.audioIds.letters && C.audioIds.letters[ch]) || null, ch);
+          }
+        }, [ch]);
+        letterBtns.push(lb);
+        wordRow.appendChild(lb);
+      });
+
+      var hintLine = h('p', { 'class': 'translit hint-line', tabindex: '-1', text: item.translit + (item.en ? ' — ' + item.en : '') });
+      var hintBtn = h('button', {
+        'class': 'btn btn-ghost', type: 'button',
+        onclick: function () {
+          hintBtn.parentNode.replaceChild(hintLine, hintBtn);
+          hintLine.focus(); // keep keyboard focus on the revealed hint
+        }
+      }, ['Show hint']);
+
+      var card = h('div', { 'class': 'deck-card' }, [
+        item.emoji
+          ? emojiSpan(item.emoji, item.en, 'deck-emoji')
+          : emojiSpan('🔤', 'syllable', 'deck-emoji'),
+        wordRow,
+        h('div', { 'class': 'card-audio-row' }, [
+          h('button', {
+            'class': 'btn btn-secondary', type: 'button',
+            onclick: function () { soundOut(item, letterBtns); }
+          }, [h('span', { 'aria-hidden': 'true', text: '🔍 ' }), 'Sound it out']),
+          audioBtn(item.id, item.ka, { label: 'Hear the whole word' })
+        ]),
+        hintBtn
+      ]);
+      deck.appendChild(card);
+
+      var nav = h('div', { 'class': 'deck-nav' });
+      var prevBtn = h('button', {
+        'class': 'dialog-arrow', type: 'button',
+        'aria-label': 'Previous card',
+        disabled: current === 0 ? true : null,
+        onclick: function () { if (current > 0) { current--; show('prev'); } }
+      }, [h('span', { 'aria-hidden': 'true', text: '←' })]);
+      nav.appendChild(prevBtn);
+      nav.appendChild(h('span', { 'class': 'dialog-ipa deck-counter', text: (current + 1) + ' / ' + items.length }));
+      var fwdBtn;
+      if (current < items.length - 1) {
+        fwdBtn = h('button', {
+          'class': 'dialog-arrow', type: 'button',
+          'aria-label': 'Next card',
+          onclick: function () { current++; show('next'); }
+        }, [h('span', { 'aria-hidden': 'true', text: '→' })]);
+      } else {
+        fwdBtn = h('button', {
+          'class': 'btn btn-primary', type: 'button',
+          onclick: finish
+        }, ['Finish ✓']);
+      }
+      nav.appendChild(fwdBtn);
+      deck.appendChild(nav);
+      if (focusDir) {
+        (focusDir === 'prev' && !prevBtn.disabled ? prevBtn : fwdBtn).focus();
+      }
+      announce('Card ' + (current + 1) + ' of ' + items.length + ': ' + item.translit);
+    }
+
+    function onKey(e) {
+      if (!document.body.contains(sec)) { document.removeEventListener('keydown', onKey); return; }
+      if (e.key === 'ArrowLeft' && current > 0) { e.preventDefault(); current--; show('prev'); }
+      else if (e.key === 'ArrowRight' && current < items.length - 1) { e.preventDefault(); current++; show('next'); }
+    }
+    document.addEventListener('keydown', onKey);
+
+    setView(sec, '');
+    show();
   }
 
   /* ------------------------------------------------------------------ *

@@ -15,7 +15,9 @@ window.CURRICULUM = {
     excellent:        "შესანიშნავია!",   // "Excellent!" (finish screen)
     alphabet:         "ანბანი",          // "alphabet"
     georgianAlphabet: "ქართული ანბანი",  // "the Georgian alphabet"
-    practice:         "პრაქტიკა"         // "practice"
+    practice:         "პრაქტიკა",        // "practice"
+    letters:          "ანბანი",          // Letters path title (same word, path context)
+    reading:          "კითხვა"           // "reading" (Reading path title)
   },
 
   /* ------------------------------------------------------------------ *
@@ -363,5 +365,303 @@ window.CURRICULUM = {
     ar_mesmis:         { id: "ar_mesmis",         ka: "არ მესმის",           translit: "ar mesmis",            en: "I don't understand",       emoji: "😕" },
     inglisurad:        { id: "inglisurad",        ka: "ლაპარაკობთ ინგლისურად?", translit: "lap'arak'obt inglisurad?", en: "do you speak English?", emoji: "🗣️" },
     kartuli:           { id: "kartuli",           ka: "ქართული",             translit: "kartuli",              en: "Georgian (language)",      emoji: "📖" }
+  },
+
+  /* ------------------------------------------------------------------ *
+   * Letters path — the 6 alphabet groups, easy → hard. The `alphabet`
+   * array order above is canonical; groups here reference it by id and
+   * never redefine letters. Three steps per group: meet / write / exam.
+   *
+   * Exam recipes (positive-only, hard rules):
+   *   - Exams award 1–3 stars by accuracy but NEVER below 1, and can
+   *     always be retried. Wrong answers gently shake/dim, then reveal
+   *     and SPEAK the correct one. Nothing is ever locked or taken away.
+   *   - `from: "group"`          → draw from this group's own letters.
+   *   - `from: "earlier-groups"` → review sprinkle from any previous
+   *     group (group-1 has none, so it gets an extra own-letter item).
+   *   - `syllablePool` lists syllable ids (see readingTrack.syllables)
+   *     whose letters ALL belong to groups learned so far.
+   * ------------------------------------------------------------------ */
+  lettersPath: {
+    groups: [
+      {
+        groupId: "group-1",
+        order: 1,
+        steps: {
+          meet:  { id: "letters-group-1-meet",  kind: "meet",  title: "Meet the letters", sub: "6 letters" },
+          write: { id: "letters-group-1-write", kind: "write", title: "Write it",         sub: "Trace each letter" },
+          exam:  {
+            id: "letters-group-1-exam", kind: "exam", title: "Letter exam",
+            recipe: [
+              { type: "hear_pick_letter", count: 2, from: "group" },
+              { type: "letter_to_sound",  count: 2, from: "group" },
+              { type: "trace_letter",     count: 1, from: "group" },
+              { type: "build_syllable",   count: 1, syllablePool: ["syl-ba", "syl-de"] },
+              /* no earlier group to review yet — extra own-letter question instead */
+              { type: "hear_pick_letter", count: 1, from: "group" }
+            ]
+          }
+        }
+      },
+      {
+        groupId: "group-2",
+        order: 2,
+        steps: {
+          meet:  { id: "letters-group-2-meet",  kind: "meet",  title: "Meet the letters", sub: "6 letters" },
+          write: { id: "letters-group-2-write", kind: "write", title: "Write it",         sub: "Trace each letter" },
+          exam:  {
+            id: "letters-group-2-exam", kind: "exam", title: "Letter exam",
+            recipe: [
+              { type: "hear_pick_letter", count: 2, from: "group" },
+              { type: "letter_to_sound",  count: 2, from: "group" },
+              { type: "trace_letter",     count: 1, from: "group" },
+              { type: "build_syllable",   count: 1, syllablePool: ["syl-ba", "syl-de", "syl-ma", "syl-di"] },
+              { type: "letter_to_sound",  count: 1, from: "earlier-groups" },
+              { type: "hear_pick_letter", count: 1, from: "earlier-groups" }
+            ]
+          }
+        }
+      },
+      {
+        groupId: "group-3",
+        order: 3,
+        steps: {
+          meet:  { id: "letters-group-3-meet",  kind: "meet",  title: "Meet the letters", sub: "6 letters" },
+          write: { id: "letters-group-3-write", kind: "write", title: "Write it",         sub: "Trace each letter" },
+          exam:  {
+            id: "letters-group-3-exam", kind: "exam", title: "Letter exam",
+            recipe: [
+              { type: "hear_pick_letter", count: 2, from: "group" },
+              { type: "letter_to_sound",  count: 2, from: "group" },
+              { type: "trace_letter",     count: 1, from: "group" },
+              { type: "build_syllable",   count: 1, syllablePool: ["syl-ma", "syl-sa", "syl-di", "syl-ba", "syl-de", "syl-lo", "syl-ni", "syl-go"] },
+              { type: "letter_to_sound",  count: 1, from: "earlier-groups" },
+              { type: "hear_pick_letter", count: 1, from: "earlier-groups" }
+            ]
+          }
+        }
+      },
+      {
+        groupId: "group-4",
+        order: 4,
+        steps: {
+          meet:  { id: "letters-group-4-meet",  kind: "meet",  title: "Meet the letters", sub: "5 letters" },
+          write: { id: "letters-group-4-write", kind: "write", title: "Write it",         sub: "Trace each letter" },
+          exam:  {
+            id: "letters-group-4-exam", kind: "exam", title: "Letter exam",
+            recipe: [
+              { type: "hear_pick_letter", count: 2, from: "group" },
+              { type: "letter_to_sound",  count: 2, from: "group" },
+              { type: "trace_letter",     count: 1, from: "group" },
+              { type: "build_syllable",   count: 1, syllablePool: ["syl-ma", "syl-sa", "syl-di", "syl-ba", "syl-de", "syl-lo", "syl-ni", "syl-go"] },
+              { type: "letter_to_sound",  count: 1, from: "earlier-groups" },
+              { type: "hear_pick_letter", count: 1, from: "earlier-groups" }
+            ]
+          }
+        }
+      },
+      {
+        groupId: "group-5",
+        order: 5,
+        steps: {
+          meet:  { id: "letters-group-5-meet",  kind: "meet",  title: "Meet the letters", sub: "5 letters" },
+          write: { id: "letters-group-5-write", kind: "write", title: "Write it",         sub: "Trace each letter" },
+          exam:  {
+            id: "letters-group-5-exam", kind: "exam", title: "Letter exam",
+            recipe: [
+              { type: "hear_pick_letter", count: 2, from: "group" },
+              { type: "letter_to_sound",  count: 2, from: "group" },
+              { type: "trace_letter",     count: 1, from: "group" },
+              { type: "build_syllable",   count: 1, syllablePool: ["syl-ma", "syl-sa", "syl-di", "syl-ba", "syl-de", "syl-lo", "syl-ni", "syl-go"] },
+              { type: "letter_to_sound",  count: 1, from: "earlier-groups" },
+              { type: "hear_pick_letter", count: 1, from: "earlier-groups" }
+            ]
+          }
+        }
+      },
+      {
+        groupId: "group-6",
+        order: 6,
+        steps: {
+          meet:  { id: "letters-group-6-meet",  kind: "meet",  title: "Meet the letters", sub: "5 letters" },
+          write: { id: "letters-group-6-write", kind: "write", title: "Write it",         sub: "Trace each letter" },
+          exam:  {
+            id: "letters-group-6-exam", kind: "exam", title: "Letter exam",
+            recipe: [
+              { type: "hear_pick_letter", count: 2, from: "group" },
+              { type: "letter_to_sound",  count: 2, from: "group" },
+              { type: "trace_letter",     count: 1, from: "group" },
+              { type: "build_syllable",   count: 1, syllablePool: ["syl-ma", "syl-sa", "syl-di", "syl-ba", "syl-de", "syl-lo", "syl-ni", "syl-go"] },
+              { type: "letter_to_sound",  count: 1, from: "earlier-groups" },
+              { type: "hear_pick_letter", count: 1, from: "earlier-groups" }
+            ]
+          }
+        }
+      }
+    ]
+  },
+
+  /* ------------------------------------------------------------------ *
+   * Reading track — sound out real Georgian, from 2-letter syllables to
+   * long words. `items` reference readingTrack.syllables, readingTrack
+   * .extras, or vocab ids above (words reuse existing vocab wherever
+   * possible; only 3 tiny new items live in `extras`).
+   *
+   * Syllables are natural Georgian syllables built from the easiest
+   * letters first: მა (mama), სა (sami/sakhli), დი (dila), ბა (bavshvi),
+   * დე (deda), ლო (skola/madloba), ნი (banani), გო (megobari, gogo).
+   * Syllables have no `en`/`emoji` — renderers fall back to translit.
+   *
+   * Steps carry practice/exam recipes like lettersPath exams. Same hard
+   * rules: exam stars 1–3 by accuracy, never below 1, always retryable,
+   * misses reveal + speak the answer, nothing locked, nothing lost.
+   * ------------------------------------------------------------------ */
+  readingTrack: {
+    syllables: [
+      { id: "syl-ma", ka: "მა", translit: "ma" },
+      { id: "syl-sa", ka: "სა", translit: "sa" },
+      { id: "syl-di", ka: "დი", translit: "di" },
+      { id: "syl-ba", ka: "ბა", translit: "ba" },
+      { id: "syl-de", ka: "დე", translit: "de" },
+      { id: "syl-lo", ka: "ლო", translit: "lo" },
+      { id: "syl-ni", ka: "ნი", translit: "ni" },
+      { id: "syl-go", ka: "გო", translit: "go" }
+    ],
+    extras: [   /* tiny dedicated word list, same shape as vocab items */
+      { id: "rw_ia",  ka: "ია",  translit: "ia",  en: "violet (flower)", emoji: "🌼" },
+      { id: "rw_tsa", ka: "ცა",  translit: "tsa", en: "sky",             emoji: "🌤️" },
+      { id: "rw_ena", ka: "ენა", translit: "ena", en: "tongue",          emoji: "👅" }
+    ],
+    steps: [
+      {
+        id: "read-1", title: "First syllables", kind: "syllables",
+        items: ["syl-ma", "syl-sa", "syl-di", "syl-ba", "syl-de", "syl-lo", "syl-ni", "syl-go"],
+        practice: [
+          { type: "build_syllable",   count: 3 },
+          { type: "letter_to_sound",  count: 2 },   /* fed the step's syllable items */
+          { type: "hear_pick_letter", count: 1 }    /* letters used by the step's syllables */
+        ],
+        exam: [
+          { type: "build_syllable",   count: 3 },
+          { type: "letter_to_sound",  count: 2 },
+          { type: "hear_pick_letter", count: 2 }
+        ]
+      },
+      {
+        id: "read-2", title: "Little words", kind: "words",   /* 2–3 letters */
+        items: ["rw_ia", "rw_tsa", "rw_ena", "da", "ki", "ara", "mta", "rva", "tkha"],
+        practice: [
+          { type: "read_word_pick_picture", count: 2 },
+          { type: "picture_pick_word",      count: 2 },
+          { type: "build_word",             count: 1 },
+          { type: "match_pairs",            count: 1 }
+        ],
+        exam: [
+          { type: "read_word_pick_picture", count: 3 },
+          { type: "picture_pick_word",      count: 2 },
+          { type: "build_word",             count: 1 },
+          /* earlier step is syllables, so the review item is a syllable build */
+          { type: "build_syllable",         count: 1, syllablePool: ["syl-ma", "syl-sa", "syl-di", "syl-ba", "syl-de", "syl-lo", "syl-ni", "syl-go"] }
+        ]
+      },
+      {
+        id: "read-3", title: "Bigger words", kind: "words",   /* 3–5 letters */
+        items: ["deda", "mama", "sami", "kata", "puri", "chai", "tevzi", "sakhli", "vashli"],
+        practice: [
+          { type: "read_word_pick_picture", count: 2 },
+          { type: "picture_pick_word",      count: 2 },
+          { type: "build_word",             count: 1 },
+          { type: "match_pairs",            count: 1 }
+        ],
+        exam: [
+          { type: "read_word_pick_picture", count: 3 },
+          { type: "picture_pick_word",      count: 2 },
+          { type: "build_word",             count: 1 },
+          { type: "read_word_pick_picture", count: 1, from: "earlier-steps" }
+        ]
+      },
+      {
+        id: "read-4", title: "Long words", kind: "words",
+        items: ["megobari", "avtobusi", "kurdgheli", "khinkali", "khachapuri", "maghazia"],
+        practice: [
+          { type: "read_word_pick_picture", count: 2 },
+          { type: "picture_pick_word",      count: 2 },
+          { type: "build_word",             count: 1 },
+          { type: "match_pairs",            count: 1 }
+        ],
+        exam: [
+          { type: "read_word_pick_picture", count: 3 },
+          { type: "picture_pick_word",      count: 2 },
+          { type: "build_word",             count: 1 },
+          { type: "read_word_pick_picture", count: 1, from: "earlier-steps" }
+        ]
+      }
+    ]
+  },
+
+  /* ------------------------------------------------------------------ *
+   * Praise phrases — short, warm Georgian encouragements played after
+   * finishes and good answers. Rewards only; never a scolding variant.
+   * ------------------------------------------------------------------ */
+  praise: [
+    { id: "praise-kargia",         ka: "კარგია!",        translit: "k'argia!",        en: "Good!" },
+    { id: "praise-shesanishnavia", ka: "შესანიშნავია!",  translit: "shesanishnavia!", en: "Excellent!" },
+    { id: "praise-qochagh",        ka: "ყოჩაღ!",         translit: "q'ochagh!",       en: "Well done!" },
+    { id: "praise-magaria",        ka: "მაგარია!",       translit: "magaria!",        en: "Awesome!" }
+  ],
+
+  /* ------------------------------------------------------------------ *
+   * Audio ids — every speakable thing maps to exactly one bundled clip:
+   *   gamarjoba/audio/ka/<audioId>.mp3   (relative path, no network)
+   *
+   * Scheme:
+   *   - Vocab items, reading extras:  audioId === the item's own id
+   *     (e.g. "gamarjoba" → audio/ka/gamarjoba.mp3).
+   *   - Syllables:  "syl-<translit>" === the syllable's own id.
+   *   - Praise:     the praise entry's own id (praise-kargia, …).
+   *   - Letters:    "letter-<translit>", looked up by the letter's `ka`
+   *     char in the map below. Filename-safe sanitization: the ejective
+   *     apostrophe (') becomes "x" —
+   *       k' → kx · p' → px · t' → tx · q' → qx · ts' → tsx · ch' → chx
+   *     so ც (ts) → letter-ts but წ (ts') → letter-tsx, etc. All 33 ids
+   *     are unique. Letter clips speak the bare letter character.
+   * ------------------------------------------------------------------ */
+  audioIds: {
+    letters: {
+      /* group-1 */ "ა": "letter-a",   "ბ": "letter-b",   "გ": "letter-g",   "დ": "letter-d",   "ე": "letter-e",  "ვ": "letter-v",
+      /* group-2 */ "ზ": "letter-z",   "თ": "letter-t",   "ი": "letter-i",   "კ": "letter-kx",  "ლ": "letter-l",  "მ": "letter-m",
+      /* group-3 */ "ნ": "letter-n",   "ო": "letter-o",   "პ": "letter-px",  "ჟ": "letter-zh",  "რ": "letter-r",  "ს": "letter-s",
+      /* group-4 */ "ტ": "letter-tx",  "უ": "letter-u",   "ფ": "letter-p",   "ქ": "letter-k",   "ღ": "letter-gh",
+      /* group-5 */ "ყ": "letter-qx",  "შ": "letter-sh",  "ჩ": "letter-ch",  "ც": "letter-ts",  "ძ": "letter-dz",
+      /* group-6 */ "წ": "letter-tsx", "ჭ": "letter-chx", "ხ": "letter-kh",  "ჯ": "letter-j",   "ჰ": "letter-h"
+    },
+
+    /* Letter example words, keyed by the example's `ka`. Examples whose
+     * `ka` equals a vocab item reuse that item's clip automatically (the
+     * app checks vocab first), so only the rest live here: ია/ცა/ენა
+     * reuse the readingTrack extras' clips, and every other unmatched
+     * example gets its own bundled clip, example-<translit>.mp3 —
+     * generated by scripts/generate-gamarjoba-audio.py like the rest. */
+    examples: {
+      "ალუბალი": "example-alubali",   // ა — cherry
+      "ბანანი":  "example-banani",    // ბ — banana
+      "ზღვა":    "example-zghva",     // ზ — sea
+      "ია":      "rw_ia",             // ი — violet (reading extra)
+      "ლომი":    "example-lomi",      // ლ — lion
+      "ნავი":    "example-navi",      // ნ — boat
+      "ოთახი":   "example-otakhi",    // ო — room
+      "ჟირაფი":  "example-zhirapi",   // ჟ — giraffe
+      "ტბა":     "example-tba",       // ტ — lake
+      "უთო":     "example-uto",       // უ — clothes iron
+      "ფული":    "example-puli",      // ფ — money
+      "ღამე":    "example-ghame",     // ღ — night
+      "ყვავილი": "example-qvavili",   // ყ — flower
+      "ცა":      "rw_tsa",            // ც — sky (reading extra)
+      "ენა":     "rw_ena",            // ე — tongue (reading extra)
+      "ჭიქა":    "example-chika",     // ჭ — glass, cup
+      "ხე":      "example-khe",       // ხ — tree
+      "ჯიბე":    "example-jibe",      // ჯ — pocket
+      "ჰაერი":   "example-haeri"      // ჰ — air
+    }
   }
 };
