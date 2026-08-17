@@ -53,6 +53,11 @@ jobs:
       - name: SPA fallback for GitHub Pages
         run: cp dist/index.html dist/404.html
 
+      # Gamarjoba! (the Georgian learning site) is plain static files —
+      # serve it alongside the app at /gamarjoba/.
+      - name: Include the Gamarjoba site
+        run: cp -r gamarjoba dist/gamarjoba
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
