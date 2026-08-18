@@ -325,10 +325,11 @@
   }
 
   /* rule clip first, then the content prompt — skipped if the view is gone */
+  /* Instructions are no longer narrated automatically (users found the
+   * voice-over repetitive) — the content audio plays straight away. Every
+   * instruction line stays tappable to hear the text on demand. */
   function speakThen(container, text, fn) {
-    playUiClip(text, function () {
-      if (fn && document.body.contains(container)) { fn(); }
-    });
+    if (fn && document.body.contains(container)) { fn(); }
   }
 
   /* track input modality so keyboard-only hints appear only for keyboard users */
@@ -1665,7 +1666,6 @@
     var hint = kbdHint();
     if (hint) { container.appendChild(hint); }
     if (s) { s.optionButtons = buttons; }
-    playUiClip('Tap the Georgian word for:');
   }
 
   function renderMatchPairs(ex, container, onResult, s) {
@@ -1786,7 +1786,6 @@
     ]);
     container.appendChild(grid);
     if (s) { s.optionButtons = []; }
-    playUiClip('Match the pairs');
   }
 
   /* renders build_word AND build_syllable — accepts any {id, ka, translit,
@@ -1902,10 +1901,8 @@
     container.appendChild(tilesRow);
     if (s) { s.optionButtons = []; }
     if (!hasMeaning) {
-      // "Build what you hear" — rule first, then say the syllable
+      // "Build what you hear" — say the syllable straight away
       speakThen(container, instText, function () { playWord(word); });
-    } else {
-      playUiClip(instText);
     }
   }
 
@@ -2615,7 +2612,6 @@
     var hint = kbdHint();
     if (hint) { container.appendChild(hint); }
     if (s) { s.optionButtons = cards; }
-    playUiClip('What sound does it make?');
   }
 
   function renderTraceLetter(ex, container, onResult, s) {
