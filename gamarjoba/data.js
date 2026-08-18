@@ -17,7 +17,11 @@ window.CURRICULUM = {
     georgianAlphabet: "ქართული ანბანი",  // "the Georgian alphabet"
     practice:         "პრაქტიკა",        // "practice"
     letters:          "ანბანი",          // Letters path title (same word, path context)
-    reading:          "კითხვა"           // "reading" (Reading path title)
+    reading:          "კითხვა",          // "reading" (Reading path title)
+    /* v3 additions — retention screens (display copy, not spoken) */
+    treasures:        "ჩემი საგანძური",  // "my treasures" (rewards screen title)
+    dictionary:       "ჩემი ლექსიკონი",  // "my dictionary" (collected words)
+    wordOfDay:        "დღის სიტყვა"      // "word of the day"
   },
 
   /* ------------------------------------------------------------------ *
@@ -243,6 +247,124 @@ window.CURRICULUM = {
         { id: "phrases-3", title: "When you're stuck",
           items: ["ar_vitsi", "ar_mesmis", "inglisurad", "kartuli"] }
       ]
+    },
+
+    /* -------------------- v3 — Sakartvelo release: units 9–16 --------------------
+     * Appended only; existing unit/lesson/vocab ids above are untouched. */
+    {
+      id: "feelings",
+      title: "Feelings & Needs",
+      emoji: "😊",
+      description: "Say how you feel — the words that get you help and hugs.",
+      lessons: [
+        { id: "feelings-1", title: "Happy & sad",
+          items: ["bednieri", "motsqenili", "daghlili", "mikharia"] },
+        { id: "feelings-2", title: "Hungry & cold",
+          items: ["mshia", "mtsquria", "mtsiva", "mtskhela"] },
+        { id: "feelings-3", title: "I like it!",
+          items: ["momtsons", "miqvarkhar", "mchirdeba", "tsudad_var"] }
+      ]
+    },
+    /* question words come BEFORE the units whose phrases embed them
+     * (რომელი საათია / ეს რა ღირს / სად არის ტუალეტი) — usefulness-first;
+     * unit/lesson ids are unchanged, so existing saves keep working */
+    {
+      id: "smalltalk",
+      title: "Questions & Small Talk",
+      emoji: "💭",
+      description: "Who, what, where — and making friends.",
+      lessons: [
+        { id: "smalltalk-1", title: "Question words",
+          items: ["ra", "vin", "sad", "rodis"] },
+        { id: "smalltalk-2", title: "More questions",
+          items: ["ratom", "rogor", "es_ra_aris", "saidan_khart"] },
+        { id: "smalltalk-3", title: "Making friends",
+          items: ["sasiamovnoa", "mobrdzandit", "shekhvedramde", "ra_tkma_unda"] }
+      ]
+    },
+    {
+      id: "time",
+      title: "Time & Days",
+      emoji: "🕐",
+      description: "Today, tomorrow and the days of the week.",
+      lessons: [
+        { id: "time-1", title: "Today & tomorrow",
+          items: ["dghes", "khval", "gushin", "akhla", "mere"] },
+        { id: "time-2", title: "Parts of the day",
+          items: ["dghe", "dila", "saghamo", "saati"] },
+        { id: "time-3", title: "Days of the week",
+          items: ["orshabati", "shabati", "kvira", "romeli_saatia"] }
+      ]
+    },
+    {
+      id: "weather",
+      title: "Weather & Seasons",
+      emoji: "⛅",
+      description: "Sun, snow and the four seasons.",
+      lessons: [
+        { id: "weather-1", title: "Sun & rain",
+          items: ["amindi", "mze", "tsvima", "tovli"] },
+        { id: "weather-2", title: "Hot & cold",
+          items: ["kari", "tsiva", "tskhela", "kargi_amindia"] },
+        { id: "weather-3", title: "The seasons",
+          items: ["gazapkhuli", "zapkhuli", "shemodgoma", "zamtari"] }
+      ]
+    },
+    {
+      id: "restaurant",
+      title: "At the Restaurant",
+      emoji: "🍽️",
+      description: "Order like a local at the supra.",
+      lessons: [
+        { id: "restaurant-1", title: "At the table",
+          items: ["meniu", "magida", "opitsianti", "salati"] },
+        { id: "restaurant-2", title: "Yum!",
+          items: ["supi", "khortsi", "naqini", "limonati", "gemrielia"] },
+        { id: "restaurant-3", title: "Ordering",
+          items: ["gemrielad_miirtvit", "erti_khinkali_gtkhovt", "angarishi_gtkhovt", "gaumarjos"] }
+      ]
+    },
+    {
+      id: "shopping",
+      title: "Shopping & Money",
+      emoji: "🛍️",
+      description: "Lari, bargains and “do you have…?”",
+      lessons: [
+        { id: "shopping-1", title: "Money",
+          items: ["puli", "lari", "dzviri", "iapi"] },
+        { id: "shopping-2", title: "Big & small",
+          items: ["didi", "patara", "akhali", "sachukari"] },
+        { id: "shopping-3", title: "At the shop",
+          items: ["tansatsmeli", "pekhsatsmeli", "gakvt", "es_ra_ghirs"] }
+      ]
+    },
+    {
+      id: "directions",
+      title: "Getting Around",
+      emoji: "🧭",
+      description: "Left, right, and “stop here, please!”",
+      lessons: [
+        { id: "directions-1", title: "Which way?",
+          items: ["martskhniv", "marjvniv", "pirdapir", "ak", "ik"] },
+        { id: "directions-2", title: "Near & far",
+          items: ["akhlos", "shors", "sad_aris_tualeti", "sadguri"] },
+        { id: "directions-3", title: "Taxi & tickets",
+          items: ["aeroporti", "taksi", "bileti", "ak_gaacheret"] }
+      ]
+    },
+    {
+      id: "verbs",
+      title: "Doing Words",
+      emoji: "🏃",
+      description: "I go, I see, I eat — your first Georgian verbs.",
+      lessons: [
+        { id: "verbs-1", title: "Going & coming",
+          items: ["mivdivar", "movdivar", "vkhedav", "vitsi"] },
+        { id: "verbs-2", title: "Eating & talking",
+          items: ["vcham", "vsvam", "mesmis", "vlaparakob"] },
+        { id: "verbs-3", title: "Living & learning",
+          items: ["vtskhovrob", "vmushaob", "vstsavlob", "tsavidet"] }
+      ]
     }
   ],
 
@@ -364,7 +486,163 @@ window.CURRICULUM = {
     ar_vitsi:          { id: "ar_vitsi",          ka: "არ ვიცი",             translit: "ar vitsi",             en: "I don't know",             emoji: "🤷" },
     ar_mesmis:         { id: "ar_mesmis",         ka: "არ მესმის",           translit: "ar mesmis",            en: "I don't understand",       emoji: "😕" },
     inglisurad:        { id: "inglisurad",        ka: "ლაპარაკობთ ინგლისურად?", translit: "lap'arak'obt inglisurad?", en: "do you speak English?", emoji: "🗣️" },
-    kartuli:           { id: "kartuli",           ka: "ქართული",             translit: "kartuli",              en: "Georgian (language)",      emoji: "📖" }
+    kartuli:           { id: "kartuli",           ka: "ქართული",             translit: "kartuli",              en: "Georgian (language)",      emoji: "📖" },
+
+    /* ---------------- v3 — Sakartvelo release: 99 unit items ---------------- */
+
+    /* Unit 9 — Feelings & needs (12) */
+    bednieri:          { id: "bednieri",          ka: "ბედნიერი",            translit: "bednieri",             en: "happy",                    emoji: "😊" },
+    motsqenili:        { id: "motsqenili",        ka: "მოწყენილი",           translit: "mots'q'enili",         en: "sad",                      emoji: "😢" },
+    daghlili:          { id: "daghlili",          ka: "დაღლილი",             translit: "daghlili",             en: "tired",                    emoji: "😴" },
+    mikharia:          { id: "mikharia",          ka: "მიხარია",             translit: "mikharia",             en: "I'm glad",                 emoji: "😄" },
+    mshia:             { id: "mshia",             ka: "მშია",                translit: "mshia",                en: "I'm hungry",               emoji: "🍽️" },
+    mtsquria:          { id: "mtsquria",          ka: "მწყურია",             translit: "mts'q'uria",           en: "I'm thirsty",              emoji: "🥤" },
+    mtsiva:            { id: "mtsiva",            ka: "მცივა",               translit: "mtsiva",               en: "I'm cold",                 emoji: "🥶" },
+    mtskhela:          { id: "mtskhela",          ka: "მცხელა",              translit: "mtskhela",             en: "I'm hot",                  emoji: "🥵" },
+    momtsons:          { id: "momtsons",          ka: "მომწონს",             translit: "momts'ons",            en: "I like it",                emoji: "👍" },
+    miqvarkhar:        { id: "miqvarkhar",        ka: "მიყვარხარ",           translit: "miq'varkhar",          en: "I love you",               emoji: "❤️" },
+    mchirdeba:         { id: "mchirdeba",         ka: "მჭირდება...",          translit: "mch'irdeba...",        en: "I need...",                emoji: "🙏" },
+    tsudad_var:        { id: "tsudad_var",        ka: "ცუდად ვარ",           translit: "tsudad var",           en: "I feel unwell",            emoji: "🤒" },
+
+    /* Unit 10 — Time & days (13) */
+    dghes:             { id: "dghes",             ka: "დღეს",                translit: "dghes",                en: "today",                    emoji: "📅" },
+    khval:             { id: "khval",             ka: "ხვალ",                translit: "khval",                en: "tomorrow",                 emoji: "➡️" },
+    gushin:            { id: "gushin",            ka: "გუშინ",               translit: "gushin",               en: "yesterday",                emoji: "⬅️" },
+    akhla:             { id: "akhla",             ka: "ახლა",                translit: "akhla",                en: "now",                      emoji: "⏰" },
+    mere:              { id: "mere",              ka: "მერე",                translit: "mere",                 en: "later",                    emoji: "⏳" },
+    dghe:              { id: "dghe",              ka: "დღე",                 translit: "dghe",                 en: "day",                      emoji: "🌞" },
+    dila:              { id: "dila",              ka: "დილა",                translit: "dila",                 en: "morning",                  emoji: "🌅" },
+    saghamo:           { id: "saghamo",           ka: "საღამო",              translit: "saghamo",              en: "evening",                  emoji: "🌆" },
+    orshabati:         { id: "orshabati",         ka: "ორშაბათი",            translit: "orshabati",            en: "Monday",                   emoji: "🗓️" },
+    shabati:           { id: "shabati",           ka: "შაბათი",              translit: "shabati",              en: "Saturday",                 emoji: "🎈" },
+    kvira:             { id: "kvira",             ka: "კვირა",               translit: "k'vira",               en: "Sunday (also: week)",      emoji: "☀️" },
+    romeli_saatia:     { id: "romeli_saatia",     ka: "რომელი საათია?",      translit: "romeli saatia?",       en: "what time is it?",         emoji: "🕐" },
+    saati:             { id: "saati",             ka: "საათი",               translit: "saati",                en: "clock, hour",              emoji: "⌚" },
+
+    /* Unit 11 — Weather & seasons (12) */
+    amindi:            { id: "amindi",            ka: "ამინდი",              translit: "amindi",               en: "weather",                  emoji: "🌤️" },
+    mze:               { id: "mze",               ka: "მზე",                 translit: "mze",                  en: "sun",                      emoji: "☀️" },
+    tsvima:            { id: "tsvima",            ka: "წვიმა",               translit: "ts'vima",              en: "rain",                     emoji: "🌧️" },
+    tovli:             { id: "tovli",             ka: "თოვლი",               translit: "tovli",                en: "snow",                     emoji: "❄️" },
+    kari:              { id: "kari",              ka: "ქარი",                translit: "kari",                 en: "wind",                     emoji: "💨" },
+    tsiva:             { id: "tsiva",             ka: "ცივა",                translit: "tsiva",                en: "it's cold (outside)",      emoji: "🧊" },
+    tskhela:           { id: "tskhela",           ka: "ცხელა",               translit: "tskhela",              en: "it's hot (outside)",       emoji: "🔥" },
+    kargi_amindia:     { id: "kargi_amindia",     ka: "კარგი ამინდია",       translit: "k'argi amindia",       en: "the weather is nice",      emoji: "🌞" },
+    gazapkhuli:        { id: "gazapkhuli",        ka: "გაზაფხული",           translit: "gazapkhuli",           en: "spring",                   emoji: "🌸" },
+    zapkhuli:          { id: "zapkhuli",          ka: "ზაფხული",             translit: "zapkhuli",             en: "summer",                   emoji: "🏖️" },
+    shemodgoma:        { id: "shemodgoma",        ka: "შემოდგომა",           translit: "shemodgoma",           en: "autumn",                   emoji: "🍂" },
+    zamtari:           { id: "zamtari",           ka: "ზამთარი",             translit: "zamtari",              en: "winter",                   emoji: "⛄" },
+
+    /* Unit 12 — At the restaurant (13) */
+    meniu:             { id: "meniu",             ka: "მენიუ",               translit: "meniu",                en: "menu",                     emoji: "📋" },
+    magida:            { id: "magida",            ka: "მაგიდა",              translit: "magida",               en: "table",                    emoji: "🪑" },
+    opitsianti:        { id: "opitsianti",        ka: "ოფიციანტი",           translit: "opitsiant'i",          en: "waiter",                   emoji: "🤵" },
+    salati:            { id: "salati",            ka: "სალათი",              translit: "salati",               en: "salad",                    emoji: "🥗" },
+    supi:              { id: "supi",              ka: "სუპი",                translit: "sup'i",                en: "soup",                     emoji: "🍲" },
+    khortsi:           { id: "khortsi",           ka: "ხორცი",               translit: "khortsi",              en: "meat",                     emoji: "🥩" },
+    naqini:            { id: "naqini",            ka: "ნაყინი",              translit: "naq'ini",              en: "ice cream",                emoji: "🍦" },
+    limonati:          { id: "limonati",          ka: "ლიმონათი",            translit: "limonati",             en: "lemonade",                 emoji: "🥤" },
+    gemrielia:         { id: "gemrielia",         ka: "გემრიელია!",          translit: "gemrielia!",           en: "it's delicious!",          emoji: "😋" },
+    gemrielad_miirtvit:{ id: "gemrielad_miirtvit",ka: "გემრიელად მიირთვით!", translit: "gemrielad miirtvit!",  en: "bon appétit!",             emoji: "🍽️" },
+    erti_khinkali_gtkhovt: { id: "erti_khinkali_gtkhovt", ka: "ერთი ხინკალი, გთხოვთ", translit: "erti khink'ali, gtkhovt", en: "one khinkali, please", emoji: "🥟" },
+    angarishi_gtkhovt: { id: "angarishi_gtkhovt", ka: "ანგარიში, გთხოვთ",    translit: "angarishi, gtkhovt",   en: "the bill, please",         emoji: "🧾" },
+    gaumarjos:         { id: "gaumarjos",         ka: "გაუმარჯოს!",          translit: "gaumarjos!",           en: "cheers! / hooray!",        emoji: "🎉" },
+
+    /* Unit 13 — Shopping & money (12) */
+    puli:              { id: "puli",              ka: "ფული",                translit: "puli",                 en: "money",                    emoji: "💵" },
+    lari:              { id: "lari",              ka: "ლარი",                translit: "lari",                 en: "lari (Georgian money)",    emoji: "💰" },
+    dzviri:            { id: "dzviri",            ka: "ძვირი",               translit: "dzviri",               en: "expensive",                emoji: "💎" },
+    iapi:              { id: "iapi",              ka: "იაფი",                translit: "iapi",                 en: "cheap",                    emoji: "🏷️" },
+    didi:              { id: "didi",              ka: "დიდი",                translit: "didi",                 en: "big",                      emoji: "🐘" },
+    patara:            { id: "patara",            ka: "პატარა",              translit: "p'at'ara",             en: "small",                    emoji: "🐭" },
+    akhali:            { id: "akhali",            ka: "ახალი",               translit: "akhali",               en: "new",                      emoji: "✨" },
+    sachukari:         { id: "sachukari",         ka: "საჩუქარი",            translit: "sachukari",            en: "gift",                     emoji: "🎁" },
+    tansatsmeli:       { id: "tansatsmeli",       ka: "ტანსაცმელი",          translit: "t'ansatsmeli",         en: "clothes",                  emoji: "👕" },
+    pekhsatsmeli:      { id: "pekhsatsmeli",      ka: "ფეხსაცმელი",          translit: "pekhsatsmeli",         en: "shoes",                    emoji: "👟" },
+    gakvt:             { id: "gakvt",             ka: "გაქვთ...?",            translit: "gakvt...?",            en: "do you have...?",          emoji: "🙋" },
+    es_ra_ghirs:       { id: "es_ra_ghirs",       ka: "ეს რა ღირს?",         translit: "es ra ghirs?",         en: "how much is this?",        emoji: "🪙" },
+
+    /* Unit 14 — Getting around (13) */
+    martskhniv:        { id: "martskhniv",        ka: "მარცხნივ",            translit: "martskhniv",           en: "left",                     emoji: "⬅️" },
+    marjvniv:          { id: "marjvniv",          ka: "მარჯვნივ",            translit: "marjvniv",             en: "right",                    emoji: "➡️" },
+    pirdapir:          { id: "pirdapir",          ka: "პირდაპირ",            translit: "p'irdap'ir",           en: "straight ahead",           emoji: "⬆️" },
+    ak:                { id: "ak",                ka: "აქ",                  translit: "ak",                   en: "here",                     emoji: "📍" },
+    ik:                { id: "ik",                ka: "იქ",                  translit: "ik",                   en: "there",                    emoji: "👉" },
+    akhlos:            { id: "akhlos",            ka: "ახლოს",               translit: "akhlos",               en: "near",                     emoji: "🤏" },
+    shors:             { id: "shors",             ka: "შორს",                translit: "shors",                en: "far",                      emoji: "🔭" },
+    sad_aris_tualeti:  { id: "sad_aris_tualeti",  ka: "სად არის ტუალეტი?",   translit: "sad aris t'ualet'i?",  en: "where is the bathroom?",   emoji: "🚻" },
+    aeroporti:         { id: "aeroporti",         ka: "აეროპორტი",           translit: "aerop'ort'i",          en: "airport",                  emoji: "✈️" },
+    sadguri:           { id: "sadguri",           ka: "სადგური",             translit: "sadguri",              en: "station",                  emoji: "🚉" },
+    taksi:             { id: "taksi",             ka: "ტაქსი",               translit: "t'aksi",               en: "taxi",                     emoji: "🚕" },
+    bileti:            { id: "bileti",            ka: "ბილეთი",              translit: "bileti",               en: "ticket",                   emoji: "🎫" },
+    ak_gaacheret:      { id: "ak_gaacheret",      ka: "აქ გააჩერეთ",         translit: "ak gaacheret",         en: "stop here (polite)",       emoji: "🛑" },
+
+    /* Unit 15 — Doing words (12) */
+    mivdivar:          { id: "mivdivar",          ka: "მივდივარ",            translit: "mivdivar",             en: "I'm going",                emoji: "🚶" },
+    movdivar:          { id: "movdivar",          ka: "მოვდივარ",            translit: "movdivar",             en: "I'm coming",               emoji: "🏃" },
+    vkhedav:           { id: "vkhedav",           ka: "ვხედავ",              translit: "vkhedav",              en: "I see",                    emoji: "👀" },
+    vitsi:             { id: "vitsi",             ka: "ვიცი",                translit: "vitsi",                en: "I know",                   emoji: "💡" },
+    mesmis:            { id: "mesmis",            ka: "მესმის",              translit: "mesmis",               en: "I understand",             emoji: "🧠" },
+    vcham:             { id: "vcham",             ka: "ვჭამ",                translit: "vch'am",               en: "I eat",                    emoji: "🍴" },
+    vsvam:             { id: "vsvam",             ka: "ვსვამ",               translit: "vsvam",                en: "I drink",                  emoji: "🥤" },
+    vlaparakob:        { id: "vlaparakob",        ka: "ვლაპარაკობ",          translit: "vlap'arak'ob",         en: "I speak",                  emoji: "🗣️" },
+    vtskhovrob:        { id: "vtskhovrob",        ka: "ვცხოვრობ",            translit: "vtskhovrob",           en: "I live (somewhere)",       emoji: "🏡" },
+    vmushaob:          { id: "vmushaob",          ka: "ვმუშაობ",             translit: "vmushaob",             en: "I work",                   emoji: "💼" },
+    vstsavlob:         { id: "vstsavlob",         ka: "ვსწავლობ",            translit: "vsts'avlob",           en: "I'm learning",             emoji: "📚" },
+    tsavidet:          { id: "tsavidet",          ka: "წავიდეთ!",            translit: "ts'avidet!",           en: "let's go!",                emoji: "🎉" },
+
+    /* Unit 16 — Questions & small talk (12) */
+    ra:                { id: "ra",                ka: "რა?",                 translit: "ra?",                  en: "what?",                    emoji: "❓" },
+    vin:               { id: "vin",               ka: "ვინ?",                translit: "vin?",                 en: "who?",                     emoji: "👤" },
+    sad:               { id: "sad",               ka: "სად?",                translit: "sad?",                 en: "where?",                   emoji: "📍" },
+    rodis:             { id: "rodis",             ka: "როდის?",              translit: "rodis?",               en: "when?",                    emoji: "🕰️" },
+    ratom:             { id: "ratom",             ka: "რატომ?",              translit: "rat'om?",              en: "why?",                     emoji: "🤔" },
+    rogor:             { id: "rogor",             ka: "როგორ?",              translit: "rogor?",               en: "how?",                     emoji: "⚙️" },
+    es_ra_aris:        { id: "es_ra_aris",        ka: "ეს რა არის?",         translit: "es ra aris?",          en: "what is this?",            emoji: "👉" },
+    saidan_khart:      { id: "saidan_khart",      ka: "საიდან ხართ?",        translit: "saidan khart?",        en: "where are you from?",      emoji: "🌍" },
+    sasiamovnoa:       { id: "sasiamovnoa",       ka: "სასიამოვნოა",         translit: "sasiamovnoa",          en: "nice to meet you",         emoji: "🤝" },
+    mobrdzandit:       { id: "mobrdzandit",       ka: "მობრძანდით!",         translit: "mobrdzandit!",         en: "welcome! / come in!",      emoji: "🚪" },
+    shekhvedramde:     { id: "shekhvedramde",     ka: "შეხვედრამდე",         translit: "shekhvedramde",        en: "see you later",            emoji: "👋" },
+    ra_tkma_unda:      { id: "ra_tkma_unda",      ka: "რა თქმა უნდა",        translit: "ra tkma unda",         en: "of course",                emoji: "💯" },
+
+    /* ------------- v3 bonus pool (30) — Word of the Day & practice mixer.
+     * Not in any unit; ids listed in C.bonusWords below. ------------- */
+
+    /* Numbers 11–20 (10) */
+    tertmeti:          { id: "tertmeti",          ka: "თერთმეტი",            translit: "tertmet'i",            en: "eleven",                   emoji: "1️⃣1️⃣" },
+    tormeti:           { id: "tormeti",           ka: "თორმეტი",             translit: "tormet'i",             en: "twelve",                   emoji: "1️⃣2️⃣" },
+    tsameti:           { id: "tsameti",           ka: "ცამეტი",              translit: "tsamet'i",             en: "thirteen",                 emoji: "1️⃣3️⃣" },
+    totkhmeti:         { id: "totkhmeti",         ka: "თოთხმეტი",            translit: "totkhmet'i",           en: "fourteen",                 emoji: "1️⃣4️⃣" },
+    tkhutmeti:         { id: "tkhutmeti",         ka: "თხუთმეტი",            translit: "tkhutmet'i",           en: "fifteen",                  emoji: "1️⃣5️⃣" },
+    tekvsmeti:         { id: "tekvsmeti",         ka: "თექვსმეტი",           translit: "tekvsmet'i",           en: "sixteen",                  emoji: "1️⃣6️⃣" },
+    chvidmeti:         { id: "chvidmeti",         ka: "ჩვიდმეტი",            translit: "chvidmet'i",           en: "seventeen",                emoji: "1️⃣7️⃣" },
+    tvrameti:          { id: "tvrameti",          ka: "თვრამეტი",            translit: "tvramet'i",            en: "eighteen",                 emoji: "1️⃣8️⃣" },
+    tskhrameti:        { id: "tskhrameti",        ka: "ცხრამეტი",            translit: "tskhramet'i",          en: "nineteen",                 emoji: "1️⃣9️⃣" },
+    otsi:              { id: "otsi",              ka: "ოცი",                 translit: "otsi",                 en: "twenty",                   emoji: "2️⃣0️⃣" },
+
+    /* Everyday things (10) */
+    tsigni:            { id: "tsigni",            ka: "წიგნი",               translit: "ts'igni",              en: "book",                     emoji: "📚" },
+    teleponi:          { id: "teleponi",          ka: "ტელეფონი",            translit: "t'eleponi",            en: "phone",                    emoji: "📱" },
+    gasaghebi:         { id: "gasaghebi",         ka: "გასაღები",            translit: "gasaghebi",            en: "key",                      emoji: "🔑" },
+    chanta:            { id: "chanta",            ka: "ჩანთა",               translit: "chanta",               en: "bag",                      emoji: "🎒" },
+    kari_door:         { id: "kari_door",         ka: "კარი",                translit: "k'ari",                en: "door",                     emoji: "🚪" },
+    panjara:           { id: "panjara",           ka: "ფანჯარა",             translit: "panjara",              en: "window",                   emoji: "🪟" },
+    skami:             { id: "skami",             ka: "სკამი",               translit: "sk'ami",               en: "chair",                    emoji: "🪑" },
+    satsoli:           { id: "satsoli",           ka: "საწოლი",              translit: "sats'oli",             en: "bed",                      emoji: "🛏️" },
+    mankana:           { id: "mankana",           ka: "მანქანა",             translit: "mankana",              en: "car",                      emoji: "🚗" },
+    kalami:            { id: "kalami",            ka: "კალამი",              translit: "k'alami",              en: "pen",                      emoji: "✏️" },
+
+    /* Nature (10) */
+    varskvlavi:        { id: "varskvlavi",        ka: "ვარსკვლავი",          translit: "varsk'vlavi",          en: "star",                     emoji: "⭐" },
+    mtvare:            { id: "mtvare",            ka: "მთვარე",              translit: "mtvare",               en: "moon",                     emoji: "🌙" },
+    mdinare:           { id: "mdinare",           ka: "მდინარე",             translit: "mdinare",              en: "river",                    emoji: "🏞️" },
+    tqe:               { id: "tqe",               ka: "ტყე",                 translit: "t'q'e",                en: "forest",                   emoji: "🌲" },
+    zghva:             { id: "zghva",             ka: "ზღვა",                translit: "zghva",                en: "sea",                      emoji: "🌊" },
+    khe:               { id: "khe",               ka: "ხე",                  translit: "khe",                  en: "tree",                     emoji: "🌳" },
+    qvavili:           { id: "qvavili",           ka: "ყვავილი",             translit: "q'vavili",             en: "flower",                   emoji: "🌸" },
+    baghi:             { id: "baghi",             ka: "ბაღი",                translit: "baghi",                en: "garden",                   emoji: "🏡" },
+    khidi:             { id: "khidi",             ka: "ხიდი",                translit: "khidi",                en: "bridge",                   emoji: "🌉" },
+    qurdzeni:          { id: "qurdzeni",          ka: "ყურძენი",             translit: "q'urdzeni",            en: "grapes",                   emoji: "🍇" }
   },
 
   /* ------------------------------------------------------------------ *
@@ -607,7 +885,11 @@ window.CURRICULUM = {
     { id: "praise-kargia",         ka: "კარგია!",        translit: "k'argia!",        en: "Good!" },
     { id: "praise-shesanishnavia", ka: "შესანიშნავია!",  translit: "shesanishnavia!", en: "Excellent!" },
     { id: "praise-qochagh",        ka: "ყოჩაღ!",         translit: "q'ochagh!",       en: "Well done!" },
-    { id: "praise-magaria",        ka: "მაგარია!",       translit: "magaria!",        en: "Awesome!" }
+    { id: "praise-magaria",        ka: "მაგარია!",       translit: "magaria!",        en: "Awesome!" },
+    /* v3 additions — more variety, same warmth */
+    { id: "praise-didebulia",      ka: "დიდებულია!",     translit: "didebulia!",      en: "Wonderful!" },
+    { id: "praise-mshvenieria",    ka: "მშვენიერია!",    translit: "mshvenieria!",    en: "Lovely!" },
+    { id: "praise-bravo",          ka: "ბრავო!",         translit: "bravo!",          en: "Bravo!" }
   ],
 
   /* ------------------------------------------------------------------ *
@@ -663,5 +945,116 @@ window.CURRICULUM = {
       "ჯიბე":    "example-jibe",      // ჯ — pocket
       "ჰაერი":   "example-haeri"      // ჰ — air
     }
+  },
+
+  /* ------------------------------------------------------------------ *
+   * v3 — Sakartvelo release (all keys below are ADDITIVE; nothing above
+   * was renamed, removed, or reordered).
+   * ------------------------------------------------------------------ */
+
+  /* Bonus pool — vocab ids that belong to NO unit. They feed the
+   * Word-of-the-Day pick (in listed order via date-hash) and, once
+   * collected, the practice mixer. Audio clips exist like any vocab. */
+  bonusWords: [
+    /* numbers 11–20 */
+    "tertmeti", "tormeti", "tsameti", "totkhmeti", "tkhutmeti",
+    "tekvsmeti", "chvidmeti", "tvrameti", "tskhrameti", "otsi",
+    /* everyday things */
+    "tsigni", "teleponi", "gasaghebi", "chanta", "kari_door",
+    "panjara", "skami", "satsoli", "mankana", "kalami",
+    /* nature */
+    "varskvlavi", "mtvare", "mdinare", "tqe", "zghva",
+    "khe", "qvavili", "baghi", "khidi", "qurdzeni"
+  ],
+
+  /* ------------------------------------------------------------------ *
+   * Unit exam — ONE generic recipe for every unit (data-driven, like the
+   * letters-path exam recipes). 9 questions drawn across the whole
+   * unit's items; distractor tiers [unitWords, ALL_WORDS].
+   *
+   * Positive-only hard rules apply unchanged: 1–3 stars by accuracy but
+   * NEVER below 1, always redoable, wrong answers gently shake, reveal
+   * and SPEAK the right one. Nothing locks, nothing is taken away.
+   *
+   *   - `from: "earlier-units"` → review sprinkle drawn from any earlier
+   *     unit (the first unit has none, so it draws from itself).
+   *   - `fallback` → exercise type to use when the primary type has no
+   *     usable material (e.g. nothing buildable for build_word).
+   * ------------------------------------------------------------------ */
+  unitExamRecipe: [
+    { type: "pick_picture",           count: 2 },
+    { type: "reverse_pick",           count: 2 },
+    { type: "match_pairs",            count: 1 },
+    { type: "build_word",             count: 1, fallback: "picture_pick_word" },
+    { type: "picture_pick_word",      count: 1 },
+    { type: "read_word_pick_picture", count: 1 },
+    { type: "pick_picture",           count: 1, from: "earlier-units" }
+  ],
+
+  /* ------------------------------------------------------------------ *
+   * Sticker album — Baba's daily welcome gifts (and first-time exam-pass
+   * / crown gifts) come from this pool IN ORDER, so the album always
+   * completes. Append-only collection: stickers are never taken away.
+   * All Georgian-flavored, friendly, never scary. Display-only (not
+   * spoken), hence no `ka` field — the audio generator skips these.
+   * ------------------------------------------------------------------ */
+  stickers: [
+    { id: "st-khinkali",        emoji: "🥟", name: "Khinkali" },
+    { id: "st-khachapuri",      emoji: "🫓", name: "Khachapuri" },
+    { id: "st-churchkhela",     emoji: "🍭", name: "Churchkhela" },
+    { id: "st-borjgali",        emoji: "☀️", name: "Borjgali sun" },
+    { id: "st-tone-puri",       emoji: "🍞", name: "Tone bread" },
+    { id: "st-sulguni",         emoji: "🧀", name: "Sulguni cheese" },
+    { id: "st-qvevri",          emoji: "🏺", name: "Qvevri jar" },
+    { id: "st-qurdzeni",        emoji: "🍇", name: "Georgian grapes" },
+    { id: "st-supra",           emoji: "🍽️", name: "Supra table" },
+    { id: "st-tbilisi-balcony", emoji: "🏘️", name: "Old Tbilisi balcony" },
+    { id: "st-narikala",        emoji: "🏰", name: "Narikala fortress" },
+    { id: "st-cable-car",       emoji: "🚡", name: "Tbilisi cable car" },
+    { id: "st-sameba",          emoji: "⛪", name: "Sameba cathedral" },
+    { id: "st-kazbegi",         emoji: "🏔️", name: "Mount Kazbegi" },
+    { id: "st-svan-tower",      emoji: "🗼", name: "Svan tower" },
+    { id: "st-vardzia",         emoji: "⛰️", name: "Vardzia cave town" },
+    { id: "st-black-sea",       emoji: "🌊", name: "Black Sea" },
+    { id: "st-batumi",          emoji: "🌴", name: "Batumi palms" },
+    { id: "st-borjomi",         emoji: "💧", name: "Borjomi spring" },
+    { id: "st-tusheti",         emoji: "🐑", name: "Tusheti sheep" },
+    { id: "st-panduri",         emoji: "🪕", name: "Panduri" },
+    { id: "st-doli",            emoji: "🥁", name: "Doli drum" },
+    { id: "st-polyphony",       emoji: "🎶", name: "Polyphonic song" },
+    { id: "st-tsekva",          emoji: "💃", name: "Georgian dance" },
+    { id: "st-chokha",          emoji: "🧥", name: "Chokha coat" },
+    { id: "st-mkhedruli",       emoji: "✍️", name: "Mkhedruli letters" },
+    { id: "st-pirosmani",       emoji: "🎨", name: "Pirosmani painting" },
+    { id: "st-tklapi",          emoji: "🍑", name: "Tklapi fruit roll" },
+    { id: "st-pelamushi",       emoji: "🍮", name: "Pelamushi pudding" },
+    { id: "st-golden-borjgali", emoji: "🌟", name: "Golden borjgali" }
+  ],
+
+  /* ------------------------------------------------------------------ *
+   * Spoken UI instructions — instruction/copy string → bundled English
+   * clip id (audio/ka/<id>.mp3, same folder as everything else; these
+   * clips use a warm English child voice, not the Georgian voice).
+   * A pre-reader hears the RULE first, then the content prompt.
+   * Legacy instruction strings map to the same clips so any un-migrated
+   * view keeps talking.
+   * ------------------------------------------------------------------ */
+  uiAudio: {
+    "Tap what you hear":                     "ui-tap-what-you-hear",
+    "Tap the Georgian word for:":            "ui-pick-georgian-word",
+    "Pick the Georgian word for:":           "ui-pick-georgian-word",  /* legacy */
+    "Match the pairs":                       "ui-match-pairs",
+    "Build the word":                        "ui-build-the-word",
+    "Build what you hear":                   "ui-build-what-you-hear",
+    "Tap the letter you hear":               "ui-tap-letter-you-hear",
+    "What sound does it make?":              "ui-what-sound",
+    "Trace the letter":                      "ui-trace-letter",
+    "Read it — then tap its picture":        "ui-read-the-word",
+    "Read the word":                         "ui-read-the-word",       /* legacy */
+    "Which word says it?":                   "ui-which-word-says-it",
+    "Read it first — then the sound unlocks!": "ui-read-first",
+    "Almost! Here is the right one.":        "ui-almost",
+    "Well done!":                            "ui-well-done",
+    "A gift for you!":                       "ui-your-gift"
   }
 };

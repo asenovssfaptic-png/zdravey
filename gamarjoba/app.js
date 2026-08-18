@@ -43,7 +43,15 @@
       lettersExamStars: {},  // groupId -> best stars 1..3, max-merge only
       readingCardsDone: [],  // reading step ids
       readingPracticeDone: [], // reading step ids
-      readingExamStars: {}   // stepId -> best stars 1..3, max-merge only
+      readingExamStars: {},  // stepId -> best stars 1..3, max-merge only
+      /* v3 additions — all additive; old saves upgrade via the key-merge below */
+      unitCardsDone: [],     // lesson ids whose word-cards deck was finished
+      unitExamStars: {},     // unitId -> best stars 1..3, max-merge only
+      daysPlayed: [],        // ISO "YYYY-MM-DD" strings, append-only, gaps never shown
+      stickers: [],          // sticker ids, append-only — never taken away
+      wodDate: "",           // date of the current word of the day
+      wodId: "",             // its vocab id
+      wodCollected: []       // collected word-of-the-day ids, append-only
     };
   }
 
@@ -127,8 +135,9 @@
     window.setTimeout(function () { $live.textContent = msg; }, 30);
   }
 
-  function toast(msg) {
-    var t = h('div', { 'class': 'toast', text: msg });
+  /* opts.keep — survives exactly one navigation (e.g. "saved" on exit) */
+  function toast(msg, opts) {
+    var t = h('div', { 'class': 'toast' + (opts && opts.keep ? ' toast--keep' : ''), text: msg });
     $toasts.appendChild(t);
     window.setTimeout(function () {
       t.classList.add('out');
@@ -161,16 +170,17 @@
 
   function hasVoice() { return !!kaVoice; }
 
-  function speak(text) {
-    if (!kaVoice) { return; }
+  function speak(text, thenFn) {
+    if (!kaVoice) { if (thenFn) { thenFn(); } return; }
     try {
       window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(text);
       u.voice = kaVoice;
       u.lang = kaVoice.lang;
       u.rate = 0.85;
+      if (thenFn) { u.onend = thenFn; }
       window.speechSynthesis.speak(u);
-    } catch (e) { /* stay silent */ }
+    } catch (e) { if (thenFn) { thenFn(); } /* stay silent */ }
   }
 
   function stopSpeech() {
@@ -197,10 +207,12 @@
   var audioBad = {};    // audioId -> true once the file 404s / errors
   var currentClip = null;
 
-  function playAudio(audioId, kaText) {
+  /* thenFn (optional) fires once when the clip/utterance finishes — used to
+   * chain speech and to let a miss reveal finish before auto-advancing */
+  function playAudio(audioId, kaText, thenFn) {
     stopSpeech();
     if (currentClip) { try { currentClip.pause(); } catch (e) {} }
-    if (!audioId || audioBad[audioId] || !AUDIO_SET[audioId]) { speak(kaText); return; }
+    if (!audioId || audioBad[audioId] || !AUDIO_SET[audioId]) { speak(kaText, thenFn); return; }
     var a = audioCache[audioId];
     if (!a) {
       a = new Audio('audio/ka/' + audioId + '.mp3');
@@ -208,12 +220,13 @@
       a.addEventListener('error', function () { audioBad[audioId] = true; });
       audioCache[audioId] = a;
     }
+    a.onended = thenFn || null; // assignment, not addEventListener — one live handler
     currentClip = a;
     try {
       a.currentTime = 0;
       var p = a.play();
       if (p && p.catch) { p.catch(function () { /* autoplay blocked: stay quiet */ }); }
-    } catch (e) { speak(kaText); }
+    } catch (e) { speak(kaText, thenFn); }
   }
 
   function letterAudioId(letter) {
@@ -224,13 +237,13 @@
   function playLetter(l) { playAudio(letterAudioId(l), l.ka); }
 
   /* letters have no `id`; anything speakable goes through here */
-  function playItem(item) {
-    if (!item) { return; }
+  function playItem(item, thenFn) {
+    if (!item) { if (thenFn) { thenFn(); } return; }
     var aid = item.id;
     if (!aid && C.audioIds && C.audioIds.letters && C.audioIds.letters[item.ka]) {
       aid = C.audioIds.letters[item.ka];
     }
-    playAudio(aid, item.ka);
+    playAudio(aid, item.ka, thenFn);
   }
 
   function playPraise() {
@@ -263,6 +276,73 @@
 
   function sayHint(translit) {
     return h('span', { 'class': 'say-hint', text: 'say it: ' + translit });
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Spoken UI instructions (v3, H1) — every .instruction is a button that
+   * replays its own English clip. On render the rule plays first, then
+   * the content prompt (chained on `ended`, 1800ms fallback).
+   * ------------------------------------------------------------------ */
+
+  var uiClipCache = {};
+
+  function playUiClip(text, thenFn, fallbackMs) {
+    var aid = (C.uiAudio && C.uiAudio[text]) || null;
+    var fired = false;
+    function fireOnce() { if (!fired) { fired = true; if (thenFn) { thenFn(); } } }
+    if (!aid || audioBad[aid] || !AUDIO_SET[aid]) { fireOnce(); return; }
+    stopSpeech();
+    if (currentClip) { try { currentClip.pause(); } catch (e) {} }
+    var a = uiClipCache[aid];
+    if (!a) {
+      a = new Audio('audio/ka/' + aid + '.mp3');
+      a.preload = 'auto';
+      a.addEventListener('error', function () { audioBad[aid] = true; });
+      uiClipCache[aid] = a;
+    }
+    a.onended = fireOnce; // assignment, not addEventListener — one live handler
+    currentClip = a;
+    try {
+      a.currentTime = 0;
+      var p = a.play();
+      if (p && p.catch) { p.catch(function () { /* autoplay blocked: fallback timer fires */ }); }
+    } catch (e) { /* stay quiet */ }
+    window.setTimeout(fireOnce, fallbackMs || 1800); // never leave the content prompt unspoken
+  }
+
+  /* the one way to put an instruction line on screen: a replayable button */
+  function instructionLine(text) {
+    return h('button', {
+      'class': 'instruction',
+      type: 'button',
+      'data-inst': text,
+      'aria-label': text + ' — tap to hear the instruction again',
+      onclick: function () { playUiClip(text); }
+    }, [
+      h('span', { text: text }),
+      h('span', { 'class': 'instruction-speaker', 'aria-hidden': 'true', text: '🔊' })
+    ]);
+  }
+
+  /* rule clip first, then the content prompt — skipped if the view is gone */
+  function speakThen(container, text, fn) {
+    playUiClip(text, function () {
+      if (fn && document.body.contains(container)) { fn(); }
+    });
+  }
+
+  /* track input modality so keyboard-only hints appear only for keyboard users */
+  var lastInputKeyboard = false;
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Tab' || (e.key && e.key.indexOf('Arrow') === 0) || (e.key >= '1' && e.key <= '9')) {
+      lastInputKeyboard = true;
+    }
+  }, true);
+  document.addEventListener('pointerdown', function () { lastInputKeyboard = false; }, true);
+
+  function kbdHint() {
+    if (!lastInputKeyboard) { return null; }
+    return h('p', { 'class': 'kbd-hint', text: 'Tip: keys 1–4 answer' });
   }
 
   /* ------------------------------------------------------------------ *
@@ -349,9 +429,11 @@
     var ids = [];
     C.units.forEach(function (u) {
       u.lessons.forEach(function (l) {
-        if ((state.stars[l.id] || 0) >= 1) { ids = ids.concat(l.items); }
+        if ((state.stars[l.id] || 0) >= 1 || state.unitCardsDone.indexOf(l.id) !== -1) { ids = ids.concat(l.items); }
       });
     });
+    // collected words of the day join the practice mixer too
+    ids = ids.concat(state.wodCollected.filter(function (id) { return !!C.vocab[id]; }));
     if (ids.length === 0) { ids = C.units[0].lessons[0].items.slice(); }
     var seen = {};
     return wordsOf(ids).filter(function (w) {
@@ -418,8 +500,16 @@
     Object.keys(state.stars).forEach(function (k) { t += state.stars[k] || 0; });
     Object.keys(state.lettersExamStars).forEach(function (k) { t += state.lettersExamStars[k] || 0; });
     Object.keys(state.readingExamStars).forEach(function (k) { t += state.readingExamStars[k] || 0; });
+    Object.keys(state.unitExamStars).forEach(function (k) { t += state.unitExamStars[k] || 0; });
     return t;
   }
+
+  /* XP milestones — celebrated when crossed, never lost (XP only goes up) */
+  var XP_MILESTONES = [
+    { at: 500,  label: '🥉 Bronze borjgali' },
+    { at: 1500, label: '🥈 Silver borjgali' },
+    { at: 3000, label: '🥇 Golden borjgali' }
+  ];
 
   var shownStats = { stars: null, xp: null };
 
@@ -437,8 +527,8 @@
     var chipXp = document.getElementById('chip-xp');
     document.getElementById('stars-val').textContent = String(stars);
     document.getElementById('xp-val').textContent = String(xp);
-    chipStars.setAttribute('aria-label', 'Total stars: ' + stars);
-    chipXp.setAttribute('aria-label', 'Total XP: ' + xp);
+    chipStars.setAttribute('aria-label', 'Total stars: ' + stars + ' — open My treasures');
+    chipXp.setAttribute('aria-label', 'Total XP: ' + xp + ' — open My treasures');
     if (shownStats.stars !== null && stars > shownStats.stars) { popChip(chipStars); }
     if (shownStats.xp !== null && xp > shownStats.xp) { popChip(chipXp); }
     shownStats.stars = stars;
@@ -447,9 +537,18 @@
 
   function addXP(n) {
     if (n <= 0) { return; }
+    var before = state.xp;
     state.xp += n;
     save();
     updateChips();
+    XP_MILESTONES.forEach(function (m) {
+      if (before < m.at && state.xp >= m.at) {
+        toast(m.label + ' — ' + m.at + ' XP! 🎉');
+        announce('Milestone reached: ' + m.label + ', ' + m.at + ' XP!');
+        var view = $app.querySelector('.view');
+        if (view) { confettiBurst(view); }
+      }
+    });
   }
 
   function earnBadge(id) {
@@ -463,13 +562,56 @@
     }
   }
 
+  /* v3 — cards node counts done for anyone who already passed practice
+   * (old saves are never sent back to flashcards). Monotonic. */
+  function cardsNodeDone(lessonId) {
+    return state.unitCardsDone.indexOf(lessonId) !== -1 || (state.stars[lessonId] || 0) >= 1;
+  }
+
+  function unitNodeCounts(unit) {
+    var total = unit.lessons.length * 2 + 1;
+    var done = 0;
+    unit.lessons.forEach(function (l) {
+      if (cardsNodeDone(l.id)) { done++; }
+      if ((state.stars[l.id] || 0) >= 1) { done++; }
+    });
+    if ((state.unitExamStars[unit.id] || 0) >= 1) { done++; }
+    return { done: done, total: total };
+  }
+
+  /* Sticker album — daily gifts, first exam passes and crowns all draw
+   * from C.stickers IN ORDER, so the album always completes. Append-only. */
+  function nextSticker() {
+    var list = C.stickers || [];
+    for (var i = 0; i < list.length; i++) {
+      if (state.stickers.indexOf(list[i].id) === -1) { return list[i]; }
+    }
+    return null;
+  }
+
+  function grantSticker(quiet) {
+    var st = nextSticker();
+    if (!st) { return null; }
+    state.stickers.push(st.id);
+    save();
+    if (!quiet) {
+      toast('🎁 New sticker: ' + st.emoji + ' ' + st.name + '!');
+      announce('New sticker for your album: ' + st.name);
+    }
+    return st;
+  }
+
+  /* Crowns celebrate the whole unit: every lesson ≥1★ AND the unit exam
+   * passed. Existing crowns persist forever — the array is never filtered. */
   function maybeCrown(unit) {
     if (state.crowns.indexOf(unit.id) !== -1) { return; }
     if (!unitCompleted(unit)) { return; }
+    if ((state.unitExamStars[unit.id] || 0) < 1) { return; }
     state.crowns.push(unit.id);
     save();
     toast('👑 ' + unit.title + ' complete!');
     earnBadge('first-crown');
+    grantSticker();
   }
 
   /* ------------------------------------------------------------------ *
@@ -486,6 +628,13 @@
   function setView(section, mainClass) {
     activeSession = null;
     stopSpeech();
+    /* toasts never outlive their view (M3) — except one marked to survive
+     * a single navigation (the exit "saved" toast) */
+    Array.prototype.slice.call($toasts.children).forEach(function (t) {
+      if (t.classList.contains('toast--keep')) { t.classList.remove('toast--keep'); }
+      else if (t.parentNode) { t.parentNode.removeChild(t); }
+    });
+    announce('');
     $main.className = mainClass || '';
     $app.innerHTML = '';
     $app.appendChild(section);
@@ -502,8 +651,14 @@
     var m;
     if (hash === '' || hash === '#' || hash === '#/' || hash === '#/home' || hash === '#home') {
       renderHome();
+    } else if ((m = hash.match(/^#\/unit\/([\w-]+)\/cards\/([\w-]+)$/))) {
+      renderUnitCards(m[1], m[2]);
+    } else if ((m = hash.match(/^#\/unit\/([\w-]+)\/exam$/))) {
+      startUnitExam(m[1]);
     } else if ((m = hash.match(/^#\/unit\/([\w-]+)$/))) {
       renderUnit(m[1]);
+    } else if (hash === '#/treasures') {
+      renderTreasures();
     } else if ((m = hash.match(/^#\/lesson\/([\w-]+)$/))) {
       renderLessonRoute(m[1]);
     } else if (hash === '#/alphabet' || hash === '#alphabet') {
@@ -533,20 +688,95 @@
    * Home — adventure path
    * ------------------------------------------------------------------ */
 
-  function entryCard(emoji, kaLabel, enLabel, sub, hash, ariaLabel) {
+  function entryCard(emoji, kaLabel, enLabel, sub, hash, ariaLabel, ring) {
+    var emojiBit;
+    if (ring) {
+      emojiBit = h('span', { 'class': 'entry-ring', 'aria-hidden': 'true' });
+      emojiBit.insertAdjacentHTML('beforeend', ringSvg(ring.frac, ring.done));
+      emojiBit.appendChild(h('span', { 'class': 'entry-emoji', text: emoji }));
+    } else {
+      emojiBit = h('span', { 'class': 'entry-emoji', 'aria-hidden': 'true', text: emoji });
+    }
     return h('button', {
       'class': 'entry-card',
       type: 'button',
       'aria-label': ariaLabel,
       onclick: function () { navigate(hash); }
     }, [
-      h('span', { 'class': 'entry-emoji', 'aria-hidden': 'true', text: emoji }),
+      emojiBit,
       h('span', {}, [
         kaSpan(kaLabel), ' · ' + enLabel,
         h('span', { 'class': 'entry-sub', text: sub })
       ]),
       h('span', { 'class': 'chevron', 'aria-hidden': 'true', text: '›' })
     ]);
+  }
+
+  /* ---------- v3 retention helpers ---------- */
+
+  function todayKey() {
+    var d = new Date();
+    var m = d.getMonth() + 1, day = d.getDate();
+    return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day;
+  }
+
+  /* ONE global next step across the course units (H5). Never a lock —
+   * just the friendliest place to tap next. */
+  function computeNextStep() {
+    for (var i = 0; i < C.units.length; i++) {
+      var u = C.units[i];
+      for (var j = 0; j < u.lessons.length; j++) {
+        var l = u.lessons[j];
+        if (!cardsNodeDone(l.id)) {
+          return { hash: '#/unit/' + u.id + '/cards/' + l.id, nodeTitle: 'Word cards', unit: u, lesson: l };
+        }
+        if ((state.stars[l.id] || 0) < 1) {
+          return { hash: '#/lesson/' + l.id, nodeTitle: 'Practice', unit: u, lesson: l };
+        }
+      }
+      if ((state.unitExamStars[u.id] || 0) < 1) {
+        return { hash: '#/unit/' + u.id + '/exam', nodeTitle: 'Unit exam', unit: u, lesson: null };
+      }
+    }
+    return null;
+  }
+
+  /* deterministic word of the day: date-hash over un-collected bonus words
+   * first (so the bonus pool completes), then the whole vocabulary */
+  function wordOfDay() {
+    var k = todayKey();
+    if (state.wodDate === k && state.wodId && C.vocab[state.wodId]) { return C.vocab[state.wodId]; }
+    var pool = (C.bonusWords || []).filter(function (id) {
+      return C.vocab[id] && state.wodCollected.indexOf(id) === -1;
+    });
+    var ids = pool.length ? pool : Object.keys(C.vocab);
+    var hsh = 0;
+    for (var i = 0; i < k.length; i++) { hsh = (hsh * 31 + k.charCodeAt(i)) % 1000003; }
+    var id = ids[hsh % ids.length];
+    state.wodDate = k;
+    state.wodId = id;
+    save();
+    return C.vocab[id];
+  }
+
+  function lettersGroupsDone() {
+    var n = 0;
+    ((C.lettersPath && C.lettersPath.groups) || []).forEach(function (g) {
+      if (state.lettersMeetDone.indexOf(g.groupId) !== -1 &&
+          state.lettersTraceDone.indexOf(g.groupId) !== -1 &&
+          (state.lettersExamStars[g.groupId] || 0) >= 1) { n++; }
+    });
+    return n;
+  }
+
+  function readingStepsDone() {
+    var n = 0;
+    ((C.readingTrack && C.readingTrack.steps) || []).forEach(function (st) {
+      if (state.readingCardsDone.indexOf(st.id) !== -1 &&
+          state.readingPracticeDone.indexOf(st.id) !== -1 &&
+          (state.readingExamStars[st.id] || 0) >= 1) { n++; }
+    });
+    return n;
   }
 
   function ringSvg(frac, done) {
@@ -563,60 +793,128 @@
     var sec = h('section', { 'class': 'view home', role: 'region', 'aria-label': 'Home' });
     sec.appendChild(h('h1', { text: 'Your Georgian adventure' }));
 
-    sec.appendChild(entryCard('🔤', C.strings.letters, 'Letters', 'Read & write all 33 letters, step by step', '#/letters', 'Open the Letters path'));
-    sec.appendChild(entryCard('📖', C.strings.reading, 'Reading', 'Sound out your first Georgian words', '#/reading', 'Open the Reading path'));
-    sec.appendChild(entryCard('🧠', C.strings.practice, 'Review', 'Mix everything you know', '#/practice', 'Practice everything you have learned'));
+    /* --- hero: continue your adventure (H5 + 4-1) --- */
+    var next = computeNextStep();
+    var started = state.xp > 0 || totalStars() > 0 || state.unitCardsDone.length > 0;
+    var day = Math.max(1, state.daysPlayed.length);
+    var heroLine = next
+      ? (started ? 'Keep going: ' : 'Start here: ') + next.unit.emoji + ' ' + next.nodeTitle +
+        (next.lesson ? ' · ' + next.lesson.title : '') + ' — ' + next.unit.title
+      : 'Every unit done — mix everything in Practice!';
+    sec.appendChild(h('button', {
+      'class': 'hero-card',
+      type: 'button',
+      'aria-label': 'Day ' + day + ' of your adventure. ' + heroLine,
+      onclick: function () { navigate(next ? next.hash : '#/practice'); }
+    }, [
+      h('span', { 'class': 'hero-day', text: '☀️ Day ' + day + ' of your adventure' }),
+      h('span', { 'class': 'hero-next', text: heroLine }),
+      h('span', { 'class': 'chevron', 'aria-hidden': 'true', text: '›' })
+    ]));
 
+    /* --- 3 newest badges as quiet chips under the hero (M6) --- */
+    if (state.badges.length) {
+      var row = h('div', { 'class': 'badges-row badges-row--mini', role: 'list', 'aria-label': 'Newest badges' });
+      state.badges.slice(-3).forEach(function (id) {
+        var b = BADGES[id];
+        if (!b) { return; }
+        row.appendChild(h('span', {
+          'class': 'badge-chip', role: 'listitem', 'aria-label': 'Badge: ' + b.name
+        }, [h('span', { 'aria-hidden': 'true', text: b.emoji }), h('span', { text: b.name })]));
+      });
+      sec.appendChild(row);
+    }
+
+    /* --- word of the day (4-4) --- */
+    var w = wordOfDay();
+    if (w) {
+      var owned = state.wodCollected.indexOf(w.id) !== -1;
+      var collectBtn = h('button', {
+        'class': 'btn ' + (owned ? 'btn-secondary' : 'btn-primary'),
+        type: 'button',
+        'aria-label': owned ? w.en + ' is in your dictionary' : 'Collect ' + w.en + ' into your dictionary',
+        onclick: function () {
+          if (state.wodCollected.indexOf(w.id) !== -1) { navigate('#/treasures'); return; }
+          pushOnce(state.wodCollected, w.id);
+          save();
+          addXP(5);
+          collectBtn.textContent = '✓ In your dictionary';
+          collectBtn.className = 'btn btn-secondary';
+          collectBtn.classList.add('anim-pop');
+          toast('Added to your dictionary! 📖');
+          announce(w.en + ' added to your dictionary.');
+        }
+      }, [owned ? '✓ In your dictionary' : 'Collect it ✓']);
+      sec.appendChild(h('div', { 'class': 'wod-card' }, [
+        h('h2', { 'class': 'wod-title' }, [kaSpan(C.strings.wordOfDay), ' · Word of the day']),
+        h('div', { 'class': 'wod-row' }, [
+          emojiSpan(w.emoji, w.en, 'wod-emoji'),
+          h('span', { 'class': 'wod-ka' }, [kaSpan(w.ka)]),
+          audioBtn(w.id, w.ka, { label: 'Hear ' + w.en })
+        ]),
+        h('p', { 'class': 'translit', text: w.translit + ' — ' + w.en }),
+        collectBtn
+      ]));
+    }
+
+    /* --- entry cards with live progress subs (H6) --- */
+    var nGroups = ((C.lettersPath && C.lettersPath.groups) || []).length;
+    var gDone = lettersGroupsDone();
+    var nSteps = ((C.readingTrack && C.readingTrack.steps) || []).length;
+    var sDone = readingStepsDone();
+    var nReady = learnedWords().length;
+    sec.appendChild(entryCard('🔤', C.strings.letters, 'Letters',
+      gDone + ' of ' + nGroups + ' groups done · all 33 letters, step by step', '#/letters',
+      'Open the Letters path — ' + gDone + ' of ' + nGroups + ' groups done',
+      { frac: nGroups ? gDone / nGroups : 0, done: nGroups > 0 && gDone === nGroups }));
+    sec.appendChild(entryCard('📖', C.strings.reading, 'Reading',
+      sDone + ' of ' + nSteps + ' steps done · sound out real words', '#/reading',
+      'Open the Reading path — ' + sDone + ' of ' + nSteps + ' steps done',
+      { frac: nSteps ? sDone / nSteps : 0, done: nSteps > 0 && sDone === nSteps }));
+    sec.appendChild(entryCard('🧠', C.strings.practice, 'Practice',
+      'Mix everything you know — ' + nReady + ' words ready', '#/practice',
+      'Practice everything you have learned — ' + nReady + ' words ready'));
+    sec.appendChild(entryCard('🏆', C.strings.treasures, 'My treasures',
+      totalStars() + ' stars · ' + state.stickers.length + ' stickers · ' + state.badges.length + ' badges',
+      '#/treasures', 'Open My treasures'));
+
+    /* --- unit path, in two labeled parts so 16 units stay scannable --- */
     var path = h('ol', { 'class': 'home-path' });
     C.units.forEach(function (u, i) {
-      var done = lessonsDone(u);
-      var total = u.lessons.length;
-      var completed = unitCompleted(u) || state.crowns.indexOf(u.id) !== -1;
-      var upcoming = !completed && unitUpcoming(i);
-      var current = !completed && !upcoming;
+      if (i === 0) {
+        path.appendChild(h('li', { 'class': 'path-section' }, [h('span', { text: 'Part 1 · First words' })]));
+      } else if (i === 8 && C.units.length > 8) {
+        path.appendChild(h('li', { 'class': 'path-section' }, [h('span', { text: 'Part 2 · Out & about' })]));
+      }
+      var counts = unitNodeCounts(u);
       var crowned = state.crowns.indexOf(u.id) !== -1;
+      var completed = crowned || counts.done === counts.total;
+      var isNext = !!next && next.unit.id === u.id;
 
       var bubble = h('button', {
-        'class': 'unit-bubble' + (completed ? ' completed' : '') + (upcoming ? ' upcoming' : '') + (current ? ' current' : ''),
+        'class': 'unit-bubble' + (completed ? ' completed' : '') + (isNext ? ' current' : ''),
         type: 'button',
-        'aria-label': 'Unit: ' + u.title + ', ' + done + ' of ' + total + ' lessons complete' + (crowned ? ', crowned' : ''),
+        'aria-label': 'Unit: ' + u.title + ', ' + counts.done + ' of ' + counts.total + ' steps complete' +
+          (crowned ? ', crowned' : '') + (isNext ? ', up next' : ''),
         onclick: (function (unitId) { return function () { navigate('#/unit/' + unitId); }; })(u.id)
       });
-      bubble.insertAdjacentHTML('beforeend', ringSvg(total ? done / total : 0, completed));
+      bubble.insertAdjacentHTML('beforeend', ringSvg(counts.total ? counts.done / counts.total : 0, completed));
       bubble.appendChild(h('span', { 'class': 'bubble-face', 'aria-hidden': 'true', text: u.emoji }));
       if (crowned) {
         bubble.appendChild(h('span', { 'class': 'unit-crown', 'aria-hidden': 'true', text: '👑' }));
       }
-
-      if (current && !done) {
+      if (isNext) {
         bubble.appendChild(h('span', { 'class': 'next-pill', text: 'Up next' }));
       }
 
       var stop = h('div', { 'class': 'unit-stop' }, [
         bubble,
         h('span', { 'class': 'unit-title', text: u.title }),
-        h('span', { 'class': 'unit-sub', text: done + ' / ' + total + ' lessons' })
+        h('span', { 'class': 'unit-sub', text: counts.done + ' / ' + counts.total + ' steps' })
       ]);
       path.appendChild(h('li', { 'class': 'unit-node' }, [stop]));
     });
     sec.appendChild(path);
-
-    if (state.badges.length) {
-      var row = h('div', { 'class': 'badges-row', role: 'list', 'aria-label': 'Badges earned' });
-      state.badges.forEach(function (id) {
-        var b = BADGES[id];
-        if (!b) { return; }
-        row.appendChild(h('span', {
-          'class': 'badge-chip',
-          role: 'listitem',
-          'aria-label': 'Badge: ' + b.name
-        }, [
-          h('span', { 'aria-hidden': 'true', text: b.emoji }),
-          h('span', { text: b.name })
-        ]));
-      });
-      sec.appendChild(row);
-    }
 
     var mark = borjgaliSvg('watermark');
     sec.appendChild(mark);
@@ -640,43 +938,90 @@
     return row;
   }
 
+  /* deterministic count of a lesson's practice exercises (shuffles change
+   * order, never counts) — used for honest "~N playful steps" subs */
+  function lessonExerciseCount(unit, lesson) {
+    var items = wordsOf(lesson.items);
+    var n = items.length;                                    // pick_picture per item
+    n += Math.max(1, Math.min(items.length, 8 - items.length - 2)); // reverse picks
+    var pairWords = padPairWords(items.slice(), [items, unitWords(unit), ALL_WORDS], 5);
+    if (pairWords.length >= 3) { n += 1; }                   // match_pairs
+    if (items.filter(isBuildable).length) { n += 1; }        // build_word
+    if (C.units.indexOf(unit) >= 3) { n += 2; }              // reading pair
+    return n;
+  }
+
+  function unitExamQuestionCount() {
+    return (C.unitExamRecipe || []).reduce(function (n, r) { return n + (r.count || 1); }, 0);
+  }
+
+  /* Unit page — a learn → practice → exam step path per lesson, same
+   * mental model as the Letters and Reading paths. Nothing is locked. */
   function renderUnit(unitId) {
     var unit = findUnit(unitId);
     if (!unit) { renderHome(); return; }
-    var idx = C.units.indexOf(unit);
 
     var sec = h('section', { 'class': 'view unit-view', role: 'region', 'aria-label': 'Unit: ' + unit.title });
-    sec.appendChild(h('button', {
-      'class': 'back-link', type: 'button',
-      onclick: function () { navigate('#/home'); }
-    }, [h('span', { 'aria-hidden': 'true', text: '←' }), ' All units']));
-
+    sec.appendChild(backLink('All units', '#/home'));
     sec.appendChild(h('h1', {}, [
       h('span', { 'aria-hidden': 'true', text: unit.emoji }), ' ' + unit.title
     ]));
     sec.appendChild(h('p', { 'class': 'unit-desc', text: unit.description }));
 
-    if (unitUpcoming(idx) && !unitCompleted(unit)) {
-      sec.appendChild(h('div', { 'class': 'friendly-card', text: 'Try earlier units first — or jump in!' }));
+    var nextFound = false;
+    function claimNext(done) {
+      if (!done && !nextFound) { nextFound = true; return true; }
+      return false;
     }
 
-    unit.lessons.forEach(function (l) {
+    unit.lessons.forEach(function (l, li) {
+      sec.appendChild(h('h2', { 'class': 'path-group-title', text: (li + 1) + ' · ' + l.title }));
+      var ol = h('ol', { 'class': 'step-path' });
+
+      var cardsDone = cardsNodeDone(l.id);
       var earned = state.stars[l.id] || 0;
-      var row = h('div', { 'class': 'lesson-row' }, [
-        h('div', { 'class': 'lesson-info' }, [
-          h('div', { 'class': 'lesson-title', text: l.title }),
-          starsRow(earned)
-        ]),
-        h('button', {
-          'class': 'btn btn-primary', type: 'button',
-          'aria-label': (earned > 0 ? 'Redo lesson: ' : 'Start lesson: ') + l.title,
-          onclick: (function (lessonId) { return function () { navigate('#/lesson/' + lessonId); }; })(l.id)
-        }, [earned > 0 ? 'Redo' : 'Start'])
-      ]);
-      sec.appendChild(row);
+      var practiceDone = earned >= 1;
+      var cardsNext = claimNext(cardsDone);
+      var practiceNext = claimNext(practiceDone);
+      var stepCount = lessonExerciseCount(unit, l);
+
+      ol.appendChild(pathNode({
+        face: h('span', { 'class': 'node-emoji', text: '🃏' }),
+        title: 'Word cards',
+        sub: l.items.length + ' cards',
+        done: cardsDone, next: cardsNext,
+        hash: '#/unit/' + unit.id + '/cards/' + l.id,
+        aria: 'Word cards — ' + l.title + ', ' + l.items.length + ' cards' +
+          (cardsDone ? ', completed' : cardsNext ? ', up next' : '')
+      }));
+      ol.appendChild(pathNode({
+        face: h('span', { 'class': 'node-emoji', text: '🧩' }),
+        title: 'Practice',
+        sub: practiceDone ? starsRow(earned) : '~' + stepCount + ' playful steps',
+        done: practiceDone, next: practiceNext,
+        hash: '#/lesson/' + l.id,
+        aria: 'Practice — ' + l.title +
+          (practiceDone ? ', completed, best ' + earned + ' of 3 stars' : practiceNext ? ', up next' : '')
+      }));
+      sec.appendChild(ol);
     });
 
-    setView(sec, '');
+    var examStars = state.unitExamStars[unit.id] || 0;
+    var examDone = examStars >= 1;
+    var examNext = claimNext(examDone);
+    var examOl = h('ol', { 'class': 'step-path' });
+    examOl.appendChild(pathNode({
+      face: h('span', { 'class': 'node-emoji', text: '🏅' }),
+      title: 'Unit exam',
+      sub: examDone ? starsRow(examStars) : 'About ' + unitExamQuestionCount() + ' questions',
+      done: examDone, next: examNext,
+      hash: '#/unit/' + unit.id + '/exam',
+      aria: 'Unit exam — ' + unit.title +
+        (examDone ? ', completed, best ' + examStars + ' of 3 stars' : examNext ? ', up next' : '')
+    }));
+    sec.appendChild(examOl);
+
+    setView(sec, 'wide-path');
   }
 
   /* ------------------------------------------------------------------ *
@@ -821,17 +1166,18 @@
     var exitBtn = h('button', {
       'class': 'exit-btn',
       type: 'button',
-      'aria-label': 'Exit lesson — progress is saved',
+      'aria-label': 'Exit — your XP is saved',
       onclick: function () {
-        toast('Saved! See you soon 👋');
+        toast('⭐ XP saved! See you soon 👋', { keep: true });
         navigate('#/home');
       }
     }, [h('span', { 'aria-hidden': 'true', text: '✕' })]);
 
+    var counter = h('span', { 'class': 'progress-count', 'aria-hidden': 'true' });
     var area = h('div', { 'class': 'exercise-area' });
 
     sec.appendChild(heading);
-    sec.appendChild(h('div', { 'class': 'lesson-topbar' }, [exitBtn, bar]));
+    sec.appendChild(h('div', { 'class': 'lesson-topbar' }, [exitBtn, bar, counter]));
     sec.appendChild(area);
     setView(sec, '');
 
@@ -846,6 +1192,9 @@
       area: area,
       fill: fill,
       bar: bar,
+      counter: counter,
+      missed: [],        // words to gently see again (finish-screen note)
+      retriesQueued: 0,  // capped so sessions never balloon (L1)
       optionButtons: [],
       alive: true,
       timers: []
@@ -866,6 +1215,16 @@
     if (pct > s.maxPct) { s.maxPct = pct; } // fill only ever moves forward
     s.fill.style.width = s.maxPct + '%';
     s.bar.setAttribute('aria-valuenow', String(s.maxPct));
+    var step = Math.min(s.idx + 1, s.queue.length);
+    s.counter.textContent = step + ' / ' + s.queue.length;
+    s.bar.setAttribute('aria-valuetext', 'Step ' + step + ' of ' + s.queue.length);
+  }
+
+  /* what the current exercise is about, for the live-region announcement */
+  function exPromptText(ex) {
+    var it = ex.word || ex.letter || ex.item;
+    if (!it) { return ''; }
+    return it.translit || it.ka || '';
   }
 
   function showExercise(s) {
@@ -877,6 +1236,14 @@
     s.area.classList.remove('warn-flash');
     s.optionButtons = [];
     RENDERERS[ex.type](ex, s.area, function (result) { handleResult(s, ex, result); }, s);
+    /* keyboard focus glides question-to-question (H4): land on the
+     * instruction, announce rule + prompt, Tab reaches option 1 next */
+    var inst = s.area.querySelector('.instruction');
+    if (inst) {
+      inst.focus();
+      var p = exPromptText(ex);
+      announce((inst.getAttribute('data-inst') || inst.textContent) + (p ? ': ' + p : ''));
+    }
   }
 
   function advance(s) {
@@ -913,11 +1280,15 @@
       save();
       boop();
       if (result.announce) { announce(result.announce); }
+      // remember the word for the finish screen's gentle "see again" note
+      if (ex.word && ex.word.id && s.missed.indexOf(ex.word) === -1) { s.missed.push(ex.word); }
       // gentle warm wash on the exercise area, 600ms
       s.area.classList.add('warn-flash');
       later(s, function () { s.area.classList.remove('warn-flash'); }, 600);
-      // quietly re-queue the same item two exercises later for one retry
-      if (!ex.retry && RETRY_TYPES[ex.type]) {
+      // quietly re-queue the same item two exercises later for one retry —
+      // capped per session so "about N questions" stays honest (L1)
+      if (!ex.retry && RETRY_TYPES[ex.type] && s.retriesQueued < 3) {
+        s.retriesQueued++;
         var props = {};
         Object.keys(ex).forEach(function (k) {
           if (k !== 'type' && k !== 'key' && k !== 'retry') { props[k] = ex[k]; }
@@ -927,15 +1298,36 @@
         var at = Math.min(s.idx + 3, s.queue.length);
         s.queue.splice(at, 0, clone);
       }
-      // child controls pacing after a miss
+      /* after a miss the child is never frozen (H3): the Continue button
+       * stays focused for keyboard/screen-reader users, the revealed green
+       * card also continues on tap, and after the answer clip has had time
+       * to play the exercise moves on by itself. All three funnel through
+       * one guarded step so nothing double-advances. */
+      var missIdx = s.idx;
+      function goOn() {
+        if (!s.alive || activeSession !== s || s.idx !== missIdx) { return; }
+        advance(s);
+      }
+      var revealed = s.area.querySelector('.state-correct');
+      if (revealed) {
+        revealed.disabled = false;
+        revealed.classList.add('reveal-continue');
+        revealed.addEventListener('click', goOn);
+      }
       var cont = h('button', {
         'class': 'btn btn-primary',
         type: 'button',
-        onclick: function () { advance(s); }
+        onclick: goOn
       }, ['Continue']);
       s.area.appendChild(cont);
       s.optionButtons = [];
       cont.focus();
+      /* self-advancing OR self-paced, never stuck — but never mid-sentence:
+       * wait for the reveal to finish speaking, then a beat; if audio can't
+       * play (blocked/missing) a generous fallback still moves things on.
+       * goOn is guarded by missIdx, so the paths can't double-advance. */
+      onRevealSpoken(function () { later(s, goOn, 1400); });
+      later(s, goOn, 9000);
     }
   }
 
@@ -966,7 +1358,7 @@
     var mode = s.cfg.mode;
     var isPractice = mode === 'practice';
     var isReadingPractice = mode === 'reading-practice';
-    var isExam = mode === 'letters-exam' || mode === 'reading-exam';
+    var isExam = mode === 'letters-exam' || mode === 'reading-exam' || mode === 'unit-exam';
     var starsEarned = 0;
     var slotCount = 3;
     var acc, prev, bonus;
@@ -988,15 +1380,22 @@
       if (mode === 'letters-exam') {
         prev = state.lettersExamStars[s.cfg.groupId] || 0;
         state.lettersExamStars[s.cfg.groupId] = Math.max(prev, starsEarned);
-      } else {
+      } else if (mode === 'reading-exam') {
         prev = state.readingExamStars[s.cfg.stepId] || 0;
         state.readingExamStars[s.cfg.stepId] = Math.max(prev, starsEarned);
+      } else {
+        prev = state.unitExamStars[s.cfg.unitId] || 0;
+        state.unitExamStars[s.cfg.unitId] = Math.max(prev, starsEarned);
       }
       save();
-      bonus = 20;
+      bonus = mode === 'unit-exam' ? 30 : 20;
       s.xpEarned += bonus;
       addXP(bonus);
       if (mode === 'reading-exam') { earnBadge('first-reader'); }
+      if (mode === 'unit-exam') {
+        if (prev === 0) { grantSticker(); } // first-time pass feeds the album
+        maybeCrown(s.cfg.unit);
+      }
     } else {
       acc = s.totalOriginal ? s.score / s.totalOriginal : 1;
       starsEarned = acc >= 0.9 ? 3 : acc >= 0.6 ? 2 : 1; // finishing always earns at least one star
@@ -1038,9 +1437,42 @@
     }
     finish.appendChild(h('p', { 'class': 'xp-line', text: '+' + s.xpEarned + ' XP' }));
 
+    /* quiet, judgment-free replay list of missed words — a signal for
+     * grown-ups, never a grade for the child */
+    if (s.missed.length) {
+      var seeAgain = h('div', { 'class': 'see-again' });
+      seeAgain.appendChild(h('p', { 'class': 'finish-note', text: 'Words to see again:' }));
+      var listRow = h('div', { 'class': 'see-again-row' });
+      s.missed.slice(0, 4).forEach(function (w) {
+        listRow.appendChild(h('span', { 'class': 'see-again-chip' }, [
+          kaSpan(w.ka),
+          audioBtn(w.id, w.ka, { small: true, label: 'Hear ' + (w.en || w.translit) + ' again' })
+        ]));
+      });
+      seeAgain.appendChild(listRow);
+      finish.appendChild(seeAgain);
+    }
+
     var continueHash = '#/home';
     if (mode === 'letters-exam') { continueHash = '#/letters'; }
     if (mode === 'reading-exam' || isReadingPractice) { continueHash = '#/reading'; }
+    if (mode === 'unit-exam') { continueHash = '#/unit/' + s.cfg.unitId; }
+
+    /* friendly teaser toward the next step (non-exam finishes) */
+    if (!isExam && !isReadingPractice) {
+      var nxt = computeNextStep();
+      if (nxt) {
+        var teaser = h('p', { 'class': 'finish-note next-teaser' }, [
+          'Next up: ' + nxt.nodeTitle + (nxt.lesson ? ' · ' + nxt.lesson.title : '') + ' — ' + nxt.unit.title
+        ]);
+        var teaseWord = nxt.lesson ? C.vocab[nxt.lesson.items[0]] : null;
+        if (teaseWord) {
+          teaser.appendChild(document.createTextNode('. You’ll meet ' + teaseWord.emoji + ' ' + teaseWord.en + ' '));
+          teaser.appendChild(audioBtn(teaseWord.id, teaseWord.ka, { small: true, label: 'Hear ' + teaseWord.en }));
+        }
+        finish.appendChild(teaser);
+      }
+    }
 
     var redoLabel = 'Redo lesson';
     if (isPractice) { redoLabel = 'Practice again'; }
@@ -1058,6 +1490,7 @@
         if (isPractice) { startPracticeSession(); }
         else if (mode === 'letters-exam') { startLettersExam(s.cfg.groupId); }
         else if (mode === 'reading-exam') { startReadingExam(s.cfg.stepId); }
+        else if (mode === 'unit-exam') { startUnitExam(s.cfg.unitId); }
         else if (isReadingPractice) { startReadingPractice(s.cfg.stepId); }
         else { renderLessonRoute(s.cfg.lessonId); }
       }
@@ -1071,7 +1504,11 @@
     confettiBurst(finish);
     window.setTimeout(function () {
       // navigated away before the praise fired? stay quiet
-      if (document.body.contains(finish)) { playPraise(); }
+      if (!document.body.contains(finish)) { return; }
+      // "Well done!" in the child's known language first, then Georgian praise
+      playUiClip('Well done!', function () {
+        if (document.body.contains(finish)) { playPraise(); }
+      }, 2400 /* the clip runs ~2.1s */);
     }, 600);
     var announceTail;
     if (isPractice) {
@@ -1099,6 +1536,20 @@
     }
   }
 
+  /* one-shot "the reveal has been fully spoken" hook: missTreatment fires it,
+   * handleResult listens so the auto-advance waits for the clip, not a guess */
+  var revealSpokenCb = null;
+  var revealAlreadySpoken = false; // covers a chain that finishes synchronously (no audio at all)
+  function onRevealSpoken(cb) {
+    if (revealAlreadySpoken) { revealAlreadySpoken = false; cb(); return; }
+    revealSpokenCb = cb;
+  }
+  function notifyRevealSpoken() {
+    var cb = revealSpokenCb;
+    revealSpokenCb = null;
+    if (cb) { cb(); } else { revealAlreadySpoken = true; }
+  }
+
   function missTreatment(tapped, correctCard, allButtons, word) {
     tapped.classList.add('anim-shake');
     window.setTimeout(function () {
@@ -1107,12 +1558,16 @@
     }, 350);
     allButtons.forEach(function (b) { b.disabled = true; });
     markCorrectCard(correctCard);
-    playItem(word); // reveal AND speak the right answer
+    /* miss rule in the child's known language first (pre-readers, v3),
+     * then reveal AND speak the right answer */
+    playUiClip('Almost! Here is the right one.', function () {
+      playItem(word, notifyRevealSpoken);
+    }, 4800 /* the clip runs ~4.4s — don't cut it short */);
   }
 
   function renderPickPicture(ex, container, onResult, s) {
     var word = ex.word;
-    container.appendChild(h('p', { 'class': 'instruction', text: 'Tap what you hear' }));
+    container.appendChild(instructionLine('Tap what you hear'));
 
     var prompt = h('div', { 'class': 'prompt-block' }, [
       h('span', { 'class': 'prompt-ka' }, [kaSpan(word.ka)]),
@@ -1155,13 +1610,18 @@
       grid.appendChild(btn);
     });
     container.appendChild(grid);
+    var hint = kbdHint();
+    if (hint) { container.appendChild(hint); }
     if (s) { s.optionButtons = buttons; }
-    playWord(word);
+    speakThen(container, 'Tap what you hear', function () { playWord(word); });
   }
 
+  /* reverse_pick — the FIRST tap on a word card judges (H2), exactly like
+   * every other exercise. The per-row 🔊 buttons stay the free "explore
+   * out loud" affordance. */
   function renderReversePick(ex, container, onResult, s) {
     var word = ex.word;
-    container.appendChild(h('p', { 'class': 'instruction', text: 'Pick the Georgian word for:' }));
+    container.appendChild(instructionLine('Tap the Georgian word for:'));
     container.appendChild(h('div', { 'class': 'prompt-block' }, [
       emojiSpan(word.emoji, word.en, 'prompt-emoji'),
       h('span', { 'class': 'prompt-en', text: word.en })
@@ -1171,22 +1631,25 @@
     var options = shuffle([word].concat(distractors));
     var list = h('div', { 'class': 'options-list' });
     var buttons = [];
-    var selected = -1;
-    var judged = false;
+    var answered = false;
 
-    options.forEach(function (opt, i) {
+    options.forEach(function (opt) {
       var btn = h('button', {
         'class': 'word-card',
         type: 'button',
-        'aria-pressed': 'false',
         onclick: function () {
-          if (judged) { return; }
-          playWord(opt); // exploring options out loud is free
-          selected = i;
-          buttons.forEach(function (b, j) {
-            b.setAttribute('aria-pressed', j === i ? 'true' : 'false');
-            b.classList.toggle('state-selected', j === i);
-          });
+          if (answered) { return; }
+          answered = true;
+          if (opt.id === word.id) {
+            buttons.forEach(function (b) { b.disabled = true; });
+            markCorrectCard(btn);
+            playWord(word);
+            onResult({ correct: true, firstTry: true, announce: 'Correct! ' + word.ka + ' — ' + word.en });
+          } else {
+            var correctBtn = buttons[options.indexOf(word)];
+            missTreatment(btn, correctBtn, buttons, word);
+            onResult({ correct: false, firstTry: false, announce: 'Almost! The answer is ' + word.ka + ' — ' + word.en });
+          }
         }
       }, [
         h('span', { 'class': 'word-ka' }, [kaSpan(opt.ka)]),
@@ -1199,36 +1662,15 @@
       ]));
     });
     container.appendChild(list);
-
-    var check = h('button', {
-      'class': 'btn btn-primary',
-      type: 'button',
-      onclick: function () {
-        if (judged) { return; }
-        if (selected === -1) { announce('Pick a word first, then press Check.'); return; }
-        judged = true;
-        check.disabled = true;
-        var chosen = buttons[selected];
-        chosen.classList.remove('state-selected');
-        var correct = options[selected].id === word.id;
-        if (correct) {
-          buttons.forEach(function (b) { b.disabled = true; });
-          markCorrectCard(chosen);
-          onResult({ correct: true, firstTry: true, announce: 'Correct! ' + word.ka + ' — ' + word.en });
-        } else {
-          var correctBtn = buttons[options.indexOf(word)];
-          missTreatment(chosen, correctBtn, buttons, word);
-          onResult({ correct: false, firstTry: false, announce: 'Almost! The answer is ' + word.ka + ' — ' + word.en });
-        }
-      }
-    }, ['Check']);
-    container.appendChild(check);
+    var hint = kbdHint();
+    if (hint) { container.appendChild(hint); }
     if (s) { s.optionButtons = buttons; }
+    playUiClip('Tap the Georgian word for:');
   }
 
   function renderMatchPairs(ex, container, onResult, s) {
     var words = ex.words;
-    container.appendChild(h('p', { 'class': 'instruction', text: 'Match the pairs' }));
+    container.appendChild(instructionLine('Match the pairs'));
 
     var leftWords = shuffle(words);
     var rightWords = shuffle(words);
@@ -1282,6 +1724,20 @@
       btn.appendChild(h('span', { 'class': 'check-badge', 'aria-hidden': 'true', text: '✓' }));
     }
 
+    /* keyboard focus never falls off a freshly-disabled button (L4):
+     * glide to the next enabled button in the same column, else anywhere */
+    function refocusAfterLock(fromBtn) {
+      var col = fromBtn.parentNode;
+      var inCol = Array.prototype.slice.call(col.querySelectorAll('.pair-btn'));
+      var idx = inCol.indexOf(fromBtn);
+      for (var i = 1; i <= inCol.length; i++) {
+        var cand = inCol[(idx + i) % inCol.length];
+        if (!cand.disabled) { cand.focus(); return; }
+      }
+      var any = container.querySelector('.pair-btn:not([disabled])');
+      if (any) { any.focus(); }
+    }
+
     function onTap(btn) {
       if (finished || btn.disabled) { return; }
       if ((btn._isKa && selLeft === btn) || (!btn._isKa && selRight === btn)) {
@@ -1295,6 +1751,10 @@
           lock(l);
           lock(r);
           lockedCount++;
+          if (lockedCount < words.length && (document.activeElement === l || document.activeElement === r ||
+              document.activeElement === document.body || document.activeElement === btn)) {
+            refocusAfterLock(btn);
+          }
           playNotes([{ f: 880, t: 0, d: 0.12 }]);
           announce('Matched: ' + l._word.ka + ' — ' + l._word.en);
           if (lockedCount === words.length) {
@@ -1326,6 +1786,7 @@
     ]);
     container.appendChild(grid);
     if (s) { s.optionButtons = []; }
+    playUiClip('Match the pairs');
   }
 
   /* renders build_word AND build_syllable — accepts any {id, ka, translit,
@@ -1334,7 +1795,8 @@
     var word = ex.word;
     var letters = String(word.ka).split('');
     var hasMeaning = !!word.emoji;
-    container.appendChild(h('p', { 'class': 'instruction', text: hasMeaning ? 'Build the word' : 'Build what you hear' }));
+    var instText = hasMeaning ? 'Build the word' : 'Build what you hear';
+    container.appendChild(instructionLine(instText));
     var promptBits = [];
     if (hasMeaning) {
       promptBits.push(emojiSpan(word.emoji, word.en, 'prompt-emoji'));
@@ -1371,6 +1833,14 @@
       slot.classList.add('filled', 'ka');
       slot.setAttribute('lang', 'ka');
       tileBtn.disabled = true;
+      /* keyboard focus glides to the next enabled tile (L4) */
+      if (document.activeElement === tileBtn || document.activeElement === document.body) {
+        var ti = tiles.indexOf(tileBtn);
+        for (var k = 1; k <= tiles.length; k++) {
+          var cand = tiles[(ti + k) % tiles.length];
+          if (!cand.disabled) { cand.focus(); break; }
+        }
+      }
       nextIdx++;
       if (nextIdx === letters.length) {
         done = true;
@@ -1431,7 +1901,12 @@
     });
     container.appendChild(tilesRow);
     if (s) { s.optionButtons = []; }
-    if (!hasMeaning) { playWord(word); } // "Build what you hear" — say it up front
+    if (!hasMeaning) {
+      // "Build what you hear" — rule first, then say the syllable
+      speakThen(container, instText, function () { playWord(word); });
+    } else {
+      playUiClip(instText);
+    }
   }
 
   var RENDERERS = {
@@ -1519,7 +1994,9 @@
 
     var current = index;
 
-    function fill() {
+    /* focusLetter — true after prev/next so keyboard focus glides to the
+     * new letter instead of being yanked to the Close button (M9) */
+    function fill(focusLetter) {
       var letter = ALL_LETTERS[current];
       recordLetterOpened(letter);
       dialog.setAttribute('aria-label', 'Letter ' + letter.name);
@@ -1532,7 +2009,7 @@
         onclick: close
       }, [h('span', { 'aria-hidden': 'true', text: '✕' })]));
 
-      dialog.appendChild(h('div', { 'class': 'dialog-letter' }, [kaSpan(letter.ka)]));
+      dialog.appendChild(h('div', { 'class': 'dialog-letter', tabindex: '-1' }, [kaSpan(letter.ka)]));
       dialog.appendChild(h('div', { 'class': 'dialog-name', text: letter.name + ' · ' + letter.translit }));
       dialog.appendChild(h('div', { 'class': 'dialog-ipa', text: 'sound: /' + letter.ipa + '/' }));
 
@@ -1566,7 +2043,7 @@
         type: 'button',
         'aria-label': 'Previous letter',
         disabled: current === 0 ? true : null,
-        onclick: function () { if (current > 0) { current--; fill(); } }
+        onclick: function () { if (current > 0) { current--; fill(true); } }
       }, [h('span', { 'aria-hidden': 'true', text: '←' })]));
       nav.appendChild(h('span', { 'class': 'dialog-ipa', text: (current + 1) + ' / ' + ALL_LETTERS.length }));
       nav.appendChild(h('button', {
@@ -1574,12 +2051,19 @@
         type: 'button',
         'aria-label': 'Next letter',
         disabled: current === ALL_LETTERS.length - 1 ? true : null,
-        onclick: function () { if (current < ALL_LETTERS.length - 1) { current++; fill(); } }
+        onclick: function () { if (current < ALL_LETTERS.length - 1) { current++; fill(true); } }
       }, [h('span', { 'aria-hidden': 'true', text: '→' })]));
       dialog.appendChild(nav);
+      dialog.appendChild(h('p', { 'class': 'dialog-ipa dialog-keys-hint', text: '← → keys work here' }));
 
-      var closeBtn = dialog.querySelector('.dialog-close');
-      if (closeBtn) { closeBtn.focus(); }
+      if (focusLetter) {
+        var glyph = dialog.querySelector('.dialog-letter');
+        if (glyph) { glyph.focus(); }
+        announce('Letter ' + letter.name + ', ' + letter.translit);
+      } else {
+        var closeBtn = dialog.querySelector('.dialog-close');
+        if (closeBtn) { closeBtn.focus(); }
+      }
     }
 
     function close() {
@@ -1590,8 +2074,8 @@
 
     function onKey(e) {
       if (e.key === 'Escape') { e.preventDefault(); close(); return; }
-      if (e.key === 'ArrowLeft' && current > 0) { e.preventDefault(); current--; fill(); return; }
-      if (e.key === 'ArrowRight' && current < ALL_LETTERS.length - 1) { e.preventDefault(); current++; fill(); return; }
+      if (e.key === 'ArrowLeft' && current > 0) { e.preventDefault(); current--; fill(true); return; }
+      if (e.key === 'ArrowRight' && current < ALL_LETTERS.length - 1) { e.preventDefault(); current++; fill(true); return; }
       if (e.key === 'Tab') {
         // simple focus trap
         var focusables = dialog.querySelectorAll('button:not([disabled])');
@@ -1737,15 +2221,21 @@
     var dpr = window.devicePixelRatio || 1;
     var canvas = h('canvas', {
       'class': 'trace-canvas',
+      tabindex: '0',
       'aria-label': 'Tracing area for letter ' + letter.ka +
-        ' — draw over the gray letter with your finger or mouse'
+        ' — draw over the gray letter with your finger or mouse, or use the Watch it draw button'
     });
-    canvas.width = Math.round(size * dpr);
-    canvas.height = Math.round(size * dpr);
-    canvas.style.width = size + 'px';
-    canvas.style.height = size + 'px';
     var ctx = canvas.getContext('2d');
-    ctx.scale(dpr, dpr);
+
+    function applySize() {
+      canvas.width = Math.round(size * dpr);
+      canvas.height = Math.round(size * dpr);
+      canvas.style.width = size + 'px';
+      canvas.style.height = size + 'px';
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+    }
+    applySize();
 
     function template() {
       ctx.clearRect(0, 0, size, size);
@@ -1758,6 +2248,65 @@
       ctx.restore();
     }
     template();
+
+    /* rotate / resize: recompute the canvas and redraw the model glyph.
+     * Stroke COUNT is preserved (progress never lost), the ink redraws. */
+    var resizeTimer = null;
+    function onResize() {
+      if (!document.body.contains(canvas)) {
+        window.removeEventListener('resize', onResize);
+        window.removeEventListener('orientationchange', onResize);
+        return;
+      }
+      if (resizeTimer) { window.clearTimeout(resizeTimer); }
+      resizeTimer = window.setTimeout(function () {
+        var next = Math.max(220, Math.min(300, Math.floor(window.innerWidth * 0.8)));
+        if (next === size) { return; }
+        size = next;
+        applySize();
+        template();
+      }, 250);
+    }
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+
+    /* "Watch it draw" (H7) — the glyph fades in stroke-red, then counts as
+     * traced, so keyboard users complete tracing too. Reduced motion →
+     * instant reveal. */
+    var watching = false;
+    function watchDraw(doneFn) {
+      if (watching) { return; }
+      watching = true;
+      var reduced = prefersReducedMotion();
+      var t0 = null;
+      var dur = 1200;
+      function paint(alpha) {
+        template();
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = '#DA291C'; // --accent (canvas needs a literal)
+        ctx.font = Math.round(size * 0.8) + 'px "Noto Sans Georgian", "Sylfaen", system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(letter.ka, size / 2, size / 2 + size * 0.04);
+        ctx.restore();
+      }
+      function finishWatch() {
+        watching = false;
+        strokeCount = Math.max(1, strokeCount); // watching counts as traced
+        if (doneFn) { doneFn(); }
+      }
+      if (reduced) { paint(1); finishWatch(); return; }
+      function frame(ts) {
+        if (!document.body.contains(canvas)) { watching = false; return; }
+        if (t0 === null) { t0 = ts; }
+        var k = Math.min(1, (ts - t0) / dur);
+        paint(k);
+        if (k < 1) { window.requestAnimationFrame(frame); }
+        else { finishWatch(); }
+      }
+      window.requestAnimationFrame(frame);
+    }
 
     var drawing = false;
     var lx = 0, ly = 0;
@@ -1797,15 +2346,30 @@
     return {
       el: canvas,
       getStrokeCount: function () { return strokeCount; },
+      watch: watchDraw,
       clear: function () { strokeCount = 0; template(); }
     };
+  }
+
+  /* the shared "▶ Watch it draw" control for every trace surface (H7) */
+  function watchDrawBtn(tc, letter) {
+    return h('button', {
+      'class': 'btn btn-secondary', type: 'button',
+      'aria-label': 'Watch the letter ' + letter.ka + ' draw itself',
+      onclick: function () {
+        tc.watch(function () {
+          recordTraced(letter.ka);
+          announce('The letter drew itself — now it counts as traced!');
+        });
+      }
+    }, ['▶ Watch it draw']);
   }
 
   /* ---------- new exercise renderers ---------- */
 
   function renderHearPickLetter(ex, container, onResult, s) {
     var letter = ex.letter;
-    container.appendChild(h('p', { 'class': 'instruction', text: 'Tap the letter you hear' }));
+    container.appendChild(instructionLine('Tap the letter you hear'));
     container.appendChild(h('div', { 'class': 'prompt-block' }, [
       audioBtn(letterAudioId(letter), letter.ka, { lg: true, label: 'Play the letter sound again' })
     ]));
@@ -1838,14 +2402,16 @@
       grid.appendChild(btn);
     });
     container.appendChild(grid);
+    var hint = kbdHint();
+    if (hint) { container.appendChild(hint); }
     if (s) { s.optionButtons = buttons; }
-    playLetter(letter);
+    speakThen(container, 'Tap the letter you hear', function () { playLetter(letter); });
   }
 
   function renderLetterToSound(ex, container, onResult, s) {
     var item = ex.item; // a letter OR a syllable ({ka, translit, name?})
     var isLetter = !!item.name;
-    container.appendChild(h('p', { 'class': 'instruction', text: 'What sound does it make?' }));
+    container.appendChild(instructionLine('What sound does it make?'));
     container.appendChild(h('div', { 'class': 'prompt-block' }, [
       h('span', { 'class': 'prompt-ka prompt-ka-xl' }, [kaSpan(item.ka)]),
       audioBtn(itemAudioId(item), item.ka, { label: 'Hear it' })
@@ -1883,17 +2449,21 @@
       ]));
     });
     container.appendChild(list);
+    var hint = kbdHint();
+    if (hint) { container.appendChild(hint); }
     if (s) { s.optionButtons = cards; }
+    playUiClip('What sound does it make?');
   }
 
   function renderTraceLetter(ex, container, onResult, s) {
     var letter = ex.letter;
-    container.appendChild(h('p', { 'class': 'instruction', text: 'Trace the letter' }));
+    container.appendChild(instructionLine('Trace the letter'));
     var tc = makeTraceCanvas(letter);
     container.appendChild(h('div', { 'class': 'trace-card' }, [tc.el]));
     var done = false;
     container.appendChild(h('div', { 'class': 'trace-controls' }, [
       audioBtn(letterAudioId(letter), letter.ka, { label: 'Hear the letter' }),
+      watchDrawBtn(tc, letter),
       h('button', {
         'class': 'btn btn-ghost', type: 'button',
         onclick: function () { tc.clear(); }
@@ -1910,16 +2480,33 @@
       }, ['Done ✓'])
     ]));
     if (s) { s.optionButtons = []; }
-    playLetter(letter);
+    speakThen(container, 'Trace the letter', function () { playLetter(letter); });
   }
 
   function renderReadWordPickPicture(ex, container, onResult, s) {
     var word = ex.word;
-    container.appendChild(h('p', { 'class': 'instruction', text: 'Read the word' }));
+    container.appendChild(instructionLine('Read it — then tap its picture'));
 
-    var listen = audioBtn(word.id, word.ka, { label: 'Listen — unlocks after you answer' });
-    listen.disabled = true;
-    listen.classList.add('speak-btn--waiting');
+    /* the sound starts "locked" but the button still TALKS (M1): tapping it
+     * wiggles and explains, then it becomes a live 🔊 after the answer */
+    var answered = false;
+    var listenIcon = h('span', { 'aria-hidden': 'true', text: '🔒' });
+    var listen = h('button', {
+      'class': 'speak-btn speak-btn--waiting',
+      type: 'button',
+      'aria-label': 'Read it first — then the sound unlocks!',
+      onclick: function (e) {
+        e.stopPropagation();
+        if (!answered) {
+          listen.classList.add('anim-shake');
+          window.setTimeout(function () { listen.classList.remove('anim-shake'); }, 400);
+          playUiClip('Read it first — then the sound unlocks!');
+          announce('Read it first — then the sound unlocks!');
+          return;
+        }
+        playWord(word);
+      }
+    }, [listenIcon]);
     container.appendChild(h('div', { 'class': 'prompt-block' }, [
       h('span', { 'class': 'prompt-ka' }, [kaSpan(word.ka)]),
       listen
@@ -1930,11 +2517,10 @@
     var options = shuffle([word].concat(distractors));
     var grid = h('div', { 'class': 'options-grid' });
     var buttons = [];
-    var answered = false;
 
     function unlock() {
-      listen.disabled = false;
       listen.classList.remove('speak-btn--waiting');
+      listenIcon.textContent = '🔊';
       listen.setAttribute('aria-label', 'Hear the word');
       container.insertBefore(translitLine, grid);
     }
@@ -1967,13 +2553,16 @@
       grid.appendChild(btn);
     });
     container.appendChild(grid);
+    var hint = kbdHint();
+    if (hint) { container.appendChild(hint); }
     if (s) { s.optionButtons = buttons; }
-    // no auto-audio, no translit up front — this one is the reading test
+    // no word audio, no translit up front — this one is the reading test
+    playUiClip('Read it — then tap its picture');
   }
 
   function renderPicturePickWord(ex, container, onResult, s) {
     var word = ex.word;
-    container.appendChild(h('p', { 'class': 'instruction', text: 'Which word says it?' }));
+    container.appendChild(instructionLine('Which word says it?'));
     container.appendChild(h('div', { 'class': 'prompt-block' }, [
       emojiSpan(word.emoji, word.en, 'prompt-emoji'),
       h('span', { 'class': 'prompt-en', text: word.en })
@@ -2013,7 +2602,10 @@
       ]));
     });
     container.appendChild(list);
+    var hint = kbdHint();
+    if (hint) { container.appendChild(hint); }
     if (s) { s.optionButtons = cards; }
+    playUiClip('Which word says it?');
   }
 
   /* ---------- exam / practice builders (data-driven from data.js recipes) ---------- */
@@ -2150,6 +2742,57 @@
     });
   }
 
+  /* ---------- v3: unit exam (data-driven from C.unitExamRecipe) ---------- */
+
+  function buildUnitExam(unit) {
+    var words = unitWords(unit);
+    var idx = C.units.indexOf(unit);
+    var earlier = [];
+    for (var j = 0; j < idx; j++) { earlier = earlier.concat(unitWords(C.units[j])); }
+    var tiers = [words, ALL_WORDS];
+    var deck = shuffle(words);
+    var wi = 0;
+    function nextW() { var w = deck[wi % deck.length]; wi++; return w; }
+
+    var exs = [];
+    (C.unitExamRecipe || []).forEach(function (r) {
+      for (var c = 0; c < (r.count || 1); c++) {
+        var type = r.type;
+        if (r.from === 'earlier-units') {
+          // review sprinkle — the first unit has no earlier units, so it
+          // draws from itself (never skipped, never a blocker)
+          var pool = earlier.length ? earlier : words;
+          exs.push(makeEx(type, { word: shuffle(pool)[0], tiers: [pool, ALL_WORDS] }));
+          continue;
+        }
+        if (type === 'match_pairs') {
+          var pw = padPairWords(shuffle(words).slice(0, 5), [ALL_WORDS], 5);
+          if (pw.length >= 3) { exs.push(makeEx('match_pairs', { words: pw })); continue; }
+          type = 'pick_picture';
+        }
+        if (type === 'build_word') {
+          var buildable = words.filter(isBuildable);
+          if (buildable.length) { exs.push(makeEx('build_word', { word: shuffle(buildable)[0] })); continue; }
+          type = r.fallback || 'picture_pick_word';
+        }
+        exs.push(makeEx(type, { word: nextW(), tiers: tiers }));
+      }
+    });
+    return exs;
+  }
+
+  function startUnitExam(unitId) {
+    var unit = findUnit(unitId);
+    if (!unit) { renderHome(); return; }
+    startSession({
+      mode: 'unit-exam',
+      unitId: unitId,
+      unit: unit,
+      title: unit.title + ' — Unit exam',
+      exercises: buildUnitExam(unit)
+    });
+  }
+
   /* ---------- path views (Letters & Reading) ---------- */
 
   /* One node on a step path. Everything is always tappable — done/next are
@@ -2224,7 +2867,7 @@
       ol.appendChild(pathNode({
         face: h('span', { 'class': 'node-emoji', text: '🏅' }),
         title: g.steps.exam.title,
-        sub: examStars > 0 ? starsRow(examStars) : examQs + ' quick questions',
+        sub: examStars > 0 ? starsRow(examStars) : 'About ' + examQs + ' questions',
         done: examDone, next: examNext,
         hash: '#/letters/' + g.groupId + '/exam',
         aria: g.steps.exam.title + ' — ' + groupTag +
@@ -2280,7 +2923,7 @@
       ol.appendChild(pathNode({
         face: h('span', { 'class': 'node-emoji', text: '🏅' }),
         title: 'Mini exam',
-        sub: examStars > 0 ? starsRow(examStars) : examQs + ' quick questions',
+        sub: examStars > 0 ? starsRow(examStars) : 'About ' + examQs + ' questions',
         done: examDone, next: examNext,
         hash: '#/reading/' + step.id + '/exam',
         aria: 'Mini exam — ' + step.title +
@@ -2328,7 +2971,7 @@
       exampleBits.push(h('span', { 'class': 'example-ka' }, [kaSpan(ex.ka)]));
       exampleBits.push(audioBtn(exampleAudioId(ex.ka, vocabMatch), ex.ka, { small: true, label: 'Hear the example word' }));
 
-      deck.appendChild(h('div', { 'class': 'deck-card' }, [
+      var meetCard = h('div', { 'class': 'deck-card' }, [
         h('div', { 'class': 'deck-glyph-row' }, [
           h('span', { 'class': 'deck-glyph' }, [kaSpan(letter.ka)]),
           audioBtn(letterAudioId(letter), letter.ka, { label: 'Hear the letter' })
@@ -2337,7 +2980,11 @@
         h('div', { 'class': 'dialog-ipa', text: 'sound: /' + letter.ipa + '/' }),
         h('div', { 'class': 'example-row' }, exampleBits),
         h('div', { 'class': 'example-en', text: ex.translit + ' — ' + ex.en })
-      ]));
+      ]);
+      deckSwipe(meetCard,
+        function () { if (current > 0) { current--; show('prev'); } },
+        function () { if (current < group.letters.length - 1) { current++; show('next'); } });
+      deck.appendChild(meetCard);
 
       var nav = h('div', { 'class': 'deck-nav' });
       var prevBtn = h('button', {
@@ -2363,6 +3010,7 @@
       }
       nav.appendChild(fwdBtn);
       deck.appendChild(nav);
+      readyPulse(fwdBtn);
       if (focusDir) {
         (focusDir === 'prev' && !prevBtn.disabled ? prevBtn : fwdBtn).focus();
       }
@@ -2452,6 +3100,7 @@
 
       area.appendChild(h('div', { 'class': 'trace-controls' }, [
         audioBtn(letterAudioId(letter), letter.ka, { label: 'Hear the letter' }),
+        watchDrawBtn(tc, letter),
         h('button', {
           'class': 'btn btn-ghost', type: 'button',
           onclick: function () { tc.clear(); }
@@ -2497,26 +3146,61 @@
     step();
   }
 
-  function renderReadingCards(stepId) {
-    var step = findReadingStep(stepId);
-    if (!step) { renderHome(); return; }
-    var items = step.items.map(readItem).filter(function (x) { return !!x; });
-    var sec = h('section', { 'class': 'view reading-cards-view', role: 'region', 'aria-label': 'Word cards' });
-    sec.appendChild(backLink('Reading', '#/reading'));
-    sec.appendChild(h('h1', { text: step.title + ' · Word cards' }));
+  /* swipe left/right on a deck card → next/prev (L3). Taps on buttons
+   * inside the card are ignored. */
+  function deckSwipe(el, onPrev, onNext) {
+    var startX = null, startY = null;
+    el.addEventListener('pointerdown', function (e) {
+      if (e.target && e.target.closest && e.target.closest('button')) { startX = null; return; }
+      startX = e.clientX;
+      startY = e.clientY;
+    });
+    el.addEventListener('pointerup', function (e) {
+      if (startX === null) { return; }
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
+      startX = null;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0) { onPrev(); } else { onNext(); }
+      }
+    });
+  }
+
+  /* after the card has had a beat, the forward arrow does a small "ready"
+   * pulse — an invitation, never a lock (L2) */
+  function readyPulse(btn) {
+    if (prefersReducedMotion()) { return; }
+    window.setTimeout(function () {
+      if (document.body.contains(btn)) { btn.classList.add('ready-pulse'); }
+    }, 1200);
+  }
+
+  /* One card deck for BOTH the Reading track and the unit word cards.
+   * opts: sectionClass, ariaLabel, backLabel, backHash, heading, items,
+   *       mode ('reading' → tap-a-letter + Show hint;
+   *             'vocab'   → meaning always visible + auto word audio),
+   *       markDone() -> true on first completion, doneToast */
+  function renderCardsDeck(opts) {
+    var items = opts.items;
+    var sec = h('section', { 'class': 'view ' + opts.sectionClass, role: 'region', 'aria-label': opts.ariaLabel });
+    sec.appendChild(backLink(opts.backLabel, opts.backHash));
+    sec.appendChild(h('h1', { text: opts.heading }));
     var deck = h('div', { 'class': 'deck-area' });
     sec.appendChild(deck);
 
     var current = 0;
 
     function finish() {
-      var first = pushOnce(state.readingCardsDone, stepId);
+      var first = opts.markDone();
       save();
       addXP(first ? 15 : 5);
       playPraise();
-      toast('Cards done! 🎉');
-      navigate('#/reading');
+      toast(opts.doneToast || 'Cards done! 🎉', { keep: true });
+      navigate(opts.backHash);
     }
+
+    function goPrev() { if (current > 0) { current--; show('prev'); } }
+    function goNext() { if (current < items.length - 1) { current++; show('next'); } }
 
     /* focusDir ('prev'|'next') — set on user navigation so keyboard focus
      * lands on the new card's matching control instead of dropping to body */
@@ -2525,10 +3209,16 @@
       deck.innerHTML = '';
       var item = items[current];
       var chars = String(item.ka).split('');
+      var allGeorgian = chars.every(function (ch) { return ch >= 'ა' && ch <= 'ჿ'; });
 
       var letterBtns = [];
-      var wordRow = h('div', { 'class': 'read-word', lang: 'ka' });
+      var wordRow = h('div', { 'class': 'read-word' + (chars.length > 8 ? ' read-word--long' : ''), lang: 'ka' });
       chars.forEach(function (ch) {
+        if (!(ch >= 'ა' && ch <= 'ჿ')) {
+          // spaces / punctuation in phrases are plain, not tappable
+          wordRow.appendChild(h('span', { 'class': 'read-sep ka', 'aria-hidden': 'true', text: ch }));
+          return;
+        }
         var known = LETTER_BY_KA[ch];
         var lb = h('button', {
           'class': 'read-letter ka',
@@ -2546,29 +3236,40 @@
         wordRow.appendChild(lb);
       });
 
-      var hintLine = h('p', { 'class': 'translit hint-line', tabindex: '-1', text: item.translit + (item.en ? ' — ' + item.en : '') });
-      var hintBtn = h('button', {
-        'class': 'btn btn-ghost', type: 'button',
-        onclick: function () {
-          hintBtn.parentNode.replaceChild(hintLine, hintBtn);
-          hintLine.focus(); // keep keyboard focus on the revealed hint
-        }
-      }, ['Show hint']);
+      var audioRow = h('div', { 'class': 'card-audio-row' });
+      if (allGeorgian) {
+        audioRow.appendChild(h('button', {
+          'class': 'btn btn-secondary', type: 'button',
+          onclick: function () { soundOut(item, letterBtns); }
+        }, [h('span', { 'aria-hidden': 'true', text: '🔍 ' }), 'Sound it out']));
+      }
+      audioRow.appendChild(audioBtn(item.id, item.ka, { label: 'Hear the whole word' }));
 
-      var card = h('div', { 'class': 'deck-card' }, [
+      var cardBits = [
         item.emoji
           ? emojiSpan(item.emoji, item.en, 'deck-emoji')
           : emojiSpan('🔤', 'syllable', 'deck-emoji'),
         wordRow,
-        h('div', { 'class': 'card-audio-row' }, [
-          h('button', {
-            'class': 'btn btn-secondary', type: 'button',
-            onclick: function () { soundOut(item, letterBtns); }
-          }, [h('span', { 'aria-hidden': 'true', text: '🔍 ' }), 'Sound it out']),
-          audioBtn(item.id, item.ka, { label: 'Hear the whole word' })
-        ]),
-        hintBtn
-      ]);
+        audioRow
+      ];
+
+      if (opts.mode === 'vocab') {
+        // learning, not testing — the meaning is always on the card
+        cardBits.push(h('p', { 'class': 'translit deck-meaning', text: item.translit + ' — ' + item.en }));
+      } else {
+        var hintLine = h('p', { 'class': 'translit hint-line', tabindex: '-1', text: item.translit + (item.en ? ' — ' + item.en : '') });
+        var hintBtn = h('button', {
+          'class': 'btn btn-ghost', type: 'button',
+          onclick: function () {
+            hintBtn.parentNode.replaceChild(hintLine, hintBtn);
+            hintLine.focus(); // keep keyboard focus on the revealed hint
+          }
+        }, ['Show hint']);
+        cardBits.push(hintBtn);
+      }
+
+      var card = h('div', { 'class': 'deck-card' }, cardBits);
+      deckSwipe(card, goPrev, goNext);
       deck.appendChild(card);
 
       var nav = h('div', { 'class': 'deck-nav' });
@@ -2576,7 +3277,7 @@
         'class': 'dialog-arrow', type: 'button',
         'aria-label': 'Previous card',
         disabled: current === 0 ? true : null,
-        onclick: function () { if (current > 0) { current--; show('prev'); } }
+        onclick: goPrev
       }, [h('span', { 'aria-hidden': 'true', text: '←' })]);
       nav.appendChild(prevBtn);
       nav.appendChild(h('span', { 'class': 'dialog-ipa deck-counter', text: (current + 1) + ' / ' + items.length }));
@@ -2585,7 +3286,7 @@
         fwdBtn = h('button', {
           'class': 'dialog-arrow', type: 'button',
           'aria-label': 'Next card',
-          onclick: function () { current++; show('next'); }
+          onclick: goNext
         }, [h('span', { 'aria-hidden': 'true', text: '→' })]);
       } else {
         fwdBtn = h('button', {
@@ -2595,16 +3296,19 @@
       }
       nav.appendChild(fwdBtn);
       deck.appendChild(nav);
+      readyPulse(fwdBtn);
       if (focusDir) {
         (focusDir === 'prev' && !prevBtn.disabled ? prevBtn : fwdBtn).focus();
       }
-      announce('Card ' + (current + 1) + ' of ' + items.length + ': ' + item.translit);
+      announce('Card ' + (current + 1) + ' of ' + items.length + ': ' + item.translit +
+        (opts.mode === 'vocab' && item.en ? ', ' + item.en : ''));
+      if (opts.mode === 'vocab') { playWord(item); } // hear every word as you meet it
     }
 
     function onKey(e) {
       if (!document.body.contains(sec)) { document.removeEventListener('keydown', onKey); return; }
-      if (e.key === 'ArrowLeft' && current > 0) { e.preventDefault(); current--; show('prev'); }
-      else if (e.key === 'ArrowRight' && current < items.length - 1) { e.preventDefault(); current++; show('next'); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev(); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); goNext(); }
     }
     document.addEventListener('keydown', onKey);
 
@@ -2612,11 +3316,237 @@
     show();
   }
 
+  function renderReadingCards(stepId) {
+    var step = findReadingStep(stepId);
+    if (!step) { renderHome(); return; }
+    renderCardsDeck({
+      sectionClass: 'reading-cards-view',
+      ariaLabel: 'Word cards',
+      backLabel: 'Reading',
+      backHash: '#/reading',
+      heading: step.title + ' · Word cards',
+      items: step.items.map(readItem).filter(function (x) { return !!x; }),
+      mode: 'reading',
+      markDone: function () { return pushOnce(state.readingCardsDone, stepId); }
+    });
+  }
+
+  /* v3 — unit word cards: meet every word BEFORE practicing it (M5) */
+  function renderUnitCards(unitId, lessonId) {
+    var unit = findUnit(unitId);
+    var found = findLesson(lessonId);
+    if (!unit || !found || found.unit !== unit) { renderHome(); return; }
+    renderCardsDeck({
+      sectionClass: 'reading-cards-view unit-cards-view',
+      ariaLabel: 'Word cards — ' + found.lesson.title,
+      backLabel: unit.title,
+      backHash: '#/unit/' + unit.id,
+      heading: found.lesson.title + ' · Word cards',
+      items: wordsOf(found.lesson.items),
+      mode: 'vocab',
+      markDone: function () { return pushOnce(state.unitCardsDone, lessonId); }
+    });
+  }
+
+  /* ================================================================== *
+   * v3 — My Treasures, daily welcome gift, boot wiring
+   * ================================================================== */
+
+  function starsBreakdown() {
+    var lessons = 0, unitEx = 0, letters = 0, reading = 0;
+    Object.keys(state.stars).forEach(function (k) { lessons += state.stars[k] || 0; });
+    Object.keys(state.unitExamStars).forEach(function (k) { unitEx += state.unitExamStars[k] || 0; });
+    Object.keys(state.lettersExamStars).forEach(function (k) { letters += state.lettersExamStars[k] || 0; });
+    Object.keys(state.readingExamStars).forEach(function (k) { reading += state.readingExamStars[k] || 0; });
+    return { lessons: lessons, unitEx: unitEx, letters: letters, reading: reading, practice: state.practiceStars || 0 };
+  }
+
+  function treasureSection(title, children) {
+    var box = h('div', { 'class': 'treasure-section' });
+    box.appendChild(h('h2', { text: title }));
+    (children || []).forEach(function (c) { if (c) { box.appendChild(c); } });
+    return box;
+  }
+
+  function renderTreasures() {
+    var sec = h('section', { 'class': 'view treasures-view', role: 'region', 'aria-label': 'My treasures' });
+    sec.appendChild(backLink('Home', '#/home'));
+    sec.appendChild(h('h1', {}, ['🏆 ', kaSpan(C.strings.treasures), ' · My treasures']));
+    sec.appendChild(h('p', { 'class': 'alpha-intro', text: 'Everything here only ever grows. ☀️ Day ' +
+      Math.max(1, state.daysPlayed.length) + ' of your adventure.' }));
+
+    /* stars */
+    var b = starsBreakdown();
+    sec.appendChild(treasureSection('⭐ Stars — ' + totalStars(), [
+      h('p', { 'class': 'treasure-line', text: 'Lessons ' + b.lessons + ' · Unit exams ' + b.unitEx +
+        ' · Letters ' + b.letters + ' · Reading ' + b.reading + ' · Practice ' + b.practice })
+    ]));
+
+    /* XP + milestones */
+    var mBits = XP_MILESTONES.map(function (m) {
+      return (state.xp >= m.at ? m.label + ' ✓' : m.label + ' at ' + m.at);
+    }).join(' · ');
+    sec.appendChild(treasureSection('⚡ ' + state.xp + ' XP', [
+      h('p', { 'class': 'treasure-line', text: mBits })
+    ]));
+
+    /* badges */
+    var badgeRow = h('div', { 'class': 'badges-row badges-row--left', role: 'list', 'aria-label': 'Badges earned' });
+    if (state.badges.length) {
+      state.badges.forEach(function (id) {
+        var bd = BADGES[id];
+        if (!bd) { return; }
+        badgeRow.appendChild(h('span', { 'class': 'badge-chip', role: 'listitem', 'aria-label': 'Badge: ' + bd.name },
+          [h('span', { 'aria-hidden': 'true', text: bd.emoji }), h('span', { text: bd.name })]));
+      });
+    } else {
+      badgeRow.appendChild(h('p', { 'class': 'treasure-line', text: 'Your first badge is waiting in your very first lesson!' }));
+    }
+    sec.appendChild(treasureSection('🎖️ Badges — ' + state.badges.length, [badgeRow]));
+
+    /* crowns */
+    var crownRow = h('div', { 'class': 'badges-row badges-row--left', role: 'list', 'aria-label': 'Crowned units' });
+    if (state.crowns.length) {
+      state.crowns.forEach(function (uid) {
+        var u = findUnit(uid);
+        if (!u) { return; }
+        crownRow.appendChild(h('span', { 'class': 'badge-chip', role: 'listitem', 'aria-label': 'Crowned unit: ' + u.title },
+          [h('span', { 'aria-hidden': 'true', text: '👑 ' + u.emoji }), h('span', { text: u.title })]));
+      });
+    } else {
+      crownRow.appendChild(h('p', { 'class': 'treasure-line', text: 'Finish a unit’s lessons and its exam to crown it!' }));
+    }
+    sec.appendChild(treasureSection('👑 Crowns — ' + state.crowns.length, [crownRow]));
+
+    /* sticker album */
+    var album = h('div', { 'class': 'sticker-grid', role: 'list', 'aria-label': 'Sticker album' });
+    (C.stickers || []).forEach(function (st) {
+      var owned = state.stickers.indexOf(st.id) !== -1;
+      album.appendChild(h('span', {
+        'class': 'sticker-tile' + (owned ? ' owned' : ''),
+        role: 'listitem',
+        'aria-label': owned ? 'Sticker: ' + st.name : 'Sticker not collected yet'
+      }, [
+        h('span', { 'class': 'sticker-emoji', 'aria-hidden': 'true', text: owned ? st.emoji : '?' }),
+        h('span', { 'class': 'sticker-name', text: owned ? st.name : '· · ·' })
+      ]));
+    });
+    sec.appendChild(treasureSection('🎁 Sticker album — ' + state.stickers.length + ' of ' + (C.stickers || []).length, [
+      h('p', { 'class': 'treasure-line', text: 'Baba has a gift waiting every day you visit.' }),
+      album
+    ]));
+
+    /* my dictionary */
+    var dict = h('div', { 'class': 'dict-list' });
+    if (state.wodCollected.length) {
+      state.wodCollected.forEach(function (id) {
+        var w = C.vocab[id];
+        if (!w) { return; }
+        dict.appendChild(h('div', { 'class': 'dict-row' }, [
+          emojiSpan(w.emoji, '', 'dict-emoji'),
+          h('span', { 'class': 'dict-word' }, [kaSpan(w.ka), h('span', { 'class': 'entry-sub', text: w.translit + ' — ' + w.en })]),
+          audioBtn(w.id, w.ka, { small: true, label: 'Hear ' + w.en })
+        ]));
+      });
+    } else {
+      dict.appendChild(h('p', { 'class': 'treasure-line', text: 'Collect the word of the day on the home screen to start your dictionary!' }));
+    }
+    sec.appendChild(treasureSection('📖 ' + C.strings.dictionary + ' · My dictionary — ' + state.wodCollected.length, [dict]));
+
+    setView(sec, '');
+  }
+
+  /* ---------- daily welcome gift (4-2) — never a word about missed days ---------- */
+
+  function showDailyGift() {
+    var day = state.daysPlayed.length;
+    var st = grantSticker(true); // quiet — the dialog IS the celebration
+    var goldenDay = !st;
+    if (goldenDay) { addXP(10); }
+
+    var backdrop = h('div', { 'class': 'modal-backdrop' });
+    var dialog = h('div', { 'class': 'letter-dialog gift-dialog', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Daily gift' });
+    backdrop.appendChild(dialog);
+
+    function close() {
+      document.removeEventListener('keydown', onKey, true);
+      if (backdrop.parentNode) { backdrop.parentNode.removeChild(backdrop); }
+      /* restore keyboard focus into the page (same idea as openLetterDialog):
+       * the gift has no trigger element, so land on the hero card / first control */
+      var back = document.querySelector('.hero-card') ||
+                 document.querySelector('#app button, #app a[href]');
+      if (back && back.focus) { back.focus(); }
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') { e.preventDefault(); close(); return; }
+      if (e.key === 'Tab') {
+        var focusables = dialog.querySelectorAll('button:not([disabled])');
+        if (!focusables.length) { return; }
+        var first = focusables[0], last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+
+    dialog.appendChild(h('p', { 'class': 'finish-title gift-title' }, [kaSpan(C.vocab.gamarjoba.ka + '!'), ' · Good to see you!']));
+    dialog.appendChild(h('p', { 'class': 'gift-day', text: 'Day ' + day + '! Baba’s gift for you:' }));
+    if (st) {
+      dialog.appendChild(h('div', { 'class': 'gift-sticker' }, [
+        h('span', { 'class': 'gift-emoji', 'aria-hidden': 'true', text: st.emoji }),
+        h('span', { 'class': 'gift-name', text: st.name })
+      ]));
+    } else {
+      dialog.appendChild(h('div', { 'class': 'gift-sticker' }, [
+        h('span', { 'class': 'gift-emoji', 'aria-hidden': 'true', text: '🌟' }),
+        h('span', { 'class': 'gift-name', text: 'Golden borjgali day — +10 XP!' })
+      ]));
+    }
+    var okBtn = h('button', {
+      'class': 'btn btn-primary btn-block', type: 'button',
+      onclick: function () {
+        close();
+        toast(st ? ('🎁 ' + st.emoji + ' ' + st.name + ' added to your treasures!') : '🌟 +10 XP added!');
+      }
+    }, ['Add to my treasures ✓']);
+    dialog.appendChild(okBtn);
+
+    document.body.appendChild(backdrop);
+    backdrop.addEventListener('click', function (e) { if (e.target === backdrop) { close(); } });
+    document.addEventListener('keydown', onKey, true);
+    confettiBurst(dialog);
+    okBtn.focus();
+    announce('Day ' + day + ' of your adventure! ' + (st ? 'New sticker: ' + st.name : 'Golden borjgali day, plus ten XP') + '.');
+    playUiClip('A gift for you!', function () {
+      if (document.body.contains(dialog)) { playPraise(); }
+    });
+  }
+
+  /* record today's visit; true when this is the first visit of the day.
+   * Called BEFORE the first route() so home's "Day N" hero and the gift
+   * dialog always agree on the day number. */
+  function recordTodayPlayed() {
+    var today = todayKey();
+    if (state.daysPlayed.indexOf(today) !== -1) { return false; }
+    state.daysPlayed.push(today); // append-only; gaps are nobody's business
+    save();
+    return true;
+  }
+
   /* ------------------------------------------------------------------ *
    * Boot
    * ------------------------------------------------------------------ */
 
+  /* header chips are real buttons now (M2) — they open My treasures */
+  ['chip-stars', 'chip-xp'].forEach(function (id) {
+    var chip = document.getElementById(id);
+    if (chip && chip.tagName === 'BUTTON') {
+      chip.addEventListener('click', function () { navigate('#/treasures'); });
+    }
+  });
+
   updateChips();
+  var firstVisitToday = recordTodayPlayed(); // before route(): "Day N" must be current on first render
   route();
+  if (firstVisitToday) { showDailyGift(); }
 
 })();

@@ -3,7 +3,11 @@
 
 Usage:
     pip install edge-tts
-    python3 scripts/generate-gamarjoba-audio.py [--force] [--only PREFIX]
+    python3 scripts/generate-gamarjoba-audio.py [ITEMS_JSON] [--force] [--only PREFIX]
+
+ITEMS_JSON (optional): path to a JSON array of {"id": ..., "text": ...}
+records appended to the manifest (after the data.js scan, overriding it
+on id clashes). Use it to feed extra/new course clips to the generator.
 
 Behavior:
   * Output dir: gamarjoba/audio/ka/ (created if missing).
@@ -29,6 +33,7 @@ Behavior:
 
 import argparse
 import asyncio
+import json
 import re
 import sys
 from pathlib import Path
@@ -81,7 +86,7 @@ LETTERS = [
 ]
 
 
-def build_manifest():
+def build_manifest(items_json=None):
     """Return an ordered {audioId: georgian_text} dict."""
     manifest = {}
     # letters first (canonical order)
@@ -96,6 +101,11 @@ def build_manifest():
     # are already in the manifest). Spoken text = the Georgian key.
     for ka, audio_id in re.findall(r'"([^"]+)":\s*"(example-[\w-]+)"', src):
         manifest[audio_id] = ka
+    # extra items from an optional JSON file: [{"id": ..., "text": ...}]
+    if items_json:
+        items = json.loads(Path(items_json).read_text(encoding="utf-8"))
+        for item in items:
+            manifest[item["id"]] = item["text"]
     return manifest
 
 
@@ -122,6 +132,8 @@ async def synth(text, path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("items_json", nargs="?", default=None,
+                        help="optional JSON array of {id, text} extra items")
     parser.add_argument("--force", action="store_true",
                         help="regenerate clips even if the mp3 already exists")
     parser.add_argument("--only", metavar="PREFIX", default=None,
@@ -129,7 +141,7 @@ def main():
     args = parser.parse_args()
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    manifest = build_manifest()
+    manifest = build_manifest(args.items_json)
 
     todo = []
     skipped = 0
