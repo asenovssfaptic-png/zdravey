@@ -573,10 +573,11 @@
       var total = u.lessons.length;
       var completed = unitCompleted(u) || state.crowns.indexOf(u.id) !== -1;
       var upcoming = !completed && unitUpcoming(i);
+      var current = !completed && !upcoming;
       var crowned = state.crowns.indexOf(u.id) !== -1;
 
       var bubble = h('button', {
-        'class': 'unit-bubble' + (completed ? ' completed' : '') + (upcoming ? ' upcoming' : ''),
+        'class': 'unit-bubble' + (completed ? ' completed' : '') + (upcoming ? ' upcoming' : '') + (current ? ' current' : ''),
         type: 'button',
         'aria-label': 'Unit: ' + u.title + ', ' + done + ' of ' + total + ' lessons complete' + (crowned ? ', crowned' : ''),
         onclick: (function (unitId) { return function () { navigate('#/unit/' + unitId); }; })(u.id)
@@ -585,6 +586,10 @@
       bubble.appendChild(h('span', { 'class': 'bubble-face', 'aria-hidden': 'true', text: u.emoji }));
       if (crowned) {
         bubble.appendChild(h('span', { 'class': 'unit-crown', 'aria-hidden': 'true', text: '👑' }));
+      }
+
+      if (current && !done) {
+        bubble.appendChild(h('span', { 'class': 'next-pill', text: 'Up next' }));
       }
 
       var stop = h('div', { 'class': 'unit-stop' }, [

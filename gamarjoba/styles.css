@@ -330,7 +330,12 @@ main {
   font-size: 28px;
   line-height: 1;
 }
-.unit-bubble.upcoming { filter: grayscale(1) opacity(.55); }
+/* Not-started units stay full colour and tappable — nothing in the app is
+   locked, so they must not read as disabled. The current unit carries the
+   "Up next" pill instead. */
+.unit-bubble.current .bubble-face { box-shadow: 0 0 0 4px var(--accent-tint), var(--shadow); }
+.unit-node .next-pill { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); z-index: 2; }
+.unit-bubble { cursor: pointer; }
 
 .unit-title { margin-top: 8px; font-size: 15px; font-weight: 700; color: var(--ink); text-align: center; }
 .unit-sub { font-size: 13px; font-weight: 600; color: var(--ink-soft); text-align: center; }
