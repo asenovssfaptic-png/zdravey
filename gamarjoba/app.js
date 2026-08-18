@@ -2215,15 +2215,24 @@
 
   /* ---------- tracing canvas (shared by trace view + trace_letter) ---------- */
 
+  /* letters whose stroke-order animation already auto-played this session
+   * (in-memory on purpose — the store stays additive-only) */
+  var autoWatched = {};
+
   function makeTraceCanvas(letter) {
     var strokeCount = 0;
+    /* stroke-order polylines (strokes.js, 0-100 box, y down) — when present
+     * the faint template is STROKED from this data so the numbered guide
+     * dots always sit exactly on the letterform on every device */
+    var strokes = (window.LETTER_STROKES && window.LETTER_STROKES[letter.ka]) || null;
     var size = Math.max(220, Math.min(300, Math.floor(window.innerWidth * 0.8)));
     var dpr = window.devicePixelRatio || 1;
     var canvas = h('canvas', {
       'class': 'trace-canvas',
       tabindex: '0',
-      'aria-label': 'Tracing area for letter ' + letter.ka +
-        ' — draw over the gray letter with your finger or mouse, or use the Watch it draw button'
+      'aria-label': 'Tracing area for letter ' + letter.ka + (strokes ?
+        ' — draw over the gray letter, starting each line at its numbered dot, or use the Watch it draw button' :
+        ' — draw over the gray letter with your finger or mouse, or use the Watch it draw button')
     });
     var ctx = canvas.getContext('2d');
 
@@ -2237,10 +2246,91 @@
     }
     applySize();
 
+    /* 0-100 stroke units → canvas px */
+    function u(v) { return v * size / 100; }
+
+    function pathStroke(pts, uptoLen) {
+      ctx.beginPath();
+      ctx.moveTo(u(pts[0][0]), u(pts[0][1]));
+      var walked = 0;
+      for (var i = 1; i < pts.length; i++) {
+        var dx = pts[i][0] - pts[i - 1][0];
+        var dy = pts[i][1] - pts[i - 1][1];
+        var seg = Math.sqrt(dx * dx + dy * dy);
+        if (uptoLen !== undefined && walked + seg > uptoLen) {
+          var k = seg ? (uptoLen - walked) / seg : 0;
+          ctx.lineTo(u(pts[i - 1][0] + dx * k), u(pts[i - 1][1] + dy * k));
+          break;
+        }
+        walked += seg;
+        ctx.lineTo(u(pts[i][0]), u(pts[i][1]));
+      }
+      ctx.stroke();
+    }
+
+    function strokeLen(pts) {
+      var L = 0;
+      for (var i = 1; i < pts.length; i++) {
+        L += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+      }
+      return L;
+    }
+
+    function drawLetterStrokes(color, count, partialLen) {
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = size * 0.13; // thick round-cap brush ≈ the glyph weight
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      var n = (count === undefined) ? strokes.length : count;
+      for (var i = 0; i < n && i < strokes.length; i++) { pathStroke(strokes[i]); }
+      if (partialLen !== undefined && n < strokes.length) { pathStroke(strokes[n], partialLen); }
+      ctx.restore();
+    }
+
+    /* numbered start dot + a small direction arrow for every stroke */
+    function drawGuides() {
+      ctx.save();
+      strokes.forEach(function (pts, si) {
+        var a = pts[0];
+        var b = pts[Math.min(2, pts.length - 1)];
+        var ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+        /* arrow a little way along the first segment */
+        var ax = u(a[0]) + Math.cos(ang) * size * 0.085;
+        var ay = u(a[1]) + Math.sin(ang) * size * 0.085;
+        var r = size * 0.028;
+        ctx.fillStyle = '#A81C11'; // --accent-deep (canvas needs a literal)
+        ctx.beginPath();
+        ctx.moveTo(ax + r * Math.cos(ang), ay + r * Math.sin(ang));
+        ctx.lineTo(ax + r * Math.cos(ang + 2.5), ay + r * Math.sin(ang + 2.5));
+        ctx.lineTo(ax + r * Math.cos(ang - 2.5), ay + r * Math.sin(ang - 2.5));
+        ctx.closePath();
+        ctx.fill();
+        /* numbered start dot */
+        var dr = size * 0.048;
+        ctx.fillStyle = '#DA291C'; // --accent
+        ctx.beginPath();
+        ctx.arc(u(a[0]), u(a[1]), dr, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '700 ' + Math.round(size * 0.055) + 'px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(si + 1), u(a[0]), u(a[1]) + size * 0.002);
+      });
+      ctx.restore();
+    }
+
     function template() {
       ctx.clearRect(0, 0, size, size);
+      if (strokes) {
+        drawLetterStrokes('rgba(43, 35, 32, 0.14)'); // ink at 14% — the faint model
+        drawGuides();
+        return;
+      }
+      /* fallback for a letter without stroke data: the old font-drawn model */
       ctx.save();
-      ctx.fillStyle = 'rgba(43, 35, 32, 0.14)'; // ink at 14% — the faint model glyph
+      ctx.fillStyle = 'rgba(43, 35, 32, 0.14)';
       ctx.font = Math.round(size * 0.8) + 'px "Noto Sans Georgian", "Sylfaen", system-ui, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -2270,15 +2360,64 @@
     window.addEventListener('resize', onResize);
     window.addEventListener('orientationchange', onResize);
 
-    /* "Watch it draw" (H7) — the glyph fades in stroke-red, then counts as
-     * traced, so keyboard users complete tracing too. Reduced motion →
-     * instant reveal. */
+    /* "Watch it draw" (H7) — the letter draws itself stroke by stroke in the
+     * right order, then counts as traced, so keyboard users complete tracing
+     * too. Reduced motion → instant static display with the numbered dots.
+     * opts.auto (the once-per-letter auto-demo) never counts as tracing. */
     var watching = false;
-    function watchDraw(doneFn) {
+    function watchDraw(doneFn, opts) {
       if (watching) { return; }
       watching = true;
+      var auto = !!(opts && opts.auto);
       var reduced = prefersReducedMotion();
-      var t0 = null;
+      function finishWatch() {
+        watching = false;
+        if (!auto) { strokeCount = Math.max(1, strokeCount); } // watching counts as traced
+        if (doneFn) { doneFn(); }
+      }
+
+      if (strokes) {
+        var lens = strokes.map(strokeLen);
+        var durs = lens.map(function (L) {
+          return Math.max(600, Math.min(900, 600 + L * 2)); // ~600-900ms per stroke
+        });
+        function paintProgress(idx, frac) {
+          template();
+          drawLetterStrokes('#DA291C', idx, frac !== undefined ? lens[idx] * frac : undefined);
+          drawGuides(); // numbers stay readable on top
+        }
+        if (reduced) { paintProgress(strokes.length); finishWatch(); return; }
+        var si = 0;
+        var t0 = null;
+        function frame(ts) {
+          if (!document.body.contains(canvas)) { watching = false; return; }
+          if (t0 === null) { t0 = ts; }
+          var k = Math.min(1, (ts - t0) / durs[si]);
+          paintProgress(si, k);
+          if (k < 1) { window.requestAnimationFrame(frame); return; }
+          si++;
+          t0 = null;
+          if (si < strokes.length) {
+            window.setTimeout(function () { window.requestAnimationFrame(frame); }, 160);
+          } else {
+            paintProgress(strokes.length);
+            finishWatch();
+            /* the auto demo settles back to the faint model so the kid
+             * traces over a fresh template (skipped once they've drawn) */
+            if (auto) {
+              window.setTimeout(function () {
+                if (!document.body.contains(canvas) || watching || strokeCount > 0) { return; }
+                template();
+              }, 700);
+            }
+          }
+        }
+        window.requestAnimationFrame(frame);
+        return;
+      }
+
+      /* fallback (no stroke data): the old whole-glyph fade-in */
+      var t0f = null;
       var dur = 1200;
       function paint(alpha) {
         template();
@@ -2291,21 +2430,16 @@
         ctx.fillText(letter.ka, size / 2, size / 2 + size * 0.04);
         ctx.restore();
       }
-      function finishWatch() {
-        watching = false;
-        strokeCount = Math.max(1, strokeCount); // watching counts as traced
-        if (doneFn) { doneFn(); }
-      }
       if (reduced) { paint(1); finishWatch(); return; }
-      function frame(ts) {
+      function fadeFrame(ts) {
         if (!document.body.contains(canvas)) { watching = false; return; }
-        if (t0 === null) { t0 = ts; }
-        var k = Math.min(1, (ts - t0) / dur);
+        if (t0f === null) { t0f = ts; }
+        var k = Math.min(1, (ts - t0f) / dur);
         paint(k);
-        if (k < 1) { window.requestAnimationFrame(frame); }
+        if (k < 1) { window.requestAnimationFrame(fadeFrame); }
         else { finishWatch(); }
       }
-      window.requestAnimationFrame(frame);
+      window.requestAnimationFrame(fadeFrame);
     }
 
     var drawing = false;
@@ -2355,7 +2489,7 @@
   function watchDrawBtn(tc, letter) {
     return h('button', {
       'class': 'btn btn-secondary', type: 'button',
-      'aria-label': 'Watch the letter ' + letter.ka + ' draw itself',
+      'aria-label': 'Watch the letter ' + letter.ka + ' draw itself stroke by stroke',
       onclick: function () {
         tc.watch(function () {
           recordTraced(letter.ka);
@@ -2363,6 +2497,35 @@
         });
       }
     }, ['▶ Watch it draw']);
+  }
+
+  /* letter identity header above every trace canvas: "ა · ani — says a" + 🔊 */
+  function traceLetterHeader(letter) {
+    return h('div', {
+      'class': 'trace-letter-header',
+      role: 'group',
+      'aria-label': 'You are writing the letter ' + letter.name + ' — it says ' + letter.translit
+    }, [
+      h('span', { 'class': 'trace-header-glyph', 'aria-hidden': 'true' }, [kaSpan(letter.ka)]),
+      h('span', { 'class': 'trace-header-text', 'aria-hidden': 'true' }, [
+        h('span', { 'class': 'trace-header-name', text: letter.name }),
+        h('span', { 'class': 'trace-header-sound', text: 'says ' + letter.translit })
+      ]),
+      audioBtn(letterAudioId(letter), letter.ka, { label: 'Hear the letter ' + letter.name })
+    ]);
+  }
+
+  /* the stroke-order demo plays itself ONCE per letter per session, so the
+   * kid first SEES the order — a gift, never a gate (reduced motion: skip;
+   * the numbered dots already tell the order statically) */
+  function maybeAutoWatch(tc, letter) {
+    if (prefersReducedMotion()) { return; }
+    if (autoWatched[letter.ka]) { return; }
+    autoWatched[letter.ka] = true;
+    window.setTimeout(function () {
+      if (!document.body.contains(tc.el)) { return; }
+      tc.watch(null, { auto: true });
+    }, 400);
   }
 
   /* ---------- new exercise renderers ---------- */
@@ -2458,11 +2621,11 @@
   function renderTraceLetter(ex, container, onResult, s) {
     var letter = ex.letter;
     container.appendChild(instructionLine('Trace the letter'));
+    container.appendChild(traceLetterHeader(letter));
     var tc = makeTraceCanvas(letter);
     container.appendChild(h('div', { 'class': 'trace-card' }, [tc.el]));
     var done = false;
     container.appendChild(h('div', { 'class': 'trace-controls' }, [
-      audioBtn(letterAudioId(letter), letter.ka, { label: 'Hear the letter' }),
       watchDrawBtn(tc, letter),
       h('button', {
         'class': 'btn btn-ghost', type: 'button',
@@ -2480,7 +2643,9 @@
       }, ['Done ✓'])
     ]));
     if (s) { s.optionButtons = []; }
+    announce('You are writing the letter ' + letter.name + ' — it says ' + letter.translit);
     speakThen(container, 'Trace the letter', function () { playLetter(letter); });
+    maybeAutoWatch(tc, letter);
   }
 
   function renderReadWordPickPicture(ex, container, onResult, s) {
@@ -3076,6 +3241,7 @@
       area.innerHTML = '';
       var letter = group.letters[idx];
       counter.textContent = 'Letter ' + (idx + 1) + ' of ' + group.letters.length;
+      area.appendChild(traceLetterHeader(letter));
       var tc = makeTraceCanvas(letter);
       var card = h('div', { 'class': 'trace-card' }, [tc.el]);
       area.appendChild(card);
@@ -3099,7 +3265,6 @@
       }, ['Done ✓']); // always enabled — skipping the drawing is fine, never judged
 
       area.appendChild(h('div', { 'class': 'trace-controls' }, [
-        audioBtn(letterAudioId(letter), letter.ka, { label: 'Hear the letter' }),
         watchDrawBtn(tc, letter),
         h('button', {
           'class': 'btn btn-ghost', type: 'button',
@@ -3107,7 +3272,10 @@
         }, ['Clear']),
         doneBtn
       ]));
+      announce('Letter ' + (idx + 1) + ' of ' + group.letters.length + ': ' +
+        letter.name + ' — it says ' + letter.translit);
       playLetter(letter);
+      maybeAutoWatch(tc, letter);
     }
 
     setView(sec, '');

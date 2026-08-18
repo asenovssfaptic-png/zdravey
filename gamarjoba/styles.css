@@ -1051,6 +1051,20 @@ main {
 .hint-line { margin: 0; }
 
 /* tracing */
+.trace-letter-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--surface);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 10px 20px;
+  margin: 0 auto 4px;
+}
+.trace-header-glyph { font-size: 46px; font-weight: 700; color: var(--accent); line-height: 1.1; }
+.trace-header-name { display: block; font-size: 20px; font-weight: 800; }
+.trace-header-sound { display: block; color: var(--ink-soft); }
 .trace-area {
   display: flex;
   flex-direction: column;
