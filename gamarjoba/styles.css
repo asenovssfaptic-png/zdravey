@@ -1387,6 +1387,169 @@ button.instruction:hover { background: var(--accent-tint); }
 }
 
 /* ------------------------------------------------------------------ *
+ * v4 — universal tap-to-hear, reading sprint, build_phrase, games
+ * ------------------------------------------------------------------ */
+
+/* tap-to-hear affordance: dotted underline + cursor + role/label —
+   text color/contrast unchanged (AA preserved), never color alone */
+.ka-tap {
+  border-bottom: 2px dotted var(--accent);  /* full-strength: ≥3:1 on the card surface (WCAG 1.4.11) */
+  cursor: pointer;
+  border-radius: 4px;
+  -webkit-tap-highlight-color: transparent;
+}
+.ka-tap:hover { background: var(--accent-tint); }
+.ka-tap:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) {
+  .ka-tap:active { transform: scale(.97); display: inline-block; }
+}
+
+/* build_phrase: whole-word tiles + wide slots */
+.word-tile-btn { width: auto; min-width: 96px; padding: 10px 16px; font-size: 24px; }
+.build-slot--word { width: auto; min-width: 96px; padding: 0 14px; font-size: 22px; }
+
+/* reading sprint */
+.sprint-card {
+  width: 100%;
+  max-width: 420px;
+  min-height: 260px;
+  cursor: pointer;
+  position: relative;
+}
+.sprint-ka { font-size: 40px; font-weight: 700; }
+.sprint-hint { font-size: 14px; font-weight: 600; color: var(--ink-soft); }
+.sprint-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 16px;
+}
+.sprint-counter { text-align: center; margin-top: 14px; }
+@media (prefers-reduced-motion: no-preference) {
+  .sprint-card.flipped { animation: sprint-flip 400ms ease; }
+}
+@keyframes sprint-flip {
+  0% { transform: rotateY(90deg); }
+  100% { transform: rotateY(0deg); }
+}
+
+/* games */
+.game-score { text-align: center; margin-bottom: 8px; }
+.game-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+}
+.game-scene-wrap { margin: 12px 0; }
+.game-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 16px;
+}
+.game-scene {
+  border-radius: 20px;
+  padding: 16px;
+  background: var(--surface-alt);
+  box-shadow: var(--shadow);
+}
+.room-scene { border-top: 14px solid var(--border); }
+.scene-row {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin: 10px 0;
+  flex-wrap: wrap;
+}
+.scene-row--floor {
+  background: linear-gradient(var(--surface-alt), var(--border));
+  border-radius: 0 0 14px 14px;
+  padding: 10px 0 14px;
+}
+.scene-item {
+  min-width: 76px;
+  min-height: 76px;
+  font-size: 44px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  position: relative;
+}
+.scene-item:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.scene-item:disabled { cursor: default; }
+.market-awning {
+  height: 18px;
+  border-radius: 12px 12px 0 0;
+  background: repeating-linear-gradient(90deg, var(--accent) 0 24px, #fff 24px 48px);
+}
+.stall-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding-top: 12px;
+}
+.basket-bar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+.basket-label { font-weight: 800; font-size: 15px; color: var(--ink); }
+.basket-slot {
+  width: 56px;
+  height: 56px;
+  font-size: 30px;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  border: 2px dashed var(--border);
+  border-radius: 14px;
+  position: relative;
+}
+.basket-slot.filled {
+  border-style: solid;
+  border-color: var(--success);
+  background: var(--success-tint);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .basket-slot.filled { animation: pop-in 400ms ease; }
+}
+.basket-slot .slot-check {
+  position: absolute;
+  top: -6px;
+  right: -4px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--success);
+}
+.safari-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  max-width: 420px;
+  margin: 0 auto;
+}
+.safari-grid .letter-choice { min-width: 0; min-height: 72px; font-size: 36px; }
+.letter-choice.state-locked {
+  border-color: var(--success) !important;
+  background: var(--success-tint) !important;
+  cursor: default;
+}
+.safari-pips { font-size: 18px; font-weight: 700; color: var(--success); letter-spacing: 2px; }
+.safari-caption { min-height: 1.4em; margin: 0; }
+@media (max-width: 420px) {
+  .stall-grid, .safari-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ------------------------------------------------------------------ *
  * Reduced motion: state changes stay instant & visible
  * ------------------------------------------------------------------ */
 

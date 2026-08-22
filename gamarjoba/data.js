@@ -21,7 +21,11 @@ window.CURRICULUM = {
     /* v3 additions — retention screens (display copy, not spoken) */
     treasures:        "ჩემი საგანძური",  // "my treasures" (rewards screen title)
     dictionary:       "ჩემი ლექსიკონი",  // "my dictionary" (collected words)
-    wordOfDay:        "დღის სიტყვა"      // "word of the day"
+    wordOfDay:        "დღის სიტყვა",     // "word of the day"
+    /* v4 additions — display copy only, not spoken (no clips → stays a
+     * plain, non-tappable kaSpan per the universal tap-to-hear policy) */
+    readingSprint:    "კითხვის სეირნობა", // "reading stroll" — calm, no racing connotation
+    games:            "თამაშები"         // "games"
   },
 
   /* ------------------------------------------------------------------ *
@@ -423,7 +427,7 @@ window.CURRICULUM = {
     khachapuri:        { id: "khachapuri",        ka: "ხაჭაპური",            translit: "khach'ap'uri",         en: "khachapuri (cheese bread)", emoji: "🫓" },
     khinkali:          { id: "khinkali",          ka: "ხინკალი",             translit: "khink'ali",            en: "khinkali (dumpling)",      emoji: "🥟" },
     vashli:            { id: "vashli",            ka: "ვაშლი",               translit: "vashli",               en: "apple",                    emoji: "🍎" },
-    khili:             { id: "khili",             ka: "ხილი",                translit: "khili",                en: "fruit",                    emoji: "🍇" },
+    khili:             { id: "khili",             ka: "ხილი",                translit: "khili",                en: "fruit",                    emoji: "🍉" },
     tsqali:            { id: "tsqali",            ka: "წყალი",               translit: "ts'q'ali",             en: "water",                    emoji: "💧" },
     chai:              { id: "chai",              ka: "ჩაი",                 translit: "chai",                 en: "tea",                      emoji: "🍵" },
     qava:              { id: "qava",              ka: "ყავა",                translit: "q'ava",                en: "coffee",                   emoji: "☕" },
@@ -642,13 +646,37 @@ window.CURRICULUM = {
     qvavili:           { id: "qvavili",           ka: "ყვავილი",             translit: "q'vavili",             en: "flower",                   emoji: "🌸" },
     baghi:             { id: "baghi",             ka: "ბაღი",                translit: "baghi",                en: "garden",                   emoji: "🏡" },
     khidi:             { id: "khidi",             ka: "ხიდი",                translit: "khidi",                en: "bridge",                   emoji: "🌉" },
-    qurdzeni:          { id: "qurdzeni",          ka: "ყურძენი",             translit: "q'urdzeni",            en: "grapes",                   emoji: "🍇" }
+    qurdzeni:          { id: "qurdzeni",          ka: "ყურძენი",             translit: "q'urdzeni",            en: "grapes",                   emoji: "🍇" },
+
+    /* ------------- v4 bonus pool (10) — household things for the games
+     * (Find it at home / Market day) and Word of the Day. Not in any
+     * unit; ids appended to C.bonusWords below. Audio: audioId === id.
+     * NOTE: `chika` (ჭიქა, the cup) is a vocab item with its own clip
+     * chika.mp3 — the letter-card clip example-chika stays untouched. */
+    chika:             { id: "chika",             ka: "ჭიქა",                translit: "ch'ika",               en: "cup, glass",               emoji: "🥛" },
+    kovzi:             { id: "kovzi",             ka: "კოვზი",               translit: "k'ovzi",               en: "spoon",                    emoji: "🥄" },
+    changali:          { id: "changali",          ka: "ჩანგალი",             translit: "changali",             en: "fork",                     emoji: "🍴" },
+    tepshi:            { id: "tepshi",            ka: "თეფში",               translit: "tepshi",               en: "plate",                    emoji: "🍽️" },
+    sapone:            { id: "sapone",            ka: "საპონი",              translit: "sap'oni",              en: "soap",                     emoji: "🧼" },
+    sarke:             { id: "sarke",             ka: "სარკე",               translit: "sark'e",               en: "mirror",                   emoji: "🪞" },
+    lampa:             { id: "lampa",             ka: "ლამპა",               translit: "lamp'a",               en: "lamp",                     emoji: "💡" },
+    divani:            { id: "divani",            ka: "დივანი",              translit: "divani",               en: "sofa",                     emoji: "🛋️" },
+    abazana:           { id: "abazana",           ka: "აბაზანა",             translit: "abazana",              en: "bath, bathroom",           emoji: "🛁" },
+    chaidani:          { id: "chaidani",          ka: "ჩაიდანი",             translit: "chaidani",             en: "kettle",                   emoji: "🫖" }
   },
 
   /* ------------------------------------------------------------------ *
    * Letters path — the 6 alphabet groups, easy → hard. The `alphabet`
    * array order above is canonical; groups here reference it by id and
-   * never redefine letters. Three steps per group: meet / write / exam.
+   * never redefine letters. Four steps per group: meet / write / read /
+   * exam (the on-screen order — practice reading before the test). The
+   * v4 `read` key is ADDITIVE: nothing renamed, and group "done" status
+   * still counts meet+trace+exam only, so old saves never regress.
+   *
+   * `read` — "Read with these letters": a no-stars bonus node (praise +
+   * XP only) whose pool uses ONLY letters learned by that group.
+   *   - pool.syllables → readingTrack.syllables ids (cumulative set)
+   *   - pool.words     → vocab / readingTrack.extras ids
    *
    * Exam recipes (positive-only, hard rules):
    *   - Exams award 1–3 stars by accuracy but NEVER below 1, and can
@@ -678,6 +706,21 @@ window.CURRICULUM = {
               /* no earlier group to review yet — extra own-letter question instead */
               { type: "hear_pick_letter", count: 1, from: "group" }
             ]
+          },
+          read: {
+            id: "letters-group-1-read", kind: "read",
+            title: "Read with these letters", sub: "Syllables & tiny words",
+            pool: {
+              syllables: ["syl-ba", "syl-de", "syl-ga", "syl-va", "syl-be"],
+              words: ["deda", "da", "rw_bade"]
+            },
+            recipe: [
+              { type: "build_syllable",         count: 2 },
+              { type: "letter_to_sound",        count: 1 },
+              { type: "hear_pick_word",         count: 2 },
+              { type: "read_word_pick_picture", count: 1 },
+              { type: "picture_pick_word",      count: 1 }
+            ]
           }
         }
       },
@@ -696,6 +739,22 @@ window.CURRICULUM = {
               { type: "build_syllable",   count: 1, syllablePool: ["syl-ba", "syl-de", "syl-ma", "syl-di"] },
               { type: "letter_to_sound",  count: 1, from: "earlier-groups" },
               { type: "hear_pick_letter", count: 1, from: "earlier-groups" }
+            ]
+          },
+          read: {
+            id: "letters-group-2-read", kind: "read",
+            title: "Read with these letters", sub: "Syllables & tiny words",
+            pool: {
+              syllables: ["syl-ba", "syl-de", "syl-ga", "syl-va", "syl-be",
+                          "syl-ma", "syl-di", "syl-ze", "syl-mi", "syl-li"],
+              words: ["mama", "dila", "ki", "mta", "didi", "ati", "bebia", "tevzi"]
+            },
+            recipe: [
+              { type: "build_syllable",         count: 2 },
+              { type: "letter_to_sound",        count: 1 },
+              { type: "hear_pick_word",         count: 2 },
+              { type: "read_word_pick_picture", count: 1 },
+              { type: "picture_pick_word",      count: 1 }
             ]
           }
         }
@@ -716,6 +775,23 @@ window.CURRICULUM = {
               { type: "letter_to_sound",  count: 1, from: "earlier-groups" },
               { type: "hear_pick_letter", count: 1, from: "earlier-groups" }
             ]
+          },
+          read: {
+            id: "letters-group-3-read", kind: "read",
+            title: "Read with these letters", sub: "Syllables & tiny words",
+            pool: {
+              syllables: ["syl-ba", "syl-de", "syl-ga", "syl-va", "syl-be",
+                          "syl-ma", "syl-di", "syl-ze", "syl-mi", "syl-li",
+                          "syl-sa", "syl-ni", "syl-lo", "syl-go", "syl-ro", "syl-so"],
+              words: ["ara", "ori", "sami", "rva", "mze", "lari", "erti", "skami", "rw_ena"]
+            },
+            recipe: [
+              { type: "build_syllable",         count: 2 },
+              { type: "letter_to_sound",        count: 1 },
+              { type: "hear_pick_word",         count: 2 },
+              { type: "read_word_pick_picture", count: 1 },
+              { type: "picture_pick_word",      count: 1 }
+            ]
           }
         }
       },
@@ -734,6 +810,24 @@ window.CURRICULUM = {
               { type: "build_syllable",   count: 1, syllablePool: ["syl-ma", "syl-sa", "syl-di", "syl-ba", "syl-de", "syl-lo", "syl-ni", "syl-go"] },
               { type: "letter_to_sound",  count: 1, from: "earlier-groups" },
               { type: "hear_pick_letter", count: 1, from: "earlier-groups" }
+            ]
+          },
+          read: {
+            id: "letters-group-4-read", kind: "read",
+            title: "Read with these letters", sub: "Syllables & tiny words",
+            pool: {
+              syllables: ["syl-ba", "syl-de", "syl-ga", "syl-va", "syl-be",
+                          "syl-ma", "syl-di", "syl-ze", "syl-mi", "syl-li",
+                          "syl-sa", "syl-ni", "syl-lo", "syl-go", "syl-ro", "syl-so",
+                          "syl-pu", "syl-ku"],
+              words: ["puri", "kata", "kali", "puli", "peri", "ghori", "magida", "bileti", "saati"]
+            },
+            recipe: [
+              { type: "build_syllable",         count: 2 },
+              { type: "letter_to_sound",        count: 1 },
+              { type: "hear_pick_word",         count: 2 },
+              { type: "read_word_pick_picture", count: 1 },
+              { type: "picture_pick_word",      count: 1 }
             ]
           }
         }
@@ -754,6 +848,24 @@ window.CURRICULUM = {
               { type: "letter_to_sound",  count: 1, from: "earlier-groups" },
               { type: "hear_pick_letter", count: 1, from: "earlier-groups" }
             ]
+          },
+          read: {
+            id: "letters-group-5-read", kind: "read",
+            title: "Read with these letters", sub: "Syllables & tiny words",
+            pool: {
+              syllables: ["syl-ba", "syl-de", "syl-ga", "syl-va", "syl-be",
+                          "syl-ma", "syl-di", "syl-ze", "syl-mi", "syl-li",
+                          "syl-sa", "syl-ni", "syl-lo", "syl-go", "syl-ro", "syl-so",
+                          "syl-pu", "syl-ku", "syl-sha", "syl-tso"],
+              words: ["chai", "rw_tsa", "vashli", "qava", "dzma", "shavi", "shvidi", "qveli", "dzaghli"]
+            },
+            recipe: [
+              { type: "build_syllable",         count: 2 },
+              { type: "letter_to_sound",        count: 1 },
+              { type: "hear_pick_word",         count: 2 },
+              { type: "read_word_pick_picture", count: 1 },
+              { type: "picture_pick_word",      count: 1 }
+            ]
           }
         }
       },
@@ -772,6 +884,24 @@ window.CURRICULUM = {
               { type: "build_syllable",   count: 1, syllablePool: ["syl-ma", "syl-sa", "syl-di", "syl-ba", "syl-de", "syl-lo", "syl-ni", "syl-go"] },
               { type: "letter_to_sound",  count: 1, from: "earlier-groups" },
               { type: "hear_pick_letter", count: 1, from: "earlier-groups" }
+            ]
+          },
+          read: {
+            id: "letters-group-6-read", kind: "read",
+            title: "Read with these letters", sub: "Syllables & tiny words",
+            pool: {
+              syllables: ["syl-ba", "syl-de", "syl-ga", "syl-va", "syl-be",
+                          "syl-ma", "syl-di", "syl-ze", "syl-mi", "syl-li",
+                          "syl-sa", "syl-ni", "syl-lo", "syl-go", "syl-ro", "syl-so",
+                          "syl-pu", "syl-ku", "syl-sha", "syl-tso", "syl-kha", "syl-ja"],
+              words: ["khe", "khili", "sakhli", "tsqali", "tsigni", "khidi", "khinkali", "khachapuri"]
+            },
+            recipe: [
+              { type: "build_syllable",         count: 2 },
+              { type: "letter_to_sound",        count: 1 },
+              { type: "hear_pick_word",         count: 2 },
+              { type: "read_word_pick_picture", count: 1 },
+              { type: "picture_pick_word",      count: 1 }
             ]
           }
         }
@@ -803,12 +933,31 @@ window.CURRICULUM = {
       { id: "syl-de", ka: "დე", translit: "de" },
       { id: "syl-lo", ka: "ლო", translit: "lo" },
       { id: "syl-ni", ka: "ნი", translit: "ni" },
-      { id: "syl-go", ka: "გო", translit: "go" }
+      { id: "syl-go", ka: "გო", translit: "go" },
+      /* v4 additions — one/two open syllables per letters group, so
+       * every "Read with these letters" node has fresh material.
+       * Group markers show the FIRST group whose letters cover them. */
+      { id: "syl-ga",  ka: "გა", translit: "ga"  },  // group-1
+      { id: "syl-va",  ka: "ვა", translit: "va"  },  // group-1
+      { id: "syl-be",  ka: "ბე", translit: "be"  },  // group-1
+      { id: "syl-ze",  ka: "ზე", translit: "ze"  },  // group-2
+      { id: "syl-mi",  ka: "მი", translit: "mi"  },  // group-2
+      { id: "syl-li",  ka: "ლი", translit: "li"  },  // group-2
+      { id: "syl-ro",  ka: "რო", translit: "ro"  },  // group-3
+      { id: "syl-so",  ka: "სო", translit: "so"  },  // group-3
+      { id: "syl-pu",  ka: "ფუ", translit: "pu"  },  // group-4
+      { id: "syl-ku",  ka: "ქუ", translit: "ku"  },  // group-4
+      { id: "syl-sha", ka: "შა", translit: "sha" },  // group-5
+      { id: "syl-tso", ka: "ცო", translit: "tso" },  // group-5
+      { id: "syl-kha", ka: "ხა", translit: "kha" },  // group-6
+      { id: "syl-ja",  ka: "ჯა", translit: "ja"  }   // group-6
     ],
     extras: [   /* tiny dedicated word list, same shape as vocab items */
-      { id: "rw_ia",  ka: "ია",  translit: "ia",  en: "violet (flower)", emoji: "🌼" },
-      { id: "rw_tsa", ka: "ცა",  translit: "tsa", en: "sky",             emoji: "🌤️" },
-      { id: "rw_ena", ka: "ენა", translit: "ena", en: "tongue",          emoji: "👅" }
+      { id: "rw_ia",   ka: "ია",   translit: "ia",   en: "violet (flower)", emoji: "🌼" },
+      { id: "rw_tsa",  ka: "ცა",   translit: "tsa",  en: "sky",             emoji: "🌤️" },
+      { id: "rw_ena",  ka: "ენა",  translit: "ena",  en: "tongue",          emoji: "👅" },
+      /* v4 — a readable group-1-letters-only word for the first read node */
+      { id: "rw_bade", ka: "ბადე", translit: "bade", en: "net",             emoji: "🥅" }
     ],
     steps: [
       {
@@ -818,6 +967,22 @@ window.CURRICULUM = {
           { type: "build_syllable",   count: 3 },
           { type: "letter_to_sound",  count: 2 },   /* fed the step's syllable items */
           { type: "hear_pick_letter", count: 1 }    /* letters used by the step's syllables */
+        ],
+        exam: [
+          { type: "build_syllable",   count: 3 },
+          { type: "letter_to_sound",  count: 2 },
+          { type: "hear_pick_letter", count: 2 }
+        ]
+      },
+      {
+        /* v4 — inserted between read-1 and read-2. Existing step ids and
+         * content are UNCHANGED (progress is keyed by id, not index). */
+        id: "read-5", title: "More syllables", kind: "syllables",
+        items: ["syl-ga", "syl-va", "syl-ze", "syl-li", "syl-ro", "syl-pu", "syl-sha", "syl-kha"],
+        practice: [
+          { type: "build_syllable",   count: 3 },
+          { type: "letter_to_sound",  count: 2 },
+          { type: "hear_pick_letter", count: 1 }
         ],
         exam: [
           { type: "build_syllable",   count: 3 },
@@ -843,6 +1008,24 @@ window.CURRICULUM = {
         ]
       },
       {
+        /* v4 — consonant clusters, gently: მთ, მზ, ძმ, რძ, თხ, რვ, ტყ, ზღ */
+        id: "read-6", title: "Two sounds together", kind: "words",
+        items: ["mta", "mze", "dzma", "rdze", "tkha", "rva", "tqe", "zghva"],
+        practice: [
+          { type: "read_word_pick_picture", count: 2 },
+          { type: "hear_pick_word",         count: 2 },
+          { type: "build_word",             count: 1 },
+          { type: "match_pairs",            count: 1 }
+        ],
+        exam: [
+          { type: "read_word_pick_picture", count: 2 },
+          { type: "hear_pick_word",         count: 2 },
+          { type: "build_word",             count: 1 },
+          { type: "picture_pick_word",      count: 1 },
+          { type: "build_syllable",         count: 1, syllablePool: ["syl-ga", "syl-va", "syl-ze", "syl-li", "syl-ro", "syl-pu", "syl-sha", "syl-kha"] }
+        ]
+      },
+      {
         id: "read-3", title: "Bigger words", kind: "words",   /* 3–5 letters */
         items: ["deda", "mama", "sami", "kata", "puri", "chai", "tevzi", "sakhli", "vashli"],
         practice: [
@@ -854,6 +1037,23 @@ window.CURRICULUM = {
         exam: [
           { type: "read_word_pick_picture", count: 3 },
           { type: "picture_pick_word",      count: 2 },
+          { type: "build_word",             count: 1 },
+          { type: "read_word_pick_picture", count: 1, from: "earlier-steps" }
+        ]
+      },
+      {
+        /* v4 — 4–6 letter words containing clusters */
+        id: "read-7", title: "Clusters in words", kind: "words",
+        items: ["mtsvane", "tskheni", "tskhra", "tsqali", "dzaghli", "tevzi", "skola", "tsigni"],
+        practice: [
+          { type: "read_word_pick_picture", count: 2 },
+          { type: "hear_pick_word",         count: 2 },
+          { type: "build_word",             count: 1 },
+          { type: "match_pairs",            count: 1 }
+        ],
+        exam: [
+          { type: "read_word_pick_picture", count: 3 },
+          { type: "hear_pick_word",         count: 2 },
           { type: "build_word",             count: 1 },
           { type: "read_word_pick_picture", count: 1, from: "earlier-steps" }
         ]
@@ -871,6 +1071,24 @@ window.CURRICULUM = {
           { type: "read_word_pick_picture", count: 3 },
           { type: "picture_pick_word",      count: 2 },
           { type: "build_word",             count: 1 },
+          { type: "read_word_pick_picture", count: 1, from: "earlier-steps" }
+        ]
+      },
+      {
+        /* v4 — two-word phrases (spaces render as plain separators; the
+         * per-word "Sound it out" machinery already handles them) */
+        id: "read-8", title: "Little phrases", kind: "phrases",
+        items: ["dila_mshvidobisa", "ghame_mshvidobisa", "rogor_khar", "ar_vitsi", "ar_mesmis", "kargi_amindia"],
+        practice: [
+          { type: "read_word_pick_picture", count: 2 },
+          { type: "build_phrase",           count: 2 },
+          { type: "hear_pick_word",         count: 1 },
+          { type: "match_pairs",            count: 1 }
+        ],
+        exam: [
+          { type: "read_word_pick_picture", count: 2 },
+          { type: "build_phrase",           count: 2 },
+          { type: "hear_pick_word",         count: 2 },
           { type: "read_word_pick_picture", count: 1, from: "earlier-steps" }
         ]
       }
@@ -964,7 +1182,10 @@ window.CURRICULUM = {
     "panjara", "skami", "satsoli", "mankana", "kalami",
     /* nature */
     "varskvlavi", "mtvare", "mdinare", "tqe", "zghva",
-    "khe", "qvavili", "baghi", "khidi", "qurdzeni"
+    "khe", "qvavili", "baghi", "khidi", "qurdzeni",
+    /* v4 — household things (games pool, see C.games) */
+    "chika", "kovzi", "changali", "tepshi", "sapone",
+    "sarke", "lampa", "divani", "abazana", "chaidani"
   ],
 
   /* ------------------------------------------------------------------ *
@@ -1032,6 +1253,47 @@ window.CURRICULUM = {
   ],
 
   /* ------------------------------------------------------------------ *
+   * v4 — Games ("თამაშები"). Supplementary cozy fun, NEVER a replacement
+   * for the learning loop and never pressure-based: endless relaxed
+   * rounds, no timers, no lives, no locks, no failure end-state. Misses
+   * always reveal + SPEAK the right answer (a free learning moment), so
+   * nothing is unfair even before study.
+   *
+   * The "fair for beginners" contract lives HERE: games draw ONLY from
+   * these curated id lists — concrete, picturable early vocab.
+   *   - findHome.zones: where each thing lives in the room scene (wall /
+   *     mid / floor); each round samples `perRound`/3 ids per zone.
+   *   - market.itemIds: stall pool; each list is `listLen` of them shown
+   *     on a stall of `stallSize`.
+   *   - safari: letter pool is progress-aware at runtime (met groups,
+   *     union group-1 as floor) — `gridSize` tiles, `copies` targets.
+   * ------------------------------------------------------------------ */
+  games: {
+    findHome: {
+      id: "find-home", emoji: "🛋️", title: "Find it at home",
+      perRound: 9,   // 3 per zone
+      zones: {
+        wall:  ["panjara", "sarke", "lampa", "saati", "kari_door"],
+        /* no "magida" here: its 🪑 depiction is identical to skami's (chair) —
+         * there is no table emoji, so the table stays out of this game pool */
+        mid:   ["skami", "divani", "satsoli", "abazana", "teleponi", "chaidani"],
+        floor: ["tsigni", "chanta", "kalami", "gasaghebi", "sapone", "chika", "kovzi", "changali", "tepshi"]
+      }
+    },
+    market: {
+      id: "market", emoji: "🧺", title: "Market day",
+      listLen: 4, stallSize: 8,
+      itemIds: ["puri", "qveli", "kvertskhi", "rdze", "shakari", "khachapuri", "khinkali", "vashli",
+                "khili", "tsqali", "chai", "qava", "tsveni", "salati", "supi", "khortsi", "naqini",
+                "limonati", "qurdzeni"]
+    },
+    safari: {
+      id: "letter-safari", emoji: "🔎", title: "Letter safari",
+      gridSize: 16, copies: 3
+    }
+  },
+
+  /* ------------------------------------------------------------------ *
    * Spoken UI instructions — instruction/copy string → bundled English
    * clip id (audio/ka/<id>.mp3, same folder as everything else; these
    * clips use a warm English child voice, not the Georgian voice).
@@ -1055,6 +1317,14 @@ window.CURRICULUM = {
     "Read it first — then the sound unlocks!": "ui-read-first",
     "Almost! Here is the right one.":        "ui-almost",
     "Well done!":                            "ui-well-done",
-    "A gift for you!":                       "ui-your-gift"
+    "A gift for you!":                       "ui-your-gift",
+    /* v4 additions — reading expansion + games. Same rule as everything
+     * here: instruction lines stay SILENT unless their line is tapped. */
+    "Which word did you hear?":              "ui-which-word-heard",
+    "Put the words in order":                "ui-words-in-order",
+    "Tap the card to flip it":               "ui-tap-to-flip",
+    "Find it in the room!":                  "ui-find-in-room",
+    "Find it at the market!":                "ui-find-market",
+    "Tap every one you see!":                "ui-tap-all-copies"
   }
 };
