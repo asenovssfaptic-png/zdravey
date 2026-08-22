@@ -170,8 +170,13 @@ def main():
                 print("  [%d/%d] %s.mp3  <- %s" % (done, len(todo), audio_id, text))
         asyncio.run(run_all())
 
-    # manifest lists every id that actually has a clip on disk
+    # manifest lists every id that actually has a clip on disk, plus any
+    # mp3s on disk not covered by this run's manifest (e.g. clips from an
+    # earlier items JSON, or hand-made recordings) so old ids survive.
     on_disk = [i for i in manifest if (OUT_DIR / (i + ".mp3")).exists()]
+    extra = sorted(p.stem for p in OUT_DIR.glob("*.mp3")
+                   if p.stem not in manifest)
+    on_disk += extra
     write_audio_map(on_disk)
 
     print("Done: %d generated, %d skipped (already present), %d ids in %s"
