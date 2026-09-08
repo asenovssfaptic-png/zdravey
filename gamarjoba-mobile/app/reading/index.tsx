@@ -35,7 +35,7 @@ export default function ReadingPathScreen(): React.ReactElement {
     <Screen>
       <BackLink label="Home" href="/" />
       <View style={styles.titleRow}>
-        <KaText text={C.strings.reading} size={type.h1} />
+        <KaText text={C.strings.reading} size={type.h1} speak />
         <Text style={styles.h1}> · Reading</Text>
       </View>
       <Text style={styles.intro}>

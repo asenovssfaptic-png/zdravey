@@ -17,7 +17,7 @@ import type { AnswerStatus } from "../../components/ui/OptionCard";
 import { colors, minTarget, radii, spacing, type } from "../../constants/theme";
 import { CURRICULUM } from "../../content/generated/curriculum";
 import { announce, useToast } from "../../lib/announce";
-import { playItem, playPraise, playUi, playWord, stopAll } from "../../lib/audio";
+import { playItem, playPraise, playUiKa, playWord, stopAll } from "../../lib/audio";
 import { chime } from "../../lib/sfx";
 import { shuffle } from "../../lib/exercise-engine";
 import { recordGameRound } from "../../lib/rewards";
@@ -144,7 +144,7 @@ export default function FindHomeScreen(): React.ReactElement {
       awardXp(1); // participation still trickles up
       announce(`Almost! Here it is: ${word.ka} — ${word.en}`);
       // miss rule in the child's language first, then reveal AND speak
-      playUi("Almost! Here is the right one.", 4800)
+      playUiKa("ui-ka-titkmis", 3600)
         .then(() => playItem(word))
         .then(() => completeRound(1400, token, targetId))
         .catch(() => {});

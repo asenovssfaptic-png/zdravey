@@ -1,6 +1,7 @@
-/* UnitPathList — the 16-unit adventure path in two labeled parts.
- * STUB (Agent A — Learn): already renders real units with progress rings
- * and crowns so the path is demoable; A replaces with the full design. */
+/* UnitPathList — the adventure path in two labeled parts, with per-unit
+ * progress rings, crowns, and a stars-at-a-glance chip (web v5 parity:
+ * lesson-best + exam-best stars over the unit max; monotonic, rewards
+ * only ever go up). */
 
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -25,6 +26,13 @@ export function UnitPathList(): React.ReactElement {
         const crowned = progress.crowns.includes(u.id);
         const completed = crowned || counts.done === counts.total;
         const isNext = !!next && next.unit.id === u.id;
+        // stars at a glance: earned unit stars (lesson bests + exam best;
+        // monotonic, never decreases) over the unit's possible max
+        const starMax = u.lessons.length * 3 + 3;
+        const starN = u.lessons.reduce(
+          (n, l) => n + (progress.stars[l.id] ?? 0),
+          progress.unitExamStars[u.id] ?? 0
+        );
         return (
           <React.Fragment key={u.id}>
             {i === 0 ? <Text style={styles.section}>Part 1 · First words</Text> : null}
@@ -34,7 +42,8 @@ export function UnitPathList(): React.ReactElement {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={
-                `Unit: ${u.title}, ${counts.done} of ${counts.total} steps complete` +
+                `Unit: ${u.title}, ${counts.done} of ${counts.total} steps complete, ` +
+                `${starN} of ${starMax} stars` +
                 (crowned ? ", crowned" : "") +
                 (isNext ? ", up next" : "")
               }
@@ -48,6 +57,7 @@ export function UnitPathList(): React.ReactElement {
               <ProgressRing
                 frac={counts.total ? counts.done / counts.total : 0}
                 done={completed}
+                gold={crowned}
                 size={52}
               >
                 <Text style={styles.face}>{u.emoji}</Text>
@@ -57,9 +67,14 @@ export function UnitPathList(): React.ReactElement {
                   {crowned ? "👑 " : ""}
                   {u.title}
                 </Text>
-                <Text style={styles.sub}>
-                  {counts.done} / {counts.total} steps
-                </Text>
+                <View style={styles.subRow}>
+                  <Text style={styles.sub}>
+                    {counts.done} / {counts.total} steps
+                  </Text>
+                  <Text style={styles.starChip} importantForAccessibility="no">
+                    <Text style={styles.starGlyph}>★</Text> {starN} / {starMax}
+                  </Text>
+                </View>
               </View>
               {isNext ? (
                 <View style={styles.pill}>
@@ -118,6 +133,19 @@ const styles = StyleSheet.create({
   sub: {
     fontSize: type.body - 3,
     color: colors.inkSoft,
+  },
+  subRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  starChip: {
+    fontSize: type.body - 3,
+    fontWeight: "700",
+    color: colors.inkSoft,
+  },
+  starGlyph: {
+    color: colors.gold,
   },
   pill: {
     backgroundColor: colors.accent,

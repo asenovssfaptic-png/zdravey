@@ -30,14 +30,22 @@ const wordResolvable = (id: string) => !!(C.vocab[id] || extras[id]);
 const resolvable = (id: string) => wordResolvable(id) || !!syllables[id];
 
 describe("generated content integrity", () => {
-  test("audio manifest has exactly 340 bundled assets + 3 SFX", () => {
-    expect(Object.keys(AUDIO_ASSETS)).toHaveLength(340);
+  test("audio manifest has exactly 373 bundled assets + 3 SFX", () => {
+    expect(Object.keys(AUDIO_ASSETS)).toHaveLength(373);
     expect(Object.keys(SFX_ASSETS).sort()).toEqual(["boop", "chime", "match"]);
   });
 
+  test("Georgian-only audio: no English ui clip is bundled", () => {
+    // guards the removed ui-* English clips from ever returning
+    for (const id of Object.keys(AUDIO_ASSETS)) {
+      expect(id).not.toMatch(/^ui-(?!ka-)/);
+    }
+  });
+
   test("curriculum counts match the web app", () => {
-    expect(C.units).toHaveLength(16);
-    expect(Object.keys(C.vocab).length).toBeGreaterThanOrEqual(228);
+    expect(C.units).toHaveLength(18);
+    expect(Object.keys(C.vocab).length).toBeGreaterThanOrEqual(279);
+    expect(C.bonusWords.length).toBeGreaterThanOrEqual(55);
     expect(C.alphabet.flatMap((g) => g.letters)).toHaveLength(33);
     expect(C.lettersPath.groups).toHaveLength(6);
     expect(C.readingTrack.steps).toHaveLength(8);
@@ -108,8 +116,9 @@ describe("generated content integrity", () => {
     }
   });
 
-  test("every uiAudio / praise / example id is a bundled AudioId", () => {
-    for (const aid of Object.values(C.uiAudio)) expect(audioIds.has(aid)).toBe(true);
+  test("every uiKa / praise / example id is a bundled AudioId", () => {
+    expect(C.uiKa).toHaveLength(12);
+    for (const u of C.uiKa) expect(audioIds.has(u.id)).toBe(true);
     for (const p of C.praise) expect(audioIds.has(p.id)).toBe(true);
     for (const aid of Object.values(C.audioIds.examples)) expect(audioIds.has(aid)).toBe(true);
   });

@@ -18,14 +18,14 @@ window.CURRICULUM = {
     practice:         "პრაქტიკა",        // "practice"
     letters:          "ანბანი",          // Letters path title (same word, path context)
     reading:          "კითხვა",          // "reading" (Reading path title)
-    /* v3 additions — retention screens (display copy, not spoken) */
-    treasures:        "ჩემი საგანძური",  // "my treasures" (rewards screen title)
-    dictionary:       "ჩემი ლექსიკონი",  // "my dictionary" (collected words)
-    wordOfDay:        "დღის სიტყვა",     // "word of the day"
-    /* v4 additions — display copy only, not spoken (no clips → stays a
-     * plain, non-tappable kaSpan per the universal tap-to-hear policy) */
-    readingSprint:    "კითხვის სეირნობა", // "reading stroll" — calm, no racing connotation
-    games:            "თამაშები"         // "games"
+    /* v3 additions — retention screens. v5: now SPOKEN — every string
+     * below has a matching Georgian title clip in C.uiKa (tap-to-hear). */
+    treasures:        "ჩემი საგანძური",  // "my treasures" → ui-ka-chemi-sagandzuri
+    dictionary:       "ჩემი ლექსიკონი",  // "my dictionary" → ui-ka-chemi-leksikoni
+    wordOfDay:        "დღის სიტყვა",     // "word of the day" → ui-ka-dghis-sitqva
+    /* v4 additions — v5: spoken too, via C.uiKa title clips */
+    readingSprint:    "კითხვის სეირნობა", // "reading stroll" → ui-ka-kitkhvis-seirnoba
+    games:            "თამაშები"         // "games" → ui-ka-tamashebi
   },
 
   /* ------------------------------------------------------------------ *
@@ -269,6 +269,23 @@ window.CURRICULUM = {
           items: ["momtsons", "miqvarkhar", "mchirdeba", "tsudad_var"] }
       ]
     },
+    /* v5 — "ქართულად!" release: unit 17 slots right after `feelings`
+     * ("I feel unwell" leads straight into "my head hurts"). Insertion
+     * is safe: progress is keyed by unit/lesson id, never by index. */
+    {
+      id: "body",
+      title: "My Body & Health",
+      emoji: "🩺",
+      description: "Head to toe — and the words that get you help.",
+      lessons: [
+        { id: "body-1", title: "Head & face",
+          items: ["tavi", "tvali", "quri", "tskhviri", "piri"] },
+        { id: "body-2", title: "Teeth, hair, hands & feet",
+          items: ["kbili", "tma", "kheli", "pekhi"] },
+        { id: "body-3", title: "At the doctor",
+          items: ["ekimi", "tsamali", "tavi_mtkiva", "kargad_var"] }
+      ]
+    },
     /* question words come BEFORE the units whose phrases embed them
      * (რომელი საათია / ეს რა ღირს / სად არის ტუალეტი) — usefulness-first;
      * unit/lesson ids are unchanged, so existing saves keep working */
@@ -369,11 +386,29 @@ window.CURRICULUM = {
         { id: "verbs-3", title: "Living & learning",
           items: ["vtskhovrob", "vmushaob", "vstsavlob", "tsavidet"] }
       ]
+    },
+
+    /* v5 — unit 18: the conversation capstone (reuses question-word
+     * skills from `smalltalk`). Appended only; nothing above changed. */
+    {
+      id: "talking",
+      title: "Talking Together",
+      emoji: "🗨️",
+      description: "May I? Once more, slowly please — phrases that keep a chat going.",
+      lessons: [
+        { id: "talking-1", title: "Polite & kind",
+          items: ["sheidzleba", "gaikhare", "araperia", "didi_madloba"] },
+        { id: "talking-2", title: "Say it again",
+          items: ["kidev_ertkhel", "nela", "tsota", "ras_nishnavs", "gavige"] },
+        { id: "talking-3", title: "Getting to know you",
+          items: ["ramdeni_tslis_khar", "modi", "erti_tsuti", "sitqva"] }
+      ]
     }
   ],
 
   /* ------------------------------------------------------------------ *
-   * Vocabulary — 99 items keyed by id.
+   * Vocabulary — 279 items keyed by id (99 v1 + 99 v3 units + 40 v3/v4
+   * bonus + 26 v5 units + 15 v5 bonus).
    * ------------------------------------------------------------------ */
   vocab: {
 
@@ -662,7 +697,60 @@ window.CURRICULUM = {
     lampa:             { id: "lampa",             ka: "ლამპა",               translit: "lamp'a",               en: "lamp",                     emoji: "💡" },
     divani:            { id: "divani",            ka: "დივანი",              translit: "divani",               en: "sofa",                     emoji: "🛋️" },
     abazana:           { id: "abazana",           ka: "აბაზანა",             translit: "abazana",              en: "bath, bathroom",           emoji: "🛁" },
-    chaidani:          { id: "chaidani",          ka: "ჩაიდანი",             translit: "chaidani",             en: "kettle",                   emoji: "🫖" }
+    chaidani:          { id: "chaidani",          ka: "ჩაიდანი",             translit: "chaidani",             en: "kettle",                   emoji: "🫖" },
+
+    /* ---------------- v5 — "ქართულად!" release: 26 unit items ---------------- */
+
+    /* Unit 17 — My body & health (13). Audio: audioId === id. */
+    tavi:              { id: "tavi",              ka: "თავი",                translit: "tavi",                 en: "head",                     emoji: "👤" },
+    tvali:             { id: "tvali",             ka: "თვალი",               translit: "tvali",                en: "eye",                      emoji: "👁️" },
+    quri:              { id: "quri",              ka: "ყური",                translit: "q'uri",                en: "ear",                      emoji: "👂" },
+    tskhviri:          { id: "tskhviri",          ka: "ცხვირი",              translit: "tskhviri",             en: "nose",                     emoji: "👃" },
+    piri:              { id: "piri",              ka: "პირი",                translit: "p'iri",                en: "mouth",                    emoji: "👄" },
+    kbili:             { id: "kbili",             ka: "კბილი",               translit: "k'bili",               en: "tooth",                    emoji: "🦷" },
+    tma:               { id: "tma",               ka: "თმა",                 translit: "tma",                  en: "hair",                     emoji: "💇" },
+    kheli:             { id: "kheli",             ka: "ხელი",                translit: "kheli",                en: "hand, arm",                emoji: "✋" },
+    pekhi:             { id: "pekhi",             ka: "ფეხი",                translit: "pekhi",                en: "foot, leg",                emoji: "🦶" },
+    ekimi:             { id: "ekimi",             ka: "ექიმი",               translit: "ekimi",                en: "doctor",                   emoji: "🧑‍⚕️" },
+    tsamali:           { id: "tsamali",           ka: "წამალი",              translit: "ts'amali",             en: "medicine",                 emoji: "💊" },
+    tavi_mtkiva:       { id: "tavi_mtkiva",       ka: "თავი მტკივა",         translit: "tavi mt'k'iva",        en: "my head hurts",            emoji: "🤕" },
+    kargad_var:        { id: "kargad_var",        ka: "კარგად ვარ",          translit: "k'argad var",          en: "I'm fine",                 emoji: "💪" },
+
+    /* Unit 18 — Talking together (13). Audio: audioId === id. */
+    sheidzleba:        { id: "sheidzleba",        ka: "შეიძლება?",           translit: "sheidzleba?",          en: "may I?",                   emoji: "🙋" },
+    gaikhare:          { id: "gaikhare",          ka: "გაიხარე",             translit: "gaikhare",             en: "you're welcome",           emoji: "🌷" },
+    araperia:          { id: "araperia",          ka: "არაფერია",            translit: "araperia",             en: "no problem, it's nothing", emoji: "🤗" },
+    didi_madloba:      { id: "didi_madloba",      ka: "დიდი მადლობა",        translit: "didi madloba",         en: "thank you very much",      emoji: "🥰" },
+    kidev_ertkhel:     { id: "kidev_ertkhel",     ka: "კიდევ ერთხელ",        translit: "k'idev ertkhel",       en: "once more, again",         emoji: "🔁" },
+    nela:              { id: "nela",              ka: "ნელა",                translit: "nela",                 en: "slowly",                   emoji: "🐢" },
+    tsota:             { id: "tsota",             ka: "ცოტა",                translit: "tsot'a",               en: "a little",                 emoji: "🤏" },
+    ras_nishnavs:      { id: "ras_nishnavs",      ka: "რას ნიშნავს?",        translit: "ras nishnavs?",        en: "what does it mean?",       emoji: "🧐" },
+    gavige:            { id: "gavige",            ka: "გავიგე!",             translit: "gavige!",              en: "got it! I understood",     emoji: "🙌" },
+    ramdeni_tslis_khar:{ id: "ramdeni_tslis_khar",ka: "რამდენი წლის ხარ?",   translit: "ramdeni ts'lis khar?", en: "how old are you?",         emoji: "🎂" },
+    modi:              { id: "modi",              ka: "მოდი!",               translit: "modi!",                en: "come!",                    emoji: "🤙" },
+    erti_tsuti:        { id: "erti_tsuti",        ka: "ერთი წუთი",           translit: "erti ts'uti",          en: "one moment",               emoji: "⏱️" },
+    sitqva:            { id: "sitqva",            ka: "სიტყვა",              translit: "sit'q'va",             en: "word",                     emoji: "📝" },
+
+    /* ------------- v5 bonus pool (15) — toys, transport & fresh produce
+     * for Word of the Day, the practice mixer and Market day. Not in any
+     * unit; ids appended to C.bonusWords below. Audio: audioId === id.
+     * NOTE: no `banani` vocab item on purpose — the letter-card clip
+     * example-banani stays the only authoritative ბანანი clip. ------------- */
+    burti:             { id: "burti",             ka: "ბურთი",               translit: "burti",                en: "ball",                     emoji: "⚽" },
+    satamasho:         { id: "satamasho",         ka: "სათამაშო",            translit: "satamasho",            en: "toy",                      emoji: "🧸" },
+    velosipedi:        { id: "velosipedi",        ka: "ველოსიპედი",          translit: "velosip'edi",          en: "bicycle",                  emoji: "🚲" },
+    matarebeli:        { id: "matarebeli",        ka: "მატარებელი",          translit: "mat'arebeli",          en: "train",                    emoji: "🚆" },
+    gemi:              { id: "gemi",              ka: "გემი",                translit: "gemi",                 en: "ship",                     emoji: "🚢" },
+    tvitmprinavi:      { id: "tvitmprinavi",      ka: "თვითმფრინავი",        translit: "tvitmprinavi",         en: "airplane",                 emoji: "🛩️" },
+    rveuli:            { id: "rveuli",            ka: "რვეული",              translit: "rveuli",               en: "notebook",                 emoji: "📓" },
+    pankari:           { id: "pankari",           ka: "ფანქარი",             translit: "pankari",              en: "pencil",                   emoji: "🖍️" },
+    limoni:            { id: "limoni",            ka: "ლიმონი",              translit: "limoni",               en: "lemon",                    emoji: "🍋" },
+    pomidori:          { id: "pomidori",          ka: "პომიდორი",            translit: "p'omidori",            en: "tomato",                   emoji: "🍅" },
+    kitri:             { id: "kitri",             ka: "კიტრი",               translit: "k'it'ri",              en: "cucumber",                 emoji: "🥒" },
+    stapilo:           { id: "stapilo",           ka: "სტაფილო",             translit: "st'apilo",             en: "carrot",                   emoji: "🥕" },
+    kartopili:         { id: "kartopili",         ka: "კარტოფილი",           translit: "k'art'opili",          en: "potato",                   emoji: "🥔" },
+    atami:             { id: "atami",             ka: "ატამი",               translit: "at'ami",               en: "peach",                    emoji: "🍑" },
+    mskhali:           { id: "mskhali",           ka: "მსხალი",              translit: "mskhali",              en: "pear",                     emoji: "🍐" }
   },
 
   /* ------------------------------------------------------------------ *
@@ -1111,6 +1199,42 @@ window.CURRICULUM = {
   ],
 
   /* ------------------------------------------------------------------ *
+   * v5 — Georgian UI phrases (GEORGIAN-ONLY AUDIO hard rule: nothing the
+   * app PLAYS is English anymore; English stays on screen as text only).
+   * Replaces the removed English UI-instruction clips. Clip file =
+   * audio/ka/<id>.mp3, same ka-GE voice as the whole corpus.
+   *
+   *   use: "miss"           → auto-played gentle feedback before the
+   *                           correct answer is revealed AND spoken
+   *                           (positive-only contract unchanged)
+   *   use: "gift"           → daily-gift dialog, chains into praise
+   *   use: "locked-speaker" → the read-first 🔒 speaker nudge
+   *   use: "title"          → screen/section titles, tap-to-hear ONLY
+   *                           (never auto-played); each matches its
+   *                           C.strings display string EXACTLY so
+   *                           KA_SPEAK can index it by `ka` text.
+   *
+   * Finish celebrations reuse the `praise` rotation above — there is no
+   * separate "well done" clip anymore.
+   * ------------------------------------------------------------------ */
+  uiKa: [
+    /* feedback — auto-played */
+    { id: "ui-ka-titkmis",            ka: "თითქმის! აი სწორი პასუხი.", translit: "titkmis! ai sts'ori p'asukhi.", en: "Almost! Here is the right one.", use: "miss" },
+    { id: "ui-ka-sachukari-shentvis", ka: "საჩუქარი შენთვის!",         translit: "sachukari shentvis!",           en: "A gift for you!",                use: "gift" },
+    { id: "ui-ka-jer-tsaikitkhe",     ka: "ჯერ წაიკითხე!",             translit: "jer ts'aik'itkhe!",             en: "Read it first!",                 use: "locked-speaker" },
+    /* screen-title clips — tap-to-hear only */
+    { id: "ui-ka-anbani",             ka: "ანბანი",            translit: "anbani",             en: "alphabet",              use: "title" },
+    { id: "ui-ka-kartuli-anbani",     ka: "ქართული ანბანი",    translit: "kartuli anbani",     en: "the Georgian alphabet", use: "title" },
+    { id: "ui-ka-praktika",           ka: "პრაქტიკა",          translit: "p'rakt'ik'a",        en: "practice",              use: "title" },
+    { id: "ui-ka-kitkhva",            ka: "კითხვა",            translit: "k'itkhva",           en: "reading",               use: "title" },
+    { id: "ui-ka-chemi-sagandzuri",   ka: "ჩემი საგანძური",    translit: "chemi sagandzuri",   en: "my treasures",          use: "title" },
+    { id: "ui-ka-chemi-leksikoni",    ka: "ჩემი ლექსიკონი",    translit: "chemi leksik'oni",   en: "my dictionary",         use: "title" },
+    { id: "ui-ka-dghis-sitqva",       ka: "დღის სიტყვა",       translit: "dghis sit'q'va",     en: "word of the day",       use: "title" },
+    { id: "ui-ka-kitkhvis-seirnoba",  ka: "კითხვის სეირნობა",  translit: "k'itkhvis seirnoba", en: "reading stroll",        use: "title" },
+    { id: "ui-ka-tamashebi",          ka: "თამაშები",          translit: "tamashebi",          en: "games",                 use: "title" }
+  ],
+
+  /* ------------------------------------------------------------------ *
    * Audio ids — every speakable thing maps to exactly one bundled clip:
    *   gamarjoba/audio/ka/<audioId>.mp3   (relative path, no network)
    *
@@ -1185,7 +1309,13 @@ window.CURRICULUM = {
     "khe", "qvavili", "baghi", "khidi", "qurdzeni",
     /* v4 — household things (games pool, see C.games) */
     "chika", "kovzi", "changali", "tepshi", "sapone",
-    "sarke", "lampa", "divani", "abazana", "chaidani"
+    "sarke", "lampa", "divani", "abazana", "chaidani",
+    /* v5 — toys & transport */
+    "burti", "satamasho", "velosipedi", "matarebeli",
+    "gemi", "tvitmprinavi", "rveuli", "pankari",
+    /* v5 — fresh produce (also feeds Market day, see C.games.market) */
+    "limoni", "pomidori", "kitri", "stapilo",
+    "kartopili", "atami", "mskhali"
   ],
 
   /* ------------------------------------------------------------------ *
@@ -1285,46 +1415,17 @@ window.CURRICULUM = {
       listLen: 4, stallSize: 8,
       itemIds: ["puri", "qveli", "kvertskhi", "rdze", "shakari", "khachapuri", "khinkali", "vashli",
                 "khili", "tsqali", "chai", "qava", "tsveni", "salati", "supi", "khortsi", "naqini",
-                "limonati", "qurdzeni"]
+                "limonati", "qurdzeni",
+                /* v5 — fresh produce */
+                "limoni", "pomidori", "kitri", "stapilo", "kartopili", "atami", "mskhali"]
     },
     safari: {
       id: "letter-safari", emoji: "🔎", title: "Letter safari",
       gridSize: 16, copies: 3
     }
-  },
-
-  /* ------------------------------------------------------------------ *
-   * Spoken UI instructions — instruction/copy string → bundled English
-   * clip id (audio/ka/<id>.mp3, same folder as everything else; these
-   * clips use a warm English child voice, not the Georgian voice).
-   * A pre-reader hears the RULE first, then the content prompt.
-   * Legacy instruction strings map to the same clips so any un-migrated
-   * view keeps talking.
-   * ------------------------------------------------------------------ */
-  uiAudio: {
-    "Tap what you hear":                     "ui-tap-what-you-hear",
-    "Tap the Georgian word for:":            "ui-pick-georgian-word",
-    "Pick the Georgian word for:":           "ui-pick-georgian-word",  /* legacy */
-    "Match the pairs":                       "ui-match-pairs",
-    "Build the word":                        "ui-build-the-word",
-    "Build what you hear":                   "ui-build-what-you-hear",
-    "Tap the letter you hear":               "ui-tap-letter-you-hear",
-    "What sound does it make?":              "ui-what-sound",
-    "Trace the letter":                      "ui-trace-letter",
-    "Read it — then tap its picture":        "ui-read-the-word",
-    "Read the word":                         "ui-read-the-word",       /* legacy */
-    "Which word says it?":                   "ui-which-word-says-it",
-    "Read it first — then the sound unlocks!": "ui-read-first",
-    "Almost! Here is the right one.":        "ui-almost",
-    "Well done!":                            "ui-well-done",
-    "A gift for you!":                       "ui-your-gift",
-    /* v4 additions — reading expansion + games. Same rule as everything
-     * here: instruction lines stay SILENT unless their line is tapped. */
-    "Which word did you hear?":              "ui-which-word-heard",
-    "Put the words in order":                "ui-words-in-order",
-    "Tap the card to flip it":               "ui-tap-to-flip",
-    "Find it in the room!":                  "ui-find-in-room",
-    "Find it at the market!":                "ui-find-market",
-    "Tap every one you see!":                "ui-tap-all-copies"
   }
+
+  /* v5 — the English spoken-instruction clip map is REMOVED, and with
+   * it the app's last English audio. Instruction lines are now text-only
+   * with a type icon; feedback/gift/locked nudges live in C.uiKa above. */
 };

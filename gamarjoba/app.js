@@ -55,7 +55,10 @@
       /* v4 additions — all monotonic */
       lettersReadDone: [],   // group ids whose "Read with these letters" node was finished
       sprintFlips: 0,        // lifetime Reading-sprint card flips
-      gameRounds: {}         // gameId -> completed rounds/lists, increment-only
+      gameRounds: {},        // gameId -> completed rounds/lists, increment-only
+      /* v5 addition (additive) — the date the daily gift dialog was shown,
+       * so a deep-link day still gets its gift on the next Home visit */
+      giftShownDate: ""
     };
   }
 
@@ -298,15 +301,15 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * Spoken UI instructions (v3, H1) — every .instruction is a button that
-   * replays its own English clip. On render the rule plays first, then
-   * the content prompt (chained on `ended`, 1800ms fallback).
+   * Georgian UI clips (v5 — GEORGIAN-ONLY AUDIO). Feedback, gift and
+   * locked-speaker nudges play short Georgian phrases from C.uiKa by id;
+   * nothing the app plays is English anymore. No speechSynthesis fallback
+   * here — a missing clip just fires thenFn (the content still speaks).
    * ------------------------------------------------------------------ */
 
   var uiClipCache = {};
 
-  function playUiClip(text, thenFn, fallbackMs) {
-    var aid = (C.uiAudio && C.uiAudio[text]) || null;
+  function playUiKa(aid, thenFn, fallbackMs) {
     var fired = false;
     function fireOnce() { if (!fired) { fired = true; if (thenFn) { thenFn(); } } }
     if (!aid || audioBad[aid] || !AUDIO_SET[aid]) { fireOnce(); return; }
@@ -329,25 +332,28 @@
     window.setTimeout(fireOnce, fallbackMs || 1800); // never leave the content prompt unspoken
   }
 
-  /* the one way to put an instruction line on screen: a replayable button */
+  /* v5 — instruction lines are TEXT-ONLY (English is never played; the
+   * old spoken-instruction clips are gone). A small type icon gives
+   * pre-readers a non-text cue for what kind of turn this is:
+   * 👂 hear-type · 👀 read-type · ✋ do-type (match/build/trace/find). */
+  function instructionIcon(text) {
+    if (/\bhear\b/.test(text)) { return '👂'; }
+    if (/^Read it|^Which word says/.test(text)) { return '👀'; }
+    return '✋';
+  }
+
+  /* the one way to put an instruction line on screen: a plain pill.
+   * tabindex -1 keeps the question-to-question keyboard glide (H4);
+   * data-inst keeps the live-region announcement icon-free. */
   function instructionLine(text) {
-    return h('button', {
-      'class': 'instruction',
-      type: 'button',
-      'data-inst': text,
-      'aria-label': text + ' — tap to hear the instruction again',
-      onclick: function () { playUiClip(text); }
-    }, [
-      h('span', { text: text }),
-      h('span', { 'class': 'instruction-speaker', 'aria-hidden': 'true', text: '🔊' })
+    return h('p', { 'class': 'instruction', tabindex: '-1', 'data-inst': text }, [
+      h('span', { 'class': 'inst-icon', 'aria-hidden': 'true', text: instructionIcon(text) }),
+      h('span', { text: text })
     ]);
   }
 
-  /* rule clip first, then the content prompt — skipped if the view is gone */
-  /* Instructions are no longer narrated automatically (users found the
-   * voice-over repetitive) — the content audio plays straight away. Every
-   * instruction line stays tappable to hear the text on demand. */
-  function speakThen(container, text, fn) {
+  /* run fn only while its view is still mounted (guards chained audio) */
+  function ifAlive(container, fn) {
     if (fn && document.body.contains(container)) { fn(); }
   }
 
@@ -427,6 +433,10 @@
   ((C.readingTrack && C.readingTrack.syllables) || []).forEach(function (x) { indexKa(x.ka, x.id); });
   Object.keys(C.audioIds.letters).forEach(function (ch) { indexKa(ch, C.audioIds.letters[ch]); });
   Object.keys(C.audioIds.examples).forEach(function (ka) { indexKa(ka, C.audioIds.examples[ka]); });
+  // v5 — praise + Georgian UI titles join the tap-to-hear index (after
+  // vocab, so a vocab clip always wins over a same-text title clip)
+  (C.praise || []).forEach(function (p) { indexKa(p.ka, p.id); });
+  (C.uiKa || []).forEach(function (u) { indexKa(u.ka, u.id); });
 
   /* one delegated handler — this is the entire tap-to-hear runtime */
   function kaTapActivate(el) { playAudio(el.getAttribute('data-speak-id'), el.getAttribute('data-speak-ka')); }
@@ -780,7 +790,7 @@
     }, [
       emojiBit,
       h('span', {}, [
-        kaSpan(kaLabel), ' · ' + enLabel,
+        kaSpan(kaLabel, null, { speak: true }), ' · ' + enLabel,
         h('span', { 'class': 'entry-sub', text: sub })
       ]),
       h('span', { 'class': 'chevron', 'aria-hidden': 'true', text: '›' })
@@ -921,7 +931,7 @@
         }
       }, [owned ? '✓ In your dictionary' : 'Collect it ✓']);
       sec.appendChild(h('div', { 'class': 'wod-card' }, [
-        h('h2', { 'class': 'wod-title' }, [kaSpan(C.strings.wordOfDay), ' · Word of the day']),
+        h('h2', { 'class': 'wod-title' }, [kaSpan(C.strings.wordOfDay, null, { speak: true }), ' · Word of the day']),
         h('div', { 'class': 'wod-row' }, [
           emojiSpan(w.emoji, w.en, 'wod-emoji'),
           h('span', { 'class': 'wod-ka' }, [kaSpan(w.ka, null, { speak: true, id: w.id })]),
@@ -967,11 +977,18 @@
       var crowned = state.crowns.indexOf(u.id) !== -1;
       var completed = crowned || counts.done === counts.total;
       var isNext = !!next && next.unit.id === u.id;
+      /* v5 — stars at a glance: earned unit stars (lesson bests + exam
+       * best; monotonic, never decreases) over the unit's possible max */
+      var starMax = u.lessons.length * 3 + 3;
+      var starN = state.unitExamStars[u.id] || 0;
+      u.lessons.forEach(function (l) { starN += state.stars[l.id] || 0; });
 
       var bubble = h('button', {
-        'class': 'unit-bubble' + (completed ? ' completed' : '') + (isNext ? ' current' : ''),
+        'class': 'unit-bubble' + (completed ? ' completed' : '') + (isNext ? ' current' : '') +
+          (crowned ? ' node-crowned' : ''),
         type: 'button',
-        'aria-label': 'Unit: ' + u.title + ', ' + counts.done + ' of ' + counts.total + ' steps complete' +
+        'aria-label': 'Unit: ' + u.title + ', ' + counts.done + ' of ' + counts.total + ' steps complete, ' +
+          starN + ' of ' + starMax + ' stars' +
           (crowned ? ', crowned' : '') + (isNext ? ', up next' : ''),
         onclick: (function (unitId) { return function () { navigate('#/unit/' + unitId); }; })(u.id)
       });
@@ -987,7 +1004,10 @@
       var stop = h('div', { 'class': 'unit-stop' }, [
         bubble,
         h('span', { 'class': 'unit-title', text: u.title }),
-        h('span', { 'class': 'unit-sub', text: counts.done + ' / ' + counts.total + ' steps' })
+        h('span', { 'class': 'unit-sub', 'aria-hidden': 'true', text: counts.done + ' / ' + counts.total + ' steps' }),
+        h('span', { 'class': 'unit-star-chip', 'aria-hidden': 'true' }, [
+          h('span', { 'class': 'unit-star-glyph', text: '★' }), ' ' + starN + ' / ' + starMax
+        ])
       ]);
       path.appendChild(h('li', { 'class': 'unit-node' }, [stop]));
     });
@@ -997,6 +1017,24 @@
     sec.appendChild(mark);
 
     setView(sec, 'wide-home');
+
+    /* v5 — a child deep in the course lands on their "Up next" unit
+     * instead of scrolling a 4000px path every visit. Instant (no smooth
+     * scroll — reduced-motion safe); unit #1 keeps the top-of-page hero.
+     * Deferred one tick so it wins over the browser's own post-load
+     * scroll handling on a reload. */
+    if (next && C.units.indexOf(next.unit) > 0) {
+      window.setTimeout(function () {
+        var curBubble = sec.querySelector('.unit-bubble.current');
+        if (curBubble && document.body.contains(curBubble) && curBubble.scrollIntoView) {
+          curBubble.scrollIntoView({ block: 'center', behavior: 'auto' });
+        }
+      }, 0);
+    }
+
+    /* v5 — Baba's daily gift greets on Home only (deep links and mid-lesson
+     * reloads go straight to their exercise; the gift waits right here) */
+    maybeShowDailyGift();
   }
 
   /* ------------------------------------------------------------------ *
@@ -1314,6 +1352,11 @@
     s.area.classList.remove('warn-flash');
     s.optionButtons = [];
     RENDERERS[ex.type](ex, s.area, function (result) { handleResult(s, ex, result); }, s);
+    /* v5 — one soft beat marks "new question" (CSS no-ops under
+     * prefers-reduced-motion) */
+    s.area.classList.remove('ex-enter');
+    void s.area.offsetWidth; // restart the animation
+    s.area.classList.add('ex-enter');
     /* keyboard focus glides question-to-question (H4): land on the
      * instruction, announce rule + prompt, Tab reaches option 1 next */
     var inst = s.area.querySelector('.instruction');
@@ -1492,7 +1535,7 @@
     var finish = h('div', { 'class': 'finish' });
     finish.appendChild(borjgaliSvg('finish-borjgali'));
     finish.appendChild(h('p', { 'class': 'finish-title' }, [
-      kaSpan(C.strings.excellent), ' · Excellent!'
+      kaSpan(C.strings.excellent, null, { speak: true }), ' · Excellent!'
     ]));
 
     if (slotCount > 0) {
@@ -1575,20 +1618,34 @@
         else { renderLessonRoute(s.cfg.lessonId); }
       }
     }, [redoLabel]));
+    /* v5 — a quiet, reward-shaped invitation to the games, right after the
+     * effort (day-1 flow stays single-path until a few stars are in) */
+    if (totalStars() >= 3) {
+      actions.appendChild(h('button', {
+        'class': 'btn btn-ghost btn-block game-invite', type: 'button',
+        'aria-label': 'Play a game — open Games',
+        onclick: function () { navigate('#/games'); }
+      }, [
+        h('span', { 'aria-hidden': 'true', text: '🎲 ' }),
+        kaSpan(C.strings.games, null, { speak: true }),
+        ' · Play a game'
+      ]));
+    }
     finish.appendChild(actions);
 
     s.area.innerHTML = '';
     s.area.appendChild(finish);
+    s.area.classList.remove('ex-enter');
+    void s.area.offsetWidth;
+    s.area.classList.add('ex-enter');
     s.fill.style.width = '100%';
     s.bar.setAttribute('aria-valuenow', '100');
     confettiBurst(finish);
     window.setTimeout(function () {
       // navigated away before the praise fired? stay quiet
       if (!document.body.contains(finish)) { return; }
-      // "Well done!" in the child's known language first, then Georgian praise
-      playUiClip('Well done!', function () {
-        if (document.body.contains(finish)) { playPraise(); }
-      }, 2400 /* the clip runs ~2.1s */);
+      // v5 — the celebration IS the Georgian praise rotation (no English)
+      playPraise();
     }, 600);
     var announceTail;
     if (isPractice) {
@@ -1638,9 +1695,9 @@
     }, 350);
     allButtons.forEach(function (b) { b.disabled = true; });
     markCorrectCard(correctCard);
-    /* miss rule in the child's known language first (pre-readers, v3),
-     * then reveal AND speak the right answer */
-    playUiClip('Almost! Here is the right one.', function () {
+    /* gentle Georgian feedback first (თითქმის! აი სწორი პასუხი.), then
+     * reveal AND speak the right answer — positive-only contract intact */
+    playUiKa('ui-ka-titkmis', function () {
       playItem(word, notifyRevealSpoken);
     }, 4800 /* the clip runs ~4.4s — don't cut it short */);
   }
@@ -1693,7 +1750,7 @@
     var hint = kbdHint();
     if (hint) { container.appendChild(hint); }
     if (s) { s.optionButtons = buttons; }
-    speakThen(container, 'Tap what you hear', function () { playWord(word); });
+    ifAlive(container, function () { playWord(word); });
   }
 
   /* reverse_pick — the FIRST tap on a word card judges (H2), exactly like
@@ -1983,7 +2040,7 @@
     if (s) { s.optionButtons = []; }
     if (!hasMeaning) {
       // "Build what you hear" — say the syllable straight away
-      speakThen(container, instText, function () { playWord(word); });
+      ifAlive(container, function () { playWord(word); });
     }
   }
 
@@ -2019,9 +2076,9 @@
 
   function renderAlphabet() {
     var sec = h('section', { 'class': 'view alphabet-view', role: 'region', 'aria-label': 'Alphabet' });
-    sec.appendChild(h('h1', {}, [kaSpan(C.strings.alphabet), ' · The alphabet']));
+    sec.appendChild(h('h1', {}, [kaSpan(C.strings.alphabet, null, { speak: true }), ' · The alphabet']));
     sec.appendChild(h('p', { 'class': 'alpha-intro' }, [
-      kaSpan(C.strings.georgianAlphabet), ' — ' + ALL_LETTERS.length + ' letters, and every one says exactly one sound.'
+      kaSpan(C.strings.georgianAlphabet, null, { speak: true }), ' — ' + ALL_LETTERS.length + ' letters, and every one says exactly one sound.'
     ]));
 
     var learned = learnedLetterSet();
@@ -2185,7 +2242,7 @@
 
   function renderPractice() {
     var sec = h('section', { 'class': 'view practice-view', role: 'region', 'aria-label': 'Review' });
-    sec.appendChild(h('h1', {}, [kaSpan(C.strings.practice), ' · Review']));
+    sec.appendChild(h('h1', {}, [kaSpan(C.strings.practice, null, { speak: true }), ' · Review']));
 
     var learned = learnedWords();
     var card = h('div', { 'class': 'practice-card' }, [
@@ -2648,7 +2705,7 @@
     var hint = kbdHint();
     if (hint) { container.appendChild(hint); }
     if (s) { s.optionButtons = buttons; }
-    speakThen(container, 'Tap the letter you hear', function () { playLetter(letter); });
+    ifAlive(container, function () { playLetter(letter); });
   }
 
   function renderLetterToSound(ex, container, onResult, s) {
@@ -2723,7 +2780,7 @@
     ]));
     if (s) { s.optionButtons = []; }
     announce('You are writing the letter ' + letter.name + ' — it says ' + letter.translit);
-    speakThen(container, 'Trace the letter', function () { playLetter(letter); });
+    ifAlive(container, function () { playLetter(letter); });
     maybeAutoWatch(tc, letter);
   }
 
@@ -2744,7 +2801,7 @@
         if (!answered) {
           listen.classList.add('anim-shake');
           window.setTimeout(function () { listen.classList.remove('anim-shake'); }, 400);
-          playUiClip('Read it first — then the sound unlocks!');
+          playUiKa('ui-ka-jer-tsaikitkhe'); // ჯერ წაიკითხე! — "Read it first!"
           announce('Read it first — then the sound unlocks!');
           return;
         }
@@ -2849,7 +2906,7 @@
     var hint = kbdHint();
     if (hint) { container.appendChild(hint); }
     if (s) { s.optionButtons = cards; }
-    // instructions are never narrated automatically — tap the line to hear it
+    // instruction lines are text-only (v5) — no clip, no tap-to-hear
   }
 
   /* hear_pick_word (v4) — the word-level sibling of hear_pick_letter.
@@ -2895,7 +2952,7 @@
     var hint = kbdHint();
     if (hint) { container.appendChild(hint); }
     if (s) { s.optionButtons = cards; }
-    speakThen(container, 'Which word did you hear?', function () { playWord(word); });
+    ifAlive(container, function () { playWord(word); });
   }
 
   /* build_phrase (v4) — build_word with whole-word tiles. `pool` = the
@@ -3302,7 +3359,7 @@
   function renderLettersPath() {
     var sec = h('section', { 'class': 'view letters-view', role: 'region', 'aria-label': 'Letters path' });
     sec.appendChild(backLink('Home', '#/home'));
-    sec.appendChild(h('h1', {}, [kaSpan(C.strings.letters), ' · Letters']));
+    sec.appendChild(h('h1', {}, [kaSpan(C.strings.letters, null, { speak: true }), ' · Letters']));
     sec.appendChild(h('p', { 'class': 'alpha-intro', text: 'Meet the letters, trace them, then take a friendly exam — group by group, easy to hard.' }));
     sec.appendChild(h('button', {
       'class': 'btn btn-ghost', type: 'button',
@@ -3380,7 +3437,7 @@
   function renderReadingPath() {
     var sec = h('section', { 'class': 'view reading-view', role: 'region', 'aria-label': 'Reading path' });
     sec.appendChild(backLink('Home', '#/home'));
-    sec.appendChild(h('h1', {}, [kaSpan(C.strings.reading), ' · Reading']));
+    sec.appendChild(h('h1', {}, [kaSpan(C.strings.reading, null, { speak: true }), ' · Reading']));
     sec.appendChild(h('p', { 'class': 'alpha-intro', text: 'Sound out real Georgian — from tiny syllables to long, delicious words.' }));
 
     /* v4 — Reading stroll entry (relaxed, endless, no score; renamed from
@@ -3394,7 +3451,7 @@
     }, [
       h('span', { 'class': 'entry-emoji', 'aria-hidden': 'true', text: '🪁' }),
       h('span', {}, [
-        kaSpan(C.strings.readingSprint), ' · Reading stroll',
+        kaSpan(C.strings.readingSprint, null, { speak: true }), ' · Reading stroll',
         h('span', { 'class': 'entry-sub', text: 'Flip through everything you can read — no rush, no score' })
       ]),
       h('span', { 'class': 'chevron', 'aria-hidden': 'true', text: '›' })
@@ -3566,7 +3623,7 @@
       counter.textContent = '';
       area.innerHTML = '';
       var fin = h('div', { 'class': 'finish' }, [
-        h('p', { 'class': 'finish-title' }, [kaSpan(C.strings.excellent), ' · Excellent!']),
+        h('p', { 'class': 'finish-title' }, [kaSpan(C.strings.excellent, null, { speak: true }), ' · Excellent!']),
         h('p', { 'class': 'finish-note', text: 'You traced all ' + group.letters.length + ' letters!' })
       ]);
       var actions = h('div', { 'class': 'finish-actions' });
@@ -3993,7 +4050,7 @@
   function renderGames() {
     var sec = h('section', { 'class': 'view games-view', role: 'region', 'aria-label': 'Games' });
     sec.appendChild(backLink('Home', '#/home'));
-    sec.appendChild(h('h1', {}, [kaSpan(C.strings.games), ' · Games']));
+    sec.appendChild(h('h1', {}, [kaSpan(C.strings.games, null, { speak: true }), ' · Games']));
     sec.appendChild(h('p', { 'class': 'alpha-intro', text: 'Just for fun — everything you find is a little extra XP. Nothing to lose, ever.' }));
     var g = C.games || {};
     if (g.findHome) {
@@ -4120,7 +4177,7 @@
         scene.appendChild(row);
       });
       sceneBox.appendChild(scene);
-      speakThen(sceneBox, 'Find it in the room!', function () { playWord(word); });
+      ifAlive(sceneBox, function () { playWord(word); });
     }
 
     setView(sec, '');
@@ -4401,7 +4458,7 @@
         grid.appendChild(btn);
       });
       gridBox.appendChild(grid);
-      speakThen(gridBox, 'Tap every one you see!', function () { playLetter(target); });
+      ifAlive(gridBox, function () { playLetter(target); });
       announce('Find every ' + target.name);
     }
 
@@ -4422,9 +4479,11 @@
     return { lessons: lessons, unitEx: unitEx, letters: letters, reading: reading, practice: state.practiceStars || 0 };
   }
 
+  /* title: a string, or an array of nodes/strings (v5 — lets the heading
+   * carry a tappable Georgian kaSpan) */
   function treasureSection(title, children) {
     var box = h('div', { 'class': 'treasure-section' });
-    box.appendChild(h('h2', { text: title }));
+    box.appendChild(typeof title === 'string' ? h('h2', { text: title }) : h('h2', {}, title));
     (children || []).forEach(function (c) { if (c) { box.appendChild(c); } });
     return box;
   }
@@ -4432,7 +4491,7 @@
   function renderTreasures() {
     var sec = h('section', { 'class': 'view treasures-view', role: 'region', 'aria-label': 'My treasures' });
     sec.appendChild(backLink('Home', '#/home'));
-    sec.appendChild(h('h1', {}, ['🏆 ', kaSpan(C.strings.treasures), ' · My treasures']));
+    sec.appendChild(h('h1', {}, ['🏆 ', kaSpan(C.strings.treasures, null, { speak: true }), ' · My treasures']));
     sec.appendChild(h('p', { 'class': 'alpha-intro', text: 'Everything here only ever grows. ☀️ Day ' +
       Math.max(1, state.daysPlayed.length) + ' of your adventure.' }));
 
@@ -4497,22 +4556,88 @@
       album
     ]));
 
-    /* my dictionary */
-    var dict = h('div', { 'class': 'dict-list' });
-    if (state.wodCollected.length) {
-      state.wodCollected.forEach(function (id) {
-        var w = C.vocab[id];
-        if (!w) { return; }
-        dict.appendChild(h('div', { 'class': 'dict-row' }, [
-          emojiSpan(w.emoji, '', 'dict-emoji'),
-          h('span', { 'class': 'dict-word' }, [kaSpan(w.ka, null, { speak: true, id: w.id }), h('span', { 'class': 'entry-sub', text: w.translit + ' — ' + w.en })]),
-          audioBtn(w.id, w.ka, { small: true, label: 'Hear ' + w.en })
-        ]));
+    /* my dictionary (v5) — grouped under unit headers and filterable by a
+     * tappable chip row (kids can't type a search, but they can tap 🥟) */
+    var UNIT_OF_WORD = {};
+    C.units.forEach(function (u) {
+      u.lessons.forEach(function (l) {
+        l.items.forEach(function (id) { if (!UNIT_OF_WORD[id]) { UNIT_OF_WORD[id] = u; } });
       });
-    } else {
-      dict.appendChild(h('p', { 'class': 'treasure-line', text: 'Collect the word of the day on the home screen to start your dictionary!' }));
+    });
+    var BONUS_GROUP = { id: '_bonus', emoji: '🎁', title: 'Bonus words' };
+    var collected = state.wodCollected.filter(function (id) { return !!C.vocab[id]; });
+    var dictGroups = [];
+    var byGroup = {};
+    collected.forEach(function (id) {
+      var g = UNIT_OF_WORD[id] || BONUS_GROUP;
+      if (!byGroup[g.id]) { byGroup[g.id] = []; dictGroups.push(g); }
+      byGroup[g.id].push(C.vocab[id]);
+    });
+    dictGroups.sort(function (a, b) {
+      var ai = a.id === '_bonus' ? C.units.length : C.units.indexOf(a);
+      var bi = b.id === '_bonus' ? C.units.length : C.units.indexOf(b);
+      return ai - bi;
+    });
+
+    var dictFilter = 'all';
+    var dictBox = h('div', { 'class': 'dict-groups' });
+
+    function dictRow(w) {
+      return h('div', { 'class': 'dict-row' }, [
+        emojiSpan(w.emoji, '', 'dict-emoji'),
+        h('span', { 'class': 'dict-word' }, [kaSpan(w.ka, null, { speak: true, id: w.id }), h('span', { 'class': 'entry-sub', text: w.translit + ' — ' + w.en })]),
+        audioBtn(w.id, w.ka, { small: true, label: 'Hear ' + w.en })
+      ]);
     }
-    sec.appendChild(treasureSection('📖 ' + C.strings.dictionary + ' · My dictionary — ' + state.wodCollected.length, [dict]));
+
+    function renderDict() {
+      dictBox.innerHTML = '';
+      if (!collected.length) {
+        dictBox.appendChild(h('p', { 'class': 'treasure-line', text: 'Collect the word of the day on the home screen to start your dictionary!' }));
+        return;
+      }
+      dictGroups.forEach(function (g) {
+        if (dictFilter !== 'all' && dictFilter !== g.id) { return; }
+        var words = byGroup[g.id];
+        dictBox.appendChild(h('h3', { 'class': 'dict-group-title' }, [
+          h('span', { 'aria-hidden': 'true', text: g.emoji + ' ' }), g.title + ' — ' + words.length
+        ]));
+        var list = h('div', { 'class': 'dict-list' });
+        words.forEach(function (w) { list.appendChild(dictRow(w)); });
+        dictBox.appendChild(list);
+      });
+    }
+
+    var filterRow = null;
+    if (dictGroups.length > 1) {
+      filterRow = h('div', { 'class': 'dict-filter-row', role: 'group', 'aria-label': 'Show words from' });
+      var makeChip = function (key, label, aria) {
+        var chipBtn = h('button', {
+          'class': 'dict-chip', type: 'button',
+          'aria-pressed': key === dictFilter ? 'true' : 'false',
+          'aria-label': aria
+        }, [label]);
+        chipBtn.addEventListener('click', function () {
+          dictFilter = key;
+          Array.prototype.forEach.call(filterRow.querySelectorAll('.dict-chip'), function (c) {
+            c.setAttribute('aria-pressed', c === chipBtn ? 'true' : 'false');
+          });
+          renderDict();
+        });
+        return chipBtn;
+      };
+      filterRow.appendChild(makeChip('all', 'All', 'Show all collected words'));
+      dictGroups.forEach(function (g) {
+        // don't double the word "words" for groups already named that way ("Bonus words")
+        var chipAria = /\bwords?$/i.test(g.title) ? 'Show only ' + g.title : 'Show only ' + g.title + ' words';
+        filterRow.appendChild(makeChip(g.id, g.emoji, chipAria));
+      });
+    }
+    renderDict();
+
+    sec.appendChild(treasureSection(
+      ['📖 ', kaSpan(C.strings.dictionary, null, { speak: true }), ' · My dictionary — ' + collected.length],
+      [filterRow, dictBox]));
 
     setView(sec, '');
   }
@@ -4549,7 +4674,7 @@
       }
     }
 
-    dialog.appendChild(h('p', { 'class': 'finish-title gift-title' }, [kaSpan(C.vocab.gamarjoba.ka + '!'), ' · Good to see you!']));
+    dialog.appendChild(h('p', { 'class': 'finish-title gift-title' }, [kaSpan(C.vocab.gamarjoba.ka + '!', null, { speak: true }), ' · Good to see you!']));
     dialog.appendChild(h('p', { 'class': 'gift-day', text: 'Day ' + day + '! Baba’s gift for you:' }));
     if (st) {
       dialog.appendChild(h('div', { 'class': 'gift-sticker' }, [
@@ -4577,9 +4702,9 @@
     confettiBurst(dialog);
     okBtn.focus();
     announce('Day ' + day + ' of your adventure! ' + (st ? 'New sticker: ' + st.name : 'Golden borjgali day, plus ten XP') + '.');
-    playUiClip('A gift for you!', function () {
+    playUiKa('ui-ka-sachukari-shentvis', function () { // საჩუქარი შენთვის!
       if (document.body.contains(dialog)) { playPraise(); }
-    });
+    }, 3100 /* the clip runs ~2.7s */);
   }
 
   /* record today's visit; true when this is the first visit of the day.
@@ -4591,6 +4716,17 @@
     state.daysPlayed.push(today); // append-only; gaps are nobody's business
     save();
     return true;
+  }
+
+  /* v5 — the gift dialog auto-opens on HOME only, once per day. A child
+   * who reloads mid-lesson meets their exercise, not a modal; the gift
+   * simply waits for the next Home visit (it is never taken away). */
+  function maybeShowDailyGift() {
+    var today = todayKey();
+    if (state.giftShownDate === today) { return; }
+    state.giftShownDate = today;
+    save();
+    showDailyGift();
   }
 
   /* ------------------------------------------------------------------ *
@@ -4618,9 +4754,14 @@
     }
   });
 
+  /* the SPA owns its scroll (top on navigate, "Up next" on home) — stop
+   * the browser restoring a stale position over it on reload */
+  try {
+    if ('scrollRestoration' in window.history) { window.history.scrollRestoration = 'manual'; }
+  } catch (e) {}
+
   updateChips();
-  var firstVisitToday = recordTodayPlayed(); // before route(): "Day N" must be current on first render
-  route();
-  if (firstVisitToday) { showDailyGift(); }
+  recordTodayPlayed(); // before route(): "Day N" must be current on first render
+  route(); // the daily gift opens from renderHome only (v5) — never over a deep link
 
 })();

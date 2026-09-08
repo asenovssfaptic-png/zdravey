@@ -20,7 +20,7 @@ import Screen from "../../components/ui/Screen";
 import { colors, minTarget, radii, spacing, type } from "../../constants/theme";
 import { CURRICULUM } from "../../content/generated/curriculum";
 import { announce, useToast } from "../../lib/announce";
-import { playItem, playPraise, playUi, playWord, stopAll } from "../../lib/audio";
+import { playItem, playPraise, playUiKa, playWord, stopAll } from "../../lib/audio";
 import { shuffle } from "../../lib/exercise-engine";
 import { recordGameRound } from "../../lib/rewards";
 import { addXp, useProgress } from "../../lib/store";
@@ -168,7 +168,7 @@ export default function MarketScreen(): React.ReactElement {
       setFoundIds((f) => [...f, currentWord.id]); // the slot fills anyway
       awardXp(1);
       announce(`Almost! Here it is: ${currentWord.ka} — ${currentWord.en}`);
-      playUi("Almost! Here is the right one.", 4800)
+      playUiKa("ui-ka-titkmis", 3600)
         .then(() => playItem(currentWord))
         .then(() => goOn(1400, turn))
         .catch(() => {});

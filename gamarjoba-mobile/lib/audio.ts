@@ -4,8 +4,9 @@
  * keep that). Everything resolves when playback finishes (via
  * playbackStatusUpdate.didJustFinish) with a per-call fallback timeout so
  * a broken/blocked asset never stalls a session. A missing/unknown id is a
- * silent no-op — all 340 clips are bundled, so there is no speechSynthesis
- * fallback (deliberate parity deviation, see blueprint §2).
+ * silent no-op — all 373 clips are bundled, so there is no TTS fallback
+ * (deliberate parity deviation, see blueprint §2). GEORGIAN-ONLY AUDIO:
+ * every bundled clip is Georgian; English never plays.
  *
  * SFX live in lib/sfx.ts on a second player so a chime never truncates
  * speech.
@@ -145,10 +146,13 @@ export function playPraise(): Praise | null {
   return p;
 }
 
-/** Spoken UI instruction (English), looked up by its exact on-screen text
- * via CURRICULUM.uiAudio. No-op when no clip exists. */
-export function playUi(text: string, fallbackMs = 1800): Promise<void> {
-  return playId(C.uiAudio[text] ?? null, fallbackMs);
+/** Georgian UI clip ids (feedback/gift/nudge/title) — the only spoken UI.
+ * Everything audible in the app is Georgian; English is on-screen only. */
+export type UiKaId = Extract<AudioId, `ui-ka-${string}`>;
+
+/** Play a Georgian UI clip by id (see CURRICULUM.uiKa). */
+export function playUiKa(id: UiKaId, fallbackMs = 4000): Promise<void> {
+  return playId(id, fallbackMs);
 }
 
 export interface SoundOutHandle {

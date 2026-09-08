@@ -273,6 +273,47 @@ export type AudioId =
   | "divani"
   | "abazana"
   | "chaidani"
+  | "tavi"
+  | "tvali"
+  | "quri"
+  | "tskhviri"
+  | "piri"
+  | "kbili"
+  | "tma"
+  | "kheli"
+  | "pekhi"
+  | "ekimi"
+  | "tsamali"
+  | "tavi_mtkiva"
+  | "kargad_var"
+  | "sheidzleba"
+  | "gaikhare"
+  | "araperia"
+  | "didi_madloba"
+  | "kidev_ertkhel"
+  | "nela"
+  | "tsota"
+  | "ras_nishnavs"
+  | "gavige"
+  | "ramdeni_tslis_khar"
+  | "modi"
+  | "erti_tsuti"
+  | "sitqva"
+  | "burti"
+  | "satamasho"
+  | "velosipedi"
+  | "matarebeli"
+  | "gemi"
+  | "tvitmprinavi"
+  | "rveuli"
+  | "pankari"
+  | "limoni"
+  | "pomidori"
+  | "kitri"
+  | "stapilo"
+  | "kartopili"
+  | "atami"
+  | "mskhali"
   | "syl-ma"
   | "syl-sa"
   | "syl-di"
@@ -306,6 +347,18 @@ export type AudioId =
   | "praise-didebulia"
   | "praise-mshvenieria"
   | "praise-bravo"
+  | "ui-ka-titkmis"
+  | "ui-ka-sachukari-shentvis"
+  | "ui-ka-jer-tsaikitkhe"
+  | "ui-ka-anbani"
+  | "ui-ka-kartuli-anbani"
+  | "ui-ka-praktika"
+  | "ui-ka-kitkhva"
+  | "ui-ka-chemi-sagandzuri"
+  | "ui-ka-chemi-leksikoni"
+  | "ui-ka-dghis-sitqva"
+  | "ui-ka-kitkhvis-seirnoba"
+  | "ui-ka-tamashebi"
   | "example-alubali"
   | "example-banani"
   | "example-zghva"
@@ -321,27 +374,7 @@ export type AudioId =
   | "example-chika"
   | "example-khe"
   | "example-jibe"
-  | "example-haeri"
-  | "ui-which-word-heard"
-  | "ui-words-in-order"
-  | "ui-tap-to-flip"
-  | "ui-find-in-room"
-  | "ui-find-market"
-  | "ui-tap-all-copies"
-  | "ui-almost"
-  | "ui-build-the-word"
-  | "ui-build-what-you-hear"
-  | "ui-match-pairs"
-  | "ui-pick-georgian-word"
-  | "ui-read-first"
-  | "ui-read-the-word"
-  | "ui-tap-letter-you-hear"
-  | "ui-tap-what-you-hear"
-  | "ui-trace-letter"
-  | "ui-well-done"
-  | "ui-what-sound"
-  | "ui-which-word-says-it"
-  | "ui-your-gift";
+  | "example-haeri";
 
 export const AUDIO_ASSETS: Record<AudioId, number> = {
   "letter-a": require("../../assets/audio/ka/letter-a.mp3"),
@@ -615,6 +648,47 @@ export const AUDIO_ASSETS: Record<AudioId, number> = {
   "divani": require("../../assets/audio/ka/divani.mp3"),
   "abazana": require("../../assets/audio/ka/abazana.mp3"),
   "chaidani": require("../../assets/audio/ka/chaidani.mp3"),
+  "tavi": require("../../assets/audio/ka/tavi.mp3"),
+  "tvali": require("../../assets/audio/ka/tvali.mp3"),
+  "quri": require("../../assets/audio/ka/quri.mp3"),
+  "tskhviri": require("../../assets/audio/ka/tskhviri.mp3"),
+  "piri": require("../../assets/audio/ka/piri.mp3"),
+  "kbili": require("../../assets/audio/ka/kbili.mp3"),
+  "tma": require("../../assets/audio/ka/tma.mp3"),
+  "kheli": require("../../assets/audio/ka/kheli.mp3"),
+  "pekhi": require("../../assets/audio/ka/pekhi.mp3"),
+  "ekimi": require("../../assets/audio/ka/ekimi.mp3"),
+  "tsamali": require("../../assets/audio/ka/tsamali.mp3"),
+  "tavi_mtkiva": require("../../assets/audio/ka/tavi_mtkiva.mp3"),
+  "kargad_var": require("../../assets/audio/ka/kargad_var.mp3"),
+  "sheidzleba": require("../../assets/audio/ka/sheidzleba.mp3"),
+  "gaikhare": require("../../assets/audio/ka/gaikhare.mp3"),
+  "araperia": require("../../assets/audio/ka/araperia.mp3"),
+  "didi_madloba": require("../../assets/audio/ka/didi_madloba.mp3"),
+  "kidev_ertkhel": require("../../assets/audio/ka/kidev_ertkhel.mp3"),
+  "nela": require("../../assets/audio/ka/nela.mp3"),
+  "tsota": require("../../assets/audio/ka/tsota.mp3"),
+  "ras_nishnavs": require("../../assets/audio/ka/ras_nishnavs.mp3"),
+  "gavige": require("../../assets/audio/ka/gavige.mp3"),
+  "ramdeni_tslis_khar": require("../../assets/audio/ka/ramdeni_tslis_khar.mp3"),
+  "modi": require("../../assets/audio/ka/modi.mp3"),
+  "erti_tsuti": require("../../assets/audio/ka/erti_tsuti.mp3"),
+  "sitqva": require("../../assets/audio/ka/sitqva.mp3"),
+  "burti": require("../../assets/audio/ka/burti.mp3"),
+  "satamasho": require("../../assets/audio/ka/satamasho.mp3"),
+  "velosipedi": require("../../assets/audio/ka/velosipedi.mp3"),
+  "matarebeli": require("../../assets/audio/ka/matarebeli.mp3"),
+  "gemi": require("../../assets/audio/ka/gemi.mp3"),
+  "tvitmprinavi": require("../../assets/audio/ka/tvitmprinavi.mp3"),
+  "rveuli": require("../../assets/audio/ka/rveuli.mp3"),
+  "pankari": require("../../assets/audio/ka/pankari.mp3"),
+  "limoni": require("../../assets/audio/ka/limoni.mp3"),
+  "pomidori": require("../../assets/audio/ka/pomidori.mp3"),
+  "kitri": require("../../assets/audio/ka/kitri.mp3"),
+  "stapilo": require("../../assets/audio/ka/stapilo.mp3"),
+  "kartopili": require("../../assets/audio/ka/kartopili.mp3"),
+  "atami": require("../../assets/audio/ka/atami.mp3"),
+  "mskhali": require("../../assets/audio/ka/mskhali.mp3"),
   "syl-ma": require("../../assets/audio/ka/syl-ma.mp3"),
   "syl-sa": require("../../assets/audio/ka/syl-sa.mp3"),
   "syl-di": require("../../assets/audio/ka/syl-di.mp3"),
@@ -648,6 +722,18 @@ export const AUDIO_ASSETS: Record<AudioId, number> = {
   "praise-didebulia": require("../../assets/audio/ka/praise-didebulia.mp3"),
   "praise-mshvenieria": require("../../assets/audio/ka/praise-mshvenieria.mp3"),
   "praise-bravo": require("../../assets/audio/ka/praise-bravo.mp3"),
+  "ui-ka-titkmis": require("../../assets/audio/ka/ui-ka-titkmis.mp3"),
+  "ui-ka-sachukari-shentvis": require("../../assets/audio/ka/ui-ka-sachukari-shentvis.mp3"),
+  "ui-ka-jer-tsaikitkhe": require("../../assets/audio/ka/ui-ka-jer-tsaikitkhe.mp3"),
+  "ui-ka-anbani": require("../../assets/audio/ka/ui-ka-anbani.mp3"),
+  "ui-ka-kartuli-anbani": require("../../assets/audio/ka/ui-ka-kartuli-anbani.mp3"),
+  "ui-ka-praktika": require("../../assets/audio/ka/ui-ka-praktika.mp3"),
+  "ui-ka-kitkhva": require("../../assets/audio/ka/ui-ka-kitkhva.mp3"),
+  "ui-ka-chemi-sagandzuri": require("../../assets/audio/ka/ui-ka-chemi-sagandzuri.mp3"),
+  "ui-ka-chemi-leksikoni": require("../../assets/audio/ka/ui-ka-chemi-leksikoni.mp3"),
+  "ui-ka-dghis-sitqva": require("../../assets/audio/ka/ui-ka-dghis-sitqva.mp3"),
+  "ui-ka-kitkhvis-seirnoba": require("../../assets/audio/ka/ui-ka-kitkhvis-seirnoba.mp3"),
+  "ui-ka-tamashebi": require("../../assets/audio/ka/ui-ka-tamashebi.mp3"),
   "example-alubali": require("../../assets/audio/ka/example-alubali.mp3"),
   "example-banani": require("../../assets/audio/ka/example-banani.mp3"),
   "example-zghva": require("../../assets/audio/ka/example-zghva.mp3"),
@@ -664,26 +750,6 @@ export const AUDIO_ASSETS: Record<AudioId, number> = {
   "example-khe": require("../../assets/audio/ka/example-khe.mp3"),
   "example-jibe": require("../../assets/audio/ka/example-jibe.mp3"),
   "example-haeri": require("../../assets/audio/ka/example-haeri.mp3"),
-  "ui-which-word-heard": require("../../assets/audio/ka/ui-which-word-heard.mp3"),
-  "ui-words-in-order": require("../../assets/audio/ka/ui-words-in-order.mp3"),
-  "ui-tap-to-flip": require("../../assets/audio/ka/ui-tap-to-flip.mp3"),
-  "ui-find-in-room": require("../../assets/audio/ka/ui-find-in-room.mp3"),
-  "ui-find-market": require("../../assets/audio/ka/ui-find-market.mp3"),
-  "ui-tap-all-copies": require("../../assets/audio/ka/ui-tap-all-copies.mp3"),
-  "ui-almost": require("../../assets/audio/ka/ui-almost.mp3"),
-  "ui-build-the-word": require("../../assets/audio/ka/ui-build-the-word.mp3"),
-  "ui-build-what-you-hear": require("../../assets/audio/ka/ui-build-what-you-hear.mp3"),
-  "ui-match-pairs": require("../../assets/audio/ka/ui-match-pairs.mp3"),
-  "ui-pick-georgian-word": require("../../assets/audio/ka/ui-pick-georgian-word.mp3"),
-  "ui-read-first": require("../../assets/audio/ka/ui-read-first.mp3"),
-  "ui-read-the-word": require("../../assets/audio/ka/ui-read-the-word.mp3"),
-  "ui-tap-letter-you-hear": require("../../assets/audio/ka/ui-tap-letter-you-hear.mp3"),
-  "ui-tap-what-you-hear": require("../../assets/audio/ka/ui-tap-what-you-hear.mp3"),
-  "ui-trace-letter": require("../../assets/audio/ka/ui-trace-letter.mp3"),
-  "ui-well-done": require("../../assets/audio/ka/ui-well-done.mp3"),
-  "ui-what-sound": require("../../assets/audio/ka/ui-what-sound.mp3"),
-  "ui-which-word-says-it": require("../../assets/audio/ka/ui-which-word-says-it.mp3"),
-  "ui-your-gift": require("../../assets/audio/ka/ui-your-gift.mp3"),
 };
 
 export const SFX_ASSETS = {

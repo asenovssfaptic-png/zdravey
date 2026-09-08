@@ -24,7 +24,7 @@ export default function GamesScreen(): React.ReactElement {
     <Screen>
       <BackLink label="Home" href="/" />
       <View style={styles.titleRow}>
-        <KaText text={C.strings.games} size={type.h1} />
+        <KaText text={C.strings.games} size={type.h1} speak />
         <Text style={styles.h1}> · Games</Text>
       </View>
       <Text style={styles.intro}>

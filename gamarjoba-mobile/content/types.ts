@@ -111,6 +111,17 @@ export interface Praise {
   en: string;
 }
 
+/** Georgian UI clip (feedback / gift / locked-speaker nudges and
+ * tap-to-hear screen titles). `id` is also the bundled clip's AudioId.
+ * Everything audible in the app is Georgian; `en` is on-screen text only. */
+export interface UiKaItem {
+  id: string;
+  ka: string;
+  translit: string;
+  en: string;
+  use: "miss" | "gift" | "locked-speaker" | "title";
+}
+
 export interface Sticker {
   id: string;
   emoji: string;
@@ -150,10 +161,10 @@ export interface Curriculum {
   lettersPath: { groups: LettersGroup[] };
   readingTrack: { syllables: Syllable[]; extras: VocabItem[]; steps: ReadingStep[] };
   praise: Praise[];
+  uiKa: UiKaItem[];
   audioIds: { letters: Record<string, string>; examples: Record<string, string> };
   bonusWords: string[];
   unitExamRecipe: RecipeItem[];
   stickers: Sticker[];
   games: GamesConfig;
-  uiAudio: Record<string, string>;
 }

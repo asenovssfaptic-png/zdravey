@@ -1150,8 +1150,10 @@ main {
  * card, treasures & sticker album, daily gift, word of the day.
  * ------------------------------------------------------------------ */
 
-/* every instruction is a replayable button now (H1) */
-button.instruction {
+/* v5 — instruction lines are text-only pills (the English instruction
+ * audio is gone); the leading icon (👂 hear / 👀 read / ✋ do) is the
+ * pre-reader's cue for what kind of turn this is */
+p.instruction {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1161,8 +1163,10 @@ button.instruction {
   border-radius: 12px;
   text-align: center;
 }
-button.instruction:hover { background: var(--accent-tint); }
-.instruction-speaker { font-size: 16px; }
+.inst-icon { font-size: 18px; }
+/* the session focuses the pill each question (keyboard glide, H4) —
+ * keep the ring for keyboard users only, as the old button did */
+p.instruction:focus:not(:focus-visible) { outline: none; }
 
 /* keyboard-only tip under option grids (L5) */
 .kbd-hint {
@@ -1548,6 +1552,69 @@ button.instruction:hover { background: var(--accent-tint); }
 @media (max-width: 420px) {
   .stall-grid, .safari-grid { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* ------------------------------------------------------------------ *
+ * v5 — ქართულად! release: exercise crossfade, home star chips,
+ * dictionary groups & filter chips, finish-screen game invite.
+ * ------------------------------------------------------------------ */
+
+/* one soft beat marks "new question" — skipped under reduced motion */
+@media (prefers-reduced-motion: no-preference) {
+  .exercise-area.ex-enter { animation: ex-in 280ms ease-out; }
+}
+@keyframes ex-in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+
+/* home path — unit stars at a glance (#8A6206 on the page bg: 5.1:1 AA;
+ * the bubble's aria-label carries the same count for screen readers) */
+.unit-star-chip {
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #8A6206;
+  text-align: center;
+}
+/* crowned units wear a gold ring */
+.unit-bubble.node-crowned .ring .ring-fill.done { stroke: var(--gold); }
+.unit-bubble.node-crowned .bubble-face { box-shadow: 0 0 0 4px rgba(200, 155, 60, .3), var(--shadow); }
+
+/* dictionary — group headers + tap-to-filter chips (44px targets) */
+.dict-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+.dict-chip {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  box-shadow: var(--shadow);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.dict-chip[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent-deep);
+}
+.dict-group-title {
+  margin: 14px 0 4px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+/* finish screen — quiet game invitation under Continue/Redo */
+.game-invite { font-weight: 700; }
 
 /* ------------------------------------------------------------------ *
  * Reduced motion: state changes stay instant & visible

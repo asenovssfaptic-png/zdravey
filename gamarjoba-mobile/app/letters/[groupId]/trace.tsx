@@ -106,7 +106,7 @@ export default function TraceScreen(): React.ReactElement {
         <BackLink label="Letters" href="/letters" />
         <View style={styles.finishWrap}>
           <View style={styles.finishRow}>
-            <KaText text={CURRICULUM.strings.excellent} size={type.h1} />
+            <KaText text={CURRICULUM.strings.excellent} size={type.h1} speak />
             <Text style={styles.finishTitle}> · Excellent!</Text>
           </View>
           <Text style={styles.finishNote}>

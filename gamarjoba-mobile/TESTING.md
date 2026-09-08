@@ -1,9 +1,16 @@
 # Testing Gamarjoba! (mobile)
 
 The native iOS + Android app for **Gamarjoba!** — Expo SDK 57 / React
-Native 0.86 / expo-router. Fully offline: all 340 audio clips, the
-curriculum, stroke data and SFX are bundled; there is no backend, no
-account, no analytics, no network call at runtime.
+Native 0.86 / expo-router. Fully offline: all 373 audio clips, the
+curriculum (18 units), stroke data and SFX are bundled; there is no
+backend, no account, no analytics, no network call at runtime.
+
+**Georgian-only audio** (hard rule): the app never plays English speech.
+English exists on screen as text only; everything audible is Georgian —
+vocab clips, praise, and the `uiKa` feedback/gift/nudge clips
+(`ui-ka-*`). Instruction lines are plain text pills (👂/👀/✋ icon), with
+no speaker or press handler. The content test suite fails if any
+`ui-*` clip that is not `ui-ka-*` ever reappears in the bundle.
 
 ## 1. Prerequisites
 
@@ -48,6 +55,10 @@ the whole app runs in Expo Go:
 - **Positive-only**: get answers wrong on purpose — the app must only ever
   reveal + speak the right answer, re-queue a gentle retry, and still
   award ≥1 star on exams. No hearts, timers, locks, or failure screens.
+- **Georgian-only audio**: answer wrong, finish a lesson, open the daily
+  gift, tap a locked 🔒 speaker — everything you hear must be Georgian
+  (თითქმის…, praise, საჩუქარი შენთვის!, ჯერ წაიკითხე!). No English audio
+  anywhere.
 - **Offline**: enable airplane mode — everything must keep working.
 
 ## 4. Store builds with EAS

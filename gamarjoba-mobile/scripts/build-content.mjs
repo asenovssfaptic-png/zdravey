@@ -4,12 +4,14 @@
  * content. This script evaluates its plain-script globals (data.js,
  * audio-map.js, strokes.js) in a vm sandbox, validates every cross
  * reference, then emits typed TypeScript into content/generated/, copies
- * the 340 bundled mp3 clips into assets/audio/ka/, and synthesizes the
+ * the bundled mp3 clips into assets/audio/ka/, and synthesizes the
  * three SFX WAVs (the web app used a WebAudio oscillator; native bundles
  * real files instead).
  *
  * Node >= 22, ESM, zero dependencies. Fails loudly (exit 1) on any
  * missing id / missing file so content drift is caught at build time.
+ * Stale files in assets/audio/ka/ (e.g. removed English ui-* clips) are
+ * deleted so the dir always mirrors the manifest exactly.
  *
  * Run: npm run build:content
  */
@@ -147,9 +149,13 @@ for (const l of allLetters) {
   else if (!audioSet.has(aid)) fail(`letter ${l.ka} audio id "${aid}" not in AUDIO_FILES`);
 }
 
-// uiAudio / praise / examples ids present in AUDIO_FILES
-for (const [text, aid] of Object.entries(C.uiAudio)) {
-  if (!audioSet.has(aid)) fail(`uiAudio "${text}" -> "${aid}" not in AUDIO_FILES`);
+// uiKa / praise / examples ids present in AUDIO_FILES
+for (const u of C.uiKa) {
+  if (!audioSet.has(u.id)) fail(`uiKa "${u.ka}" -> "${u.id}" not in AUDIO_FILES`);
+}
+// Georgian-only audio (hard rule): no English ui clip may ever return
+for (const id of AUDIO_FILES) {
+  if (/^ui-(?!ka-)/.test(id)) fail(`English ui clip in AUDIO_FILES: "${id}" (Georgian-only audio rule)`);
 }
 for (const p of C.praise) {
   if (!audioSet.has(p.id)) fail(`praise "${p.id}" not in AUDIO_FILES`);
@@ -308,6 +314,6 @@ console.log(`  reading track:  ${C.readingTrack.steps.length} steps, ${C.reading
 console.log(`  games:          ${Object.keys(C.games).length}`);
 console.log(`  stickers:       ${C.stickers.length}`);
 console.log(`  praise clips:   ${C.praise.length}`);
-console.log(`  ui clips:       ${Object.keys(C.uiAudio).length}`);
+console.log(`  uiKa clips:     ${C.uiKa.length}`);
 console.log(`  audio entries:  ${AUDIO_FILES.length}`);
 console.log("Done.");

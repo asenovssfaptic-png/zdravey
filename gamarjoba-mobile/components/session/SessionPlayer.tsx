@@ -6,8 +6,9 @@
  *
  * Positive-only, always: forward-only progress bar; correct → XP + chime +
  * advance after 900 ms; miss → soft boop + warm flash, the renderer
- * reveals the right answer, the player SPEAKS it ("Almost! Here is the
- * right one." then the answer clip), quietly re-queues one retry (cap 3,
+ * reveals the right answer, the player SPEAKS it (the Georgian თითქმის
+ * clip "ui-ka-titkmis" then the answer clip — nothing audible is
+ * English), quietly re-queues one retry (cap 3,
  * two exercises later) and then moves on by itself — Continue button,
  * tapping the revealed card, and the auto-advance all funnel through one
  * miss-index-guarded step, so the child is never stuck and never punished.
@@ -16,13 +17,13 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 
 import { colors, minTarget, radii, spacing, type } from "../../constants/theme";
 import type { Letter, Speakable, VocabItem } from "../../content/types";
-import { announce, useToast } from "../../lib/announce";
-import { playItem, playUi, stopAll } from "../../lib/audio";
+import { announce, useReducedMotion, useToast } from "../../lib/announce";
+import { playItem, playUiKa, stopAll } from "../../lib/audio";
 import {
   buildLessonExercises,
   buildLetterExam,
@@ -165,6 +166,36 @@ function rebuildExercises(config: SessionConfig): Exercise[] {
       return st ? buildReadingExercises(st, "exam") : [];
     }
   }
+}
+
+/* One soft beat as each new question (or the finish screen) mounts —
+ * fade + 8px rise over 280ms, so the screen never "teleports" under a
+ * young child. Skipped entirely under reduced motion (web §4.4 parity). */
+function ExEnter({ children }: { children: React.ReactNode }): React.ReactElement {
+  const reduced = useReducedMotion();
+  const [anim] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (reduced) {
+      anim.setValue(1);
+      return;
+    }
+    Animated.timing(anim, {
+      toValue: 1,
+      duration: 280,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+    }).start();
+  }, [anim, reduced]);
+  return (
+    <Animated.View
+      style={{
+        opacity: anim,
+        transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }],
+      }}
+    >
+      {children}
+    </Animated.View>
+  );
 }
 
 export function SessionPlayer({ config, onExit }: SessionPlayerProps): React.ReactElement {
@@ -329,7 +360,7 @@ export function SessionPlayer({ config, onExit }: SessionPlayerProps): React.Rea
       // answer, then a beat — and a generous failsafe so a blocked clip
       // never strands the session
       void (async () => {
-        await playUi("Almost! Here is the right one.", 4800);
+        await playUiKa("ui-ka-titkmis", 3600);
         if (!aliveRef.current || sRef.current.run !== st.run) return;
         await playItem(answerOf(ex));
         later(() => goOn(missIdx, st.run), 1400, st.run);
@@ -401,14 +432,16 @@ export function SessionPlayer({ config, onExit }: SessionPlayerProps): React.Rea
         scrollEnabled={!current || current.type !== "trace_letter"}
       >
         {s.phase === "finished" && s.outcome ? (
-          <FinishScreen
-            config={config}
-            outcome={s.outcome}
-            xpEarned={s.xpEarned}
-            missed={s.missed}
-            onContinue={continueTo}
-            onRedo={redo}
-          />
+          <ExEnter>
+            <FinishScreen
+              config={config}
+              outcome={s.outcome}
+              xpEarned={s.xpEarned}
+              missed={s.missed}
+              onContinue={continueTo}
+              onRedo={redo}
+            />
+          </ExEnter>
         ) : current ? (
           <View style={[styles.area, s.flash && styles.flash]}>
             {(() => {
@@ -417,11 +450,9 @@ export function SessionPlayer({ config, onExit }: SessionPlayerProps): React.Rea
                 onResult: (r: ExerciseResult) => void;
               }>;
               return (
-                <Renderer
-                  key={`${current.key}:${s.run}`}
-                  ex={current}
-                  onResult={(r) => handleResult(current, r)}
-                />
+                <ExEnter key={`${current.key}:${s.run}`}>
+                  <Renderer ex={current} onResult={(r) => handleResult(current, r)} />
+                </ExEnter>
               );
             })()}
             {s.phase === "miss" ? (

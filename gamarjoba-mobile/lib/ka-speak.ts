@@ -2,8 +2,8 @@
  * to a bundled audio id, built once at import (a port of the web app's
  * KA_SPEAK index, app.js). Georgian text is tappable IFF a clip resolves;
  * unresolvable text stays plain. Precedence: vocab → reading extras →
- * syllables → letters → examples; each also indexed under its
- * trailing-punctuation-stripped key. */
+ * syllables → letters → examples → praise → uiKa titles; each also
+ * indexed under its trailing-punctuation-stripped key. */
 
 import { AUDIO_ASSETS, type AudioId } from "../content/generated/audioAssets";
 import { CURRICULUM } from "../content/generated/curriculum";
@@ -31,6 +31,8 @@ Object.keys(C.vocab).forEach((id) => indexKa(C.vocab[id].ka, id));
 (C.readingTrack?.syllables ?? []).forEach((x) => indexKa(x.ka, x.id));
 Object.keys(C.audioIds.letters).forEach((ch) => indexKa(ch, C.audioIds.letters[ch]));
 Object.keys(C.audioIds.examples).forEach((ka) => indexKa(ka, C.audioIds.examples[ka]));
+(C.praise ?? []).forEach((p) => indexKa(p.ka, p.id));
+(C.uiKa ?? []).forEach((u) => indexKa(u.ka, u.id));
 
 /** Bundled clip for exact Georgian text, or null (→ text stays plain). */
 export function resolveKaAudio(text: string): AudioId | null {

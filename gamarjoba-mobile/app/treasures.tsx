@@ -44,7 +44,7 @@ export default function TreasuresScreen(): React.ReactElement {
       <BackLink label="Home" href="/" />
       <View style={styles.titleRow}>
         <Text style={styles.h1}>🏆 </Text>
-        <KaText text={C.strings.treasures} size={type.h1} />
+        <KaText text={C.strings.treasures} size={type.h1} speak />
         <Text style={styles.h1}> · My treasures</Text>
       </View>
       <Text style={styles.intro}>
@@ -114,7 +114,7 @@ export default function TreasuresScreen(): React.ReactElement {
       <View style={styles.section}>
         <View style={styles.dictTitleRow}>
           <Text style={styles.h2}>📖 </Text>
-          <KaText text={C.strings.dictionary} size={type.h2 - 2} />
+          <KaText text={C.strings.dictionary} size={type.h2 - 2} speak />
           <Text style={styles.h2}> · My dictionary — {progress.wodCollected.length}</Text>
         </View>
         <DictionaryList wordIds={progress.wodCollected} />

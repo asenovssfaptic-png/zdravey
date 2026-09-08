@@ -1,6 +1,7 @@
 /* FinishScreen — celebration at the end of every session. Rewards ONLY:
- * stars fill (never empty out), "+N XP", confetti, "Well done!" then a
- * Georgian praise clip; missed words appear as quiet, judgment-free
+ * stars fill (never empty out), "+N XP", confetti, and a Georgian praise
+ * clip (the praise rotation IS the finish celebration — nothing audible
+ * is English); missed words appear as quiet, judgment-free
  * tap-to-hear chips (a signal for grown-ups, never a grade). Continue
  * goes to the mode's home; Redo restarts with a fresh shuffle. */
 
@@ -11,7 +12,7 @@ import { colors, minTarget, radii, shadow, spacing, type } from "../../constants
 import { CURRICULUM } from "../../content/generated/curriculum";
 import type { VocabItem } from "../../content/types";
 import { announce } from "../../lib/announce";
-import { playPraise, playUi } from "../../lib/audio";
+import { playPraise } from "../../lib/audio";
 import { computeNextStep, type SessionConfig } from "../../lib/exercise-engine";
 import type { FinishOutcome } from "../../lib/rewards";
 import { useProgress } from "../../lib/store";
@@ -50,8 +51,8 @@ export function FinishScreen({
   const totalXp = xpEarned + outcome.xpBonus;
   const alive = useRef(true);
 
-  // celebrate: "Well done!" in the child's known language first, then a
-  // Georgian praise clip — and announce the whole outcome politely
+  // celebrate with a Georgian praise clip — and announce the whole
+  // outcome politely (screen-reader text, never English audio)
   useEffect(() => {
     alive.current = true;
     let tail: string;
@@ -66,13 +67,10 @@ export function FinishScreen({
       } and ${totalXp} XP.`;
     }
     announce(`Excellent! ${tail}`);
+    // Georgian-only audio: the praise rotation IS the finish celebration
     const t = setTimeout(() => {
       if (!alive.current) return;
-      playUi("Well done!", 2400)
-        .then(() => {
-          if (alive.current) playPraise();
-        })
-        .catch(() => {});
+      playPraise();
     }, 600);
     return () => {
       alive.current = false;
@@ -94,7 +92,7 @@ export function FinishScreen({
       <Confetti trigger={1} />
       <Borjgali size={64} />
       <View style={styles.titleRow}>
-        <KaText text={C.strings.excellent} size={type.h2} />
+        <KaText text={C.strings.excellent} size={type.h2} speak />
         <Text style={styles.title}> · Excellent!</Text>
       </View>
 

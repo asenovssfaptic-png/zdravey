@@ -31,7 +31,7 @@ export function WordOfDayCard(): React.ReactElement {
   return (
     <View style={styles.card}>
       <View style={styles.titleRow}>
-        <KaText text={CURRICULUM.strings.wordOfDay} size={type.body - 1} />
+        <KaText text={CURRICULUM.strings.wordOfDay} size={type.body - 1} speak />
         <Text style={styles.title}> · Word of the day</Text>
       </View>
       <View style={styles.row}>

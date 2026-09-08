@@ -10,7 +10,7 @@ import { colors, minTarget, radii, spacing, type } from "../../constants/theme";
 import { CURRICULUM } from "../../content/generated/curriculum";
 import type { Sticker } from "../../content/types";
 import { announce, useToast } from "../../lib/announce";
-import { playPraise, playUi } from "../../lib/audio";
+import { playPraise, playUiKa } from "../../lib/audio";
 import { grantSticker } from "../../lib/rewards";
 import { addXp, consumeFirstVisitToday, getProgress } from "../../lib/store";
 import Confetti from "../ui/Confetti";
@@ -43,8 +43,8 @@ export function DailyGiftModal(): React.ReactElement | null {
 
   useEffect(() => {
     if (!gift) return;
-    // "A gift for you!" first, then a Georgian praise clip (web parity)
-    playUi("A gift for you!")
+    // "საჩუქარი შენთვის!" first, then a Georgian praise clip (web parity)
+    playUiKa("ui-ka-sachukari-shentvis")
       .then(() => {
         playPraise();
       })

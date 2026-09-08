@@ -23,7 +23,7 @@ export default function AlphabetScreen(): React.ReactElement {
     <Screen>
       <BackLink label="Home" href="/" />
       <View style={styles.titleRow}>
-        <KaText text={C.strings.alphabet} size={type.h1} />
+        <KaText text={C.strings.alphabet} size={type.h1} speak />
         <Text style={styles.h1} accessibilityRole="header">
           {" "}
           · The alphabet

@@ -9,7 +9,7 @@ import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { colors, minTarget, spacing, type } from "../../../constants/theme";
 import { announce, useReducedMotion } from "../../../lib/announce";
-import { playUi, playWord } from "../../../lib/audio";
+import { playUiKa, playWord } from "../../../lib/audio";
 import {
   pickDistractors,
   shuffle,
@@ -63,7 +63,7 @@ export function ReadWordPickPicture({
         )
       ).start();
     }
-    playUi("Read it first — then the sound unlocks!").catch(() => {});
+    playUiKa("ui-ka-jer-tsaikitkhe").catch(() => {});
     announce("Read it first — then the sound unlocks!");
   };
 

@@ -12,6 +12,8 @@ import { colors } from "../../constants/theme";
 export interface ProgressRingProps {
   frac: number;
   done?: boolean;
+  /** Crowned unit: the done fill turns gold (web `.node-crowned` parity). */
+  gold?: boolean;
   size?: number;
   children?: React.ReactNode;
 }
@@ -22,6 +24,7 @@ const CIRC = 2 * Math.PI * R;
 export function ProgressRing({
   frac,
   done = false,
+  gold = false,
   size = 56,
   children,
 }: ProgressRingProps): React.ReactElement {
@@ -38,7 +41,7 @@ export function ProgressRing({
           cx={54}
           cy={54}
           r={R}
-          stroke={done ? colors.success : colors.accent}
+          stroke={done ? (gold ? colors.gold : colors.success) : colors.accent}
           strokeWidth={7}
           strokeLinecap="round"
           fill="none"
