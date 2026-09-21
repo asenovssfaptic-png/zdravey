@@ -1,0 +1,169 @@
+{
+  "record": "17307476",
+  "source_file": "/home/user/zdravey/tools/amaryl_mining/mining_pipeline.py",
+  "source_sha256": "0038991aba300748065b0a8fbc191e5f600ac1ad1f1252c8653a6560efdbcb06",
+  "generated_utc": "2026-09-21T17:56:57Z",
+  "parameters": {
+    "evalue": 1e-10,
+    "min_coverage": 0.5,
+    "min_confidence": "Low"
+  },
+  "counts": [
+    [
+      "Zenodo record",
+      "17307476 (AmarylOmicBase)"
+    ],
+    [
+      "Archives in record",
+      "13"
+    ],
+    [
+      "Archives used",
+      "8"
+    ],
+    [
+      "Species / assemblies scanned",
+      "30"
+    ],
+    [
+      "Peptides searched (Method B)",
+      "2,510,506"
+    ],
+    [
+      "Method A candidates (annotation)",
+      "853"
+    ],
+    [
+      "  ... from Trinotate reports",
+      "814"
+    ],
+    [
+      "  ... added by hmmscan/Pfam-A",
+      "27"
+    ],
+    [
+      "  ... added by EggNOG-mapper",
+      "0"
+    ],
+    [
+      "  ... added by BLASTp/Swiss-Prot",
+      "12"
+    ],
+    [
+      "Method B candidates added (homology)",
+      "1"
+    ],
+    [
+      "Six-frame assembly sweep: ORF-less transcripts",
+      "571"
+    ],
+    [
+      "Merged unique candidates",
+      "1425"
+    ],
+    [
+      "Rows written to summary",
+      "1165"
+    ],
+    [
+      "Rows rejected (decoy/weak)",
+      "260"
+    ],
+    [
+      "Sequencing runs mapped",
+      "315"
+    ],
+    [
+      "DAHP Synthase -- distinct transcripts",
+      "851"
+    ],
+    [
+      "DAHP Synthase -- rows (one per predicted ORF)",
+      "870"
+    ],
+    [
+      "DAHP Synthase -- species",
+      "29"
+    ],
+    [
+      "DAHP Synthase -- High/Medium/Low",
+      "418/32/420"
+    ],
+    [
+      "Arogenate Dehydrogenase -- distinct transcripts",
+      "287"
+    ],
+    [
+      "Arogenate Dehydrogenase -- rows (one per predicted ORF)",
+      "295"
+    ],
+    [
+      "Arogenate Dehydrogenase -- species",
+      "29"
+    ],
+    [
+      "Arogenate Dehydrogenase -- High/Medium/Low",
+      "211/13/71"
+    ],
+    [
+      "FASTA records (CDS)",
+      "659"
+    ],
+    [
+      "FASTA records (protein)",
+      "1130"
+    ],
+    [
+      "FASTA records (full cDNA/unitig)",
+      "1138"
+    ],
+    [
+      "Wall time",
+      "3385.6 s"
+    ]
+  ],
+  "method_b": {
+    "phmmer": 7915,
+    "hmmsearch": 858,
+    "species": 30,
+    "skipped": false
+  },
+  "six_frame": {
+    "species": 30,
+    "hits": 571,
+    "new_transcripts": 571,
+    "fragments": 28921096
+  },
+  "reference_proteins": {
+    "DAHP Synthase": [
+      "AROF_ARATH",
+      "AROG_ARATH",
+      "Q9SK84_ARATH",
+      "AROF_CATRO",
+      "AROF_ORYSJ",
+      "AROF_SOLLC",
+      "AROF_SOLTU",
+      "AROF_TOBAC",
+      "AROG1_PETHY",
+      "AROG2_PETHY",
+      "AROG_ORYSJ",
+      "AROG_SOLLC",
+      "AROG_SOLTU"
+    ],
+    "Arogenate Dehydrogenase": [
+      "TYRA1_ARATH",
+      "TYRA2_ARATH",
+      "A0A804PD07_MAIZE",
+      "A0A804PD23_MAIZE",
+      "A0A804R2S8_MAIZE",
+      "A0A804R424_MAIZE",
+      "B4FY98_MAIZE",
+      "B6SRK3_MAIZE",
+      "B6SS03_MAIZE",
+      "B6TCN6_MAIZE",
+      "B6TPZ9_MAIZE",
+      "C0HES6_MAIZE",
+      "C0PK73_MAIZE"
+    ]
+  }
+}

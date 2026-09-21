@@ -118,7 +118,7 @@ These matter more than raw hit counts, so they are called out explicitly:
 * **Plants have no class-I DAHP synthase.** The plant enzyme is class II
   (`PF01474`). A `PF00793`-only sequence is therefore a KDSA paralog or a
   non-plant contig, never a plant DAHP synthase, so it is rejected outright.
-  In this dataset that rule moves 145 rows out of the master table — including
+  In this dataset that rule moves 168 rows out of the master table — including
   16 that otherwise scored *High* and are near-verbatim *E. coli* AroG/AroF and
   yeast Aro4 contaminant contigs (70–90 % identity to the microbial protein,
   ~25 % to every plant reference).
@@ -227,6 +227,28 @@ EC number, family-diagnostic Pfam domain, protein-name match, Swiss-Prot entry
 hit, and HMMER homology support, with penalties for decoy annotations and for
 non-diagnostic (class-I-only) domain evidence. A `High` call requires both
 annotation and homology support plus an EC or family-Pfam assignment.
+
+## Results of the shipped run
+
+One end-to-end run over all 30 assemblies (~56 min on 4 cores, archives cached):
+
+| | DAHP synthase | Arogenate dehydrogenase |
+|---|---|---|
+| distinct transcripts | 851 | 287 |
+| rows (one per predicted ORF) | 870 | 295 |
+| assemblies with ≥ 1 hit | 30 / 30 | 30 / 30 |
+| High / Medium / Low | 418 / 32 / 420 | 211 / 13 / 71 |
+
+2.5 M predicted peptides and 28.9 M six-frame ORF fragments were searched;
+1 425 candidates were merged, 1 165 kept and 260 rejected as decoys or
+insufficient evidence. 571 of the kept transcripts carry a target domain but no
+TransDecoder ORF and are visible only to the six-frame sweep. Every derived CDS
+translates exactly to its predicted peptide (659/659), and 315 sequencing runs
+were resolved to a tissue and a condition.
+
+The large `Low` tier is expected: it is dominated by six-frame hits, which have
+domain evidence but no functional annotation and are usually short fragments.
+Filter on `Confidence` and `Flags` for the use you have in mind.
 
 ## Caveats
 
