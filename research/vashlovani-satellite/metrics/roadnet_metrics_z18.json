@@ -1,0 +1,59 @@
+{
+ "raster": "calib_z18.tif",
+ "ground_m_per_px": 0.449,
+ "window": {
+  "row": 4096,
+  "col": 2048,
+  "size": 4096
+ },
+ "split": "left half train / right half test (spatially disjoint)",
+ "labels": {
+  "positive_within_m": 8.0,
+  "negative_ring_m": [
+   30.0,
+   70.0
+  ],
+  "pos_px": 491781,
+  "neg_px": 2154789
+ },
+ "models": {
+  "logreg": {
+   "auc": 0.5498,
+   "thr_youden": 0.4521,
+   "tpr_youden": 0.582,
+   "fpr_youden": 0.505,
+   "thr_precision": 0.6262,
+   "tpr_at_budget": 0.057,
+   "fpr_at_budget": 0.0499
+  },
+  "rf": {
+   "auc": 0.7025,
+   "thr_youden": 0.3581,
+   "tpr_youden": 0.688,
+   "fpr_youden": 0.402,
+   "thr_precision": 0.6771,
+   "tpr_at_budget": 0.16,
+   "fpr_at_budget": 0.0485
+  }
+ },
+ "best": "rf",
+ "rf_feature_importance": {
+  "gray": 0.3315,
+  "dir_open": 0.1446,
+  "coherence9": 0.1376,
+  "std15": 0.1009,
+  "highpass": 0.0684,
+  "tophat": 0.0398,
+  "sato3": 0.0357,
+  "std5": 0.0351,
+  "coherence3": 0.0304,
+  "sato2": 0.0243,
+  "blackhat": 0.021,
+  "sato1": 0.0173,
+  "grad_mag": 0.0133
+ },
+ "caveats": [
+  "negative ring lies inside a park with genuinely unmapped tracks, so these metrics are a lower bound",
+  "OSM itself is incomplete here; 'false positive' partly means 'not in OSM' rather than 'not a road'"
+ ]
+}

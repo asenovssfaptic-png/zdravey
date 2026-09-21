@@ -1,0 +1,49 @@
+{
+ "imagery": "vashlovani_esri_z16.tif, 1.80 m/px ground",
+ "detector": "rf on 13 features, threshold 0.744 chosen at FPR<=0.05",
+ "held_out_metrics": {
+  "auc": 0.8479,
+  "thr_youden": 0.5773,
+  "tpr_youden": 0.727,
+  "fpr_youden": 0.165,
+  "thr_precision": 0.7436,
+  "tpr_at_budget": 0.516,
+  "fpr_at_budget": 0.0495
+ },
+ "detected": {
+  "segments": 562,
+  "km": 57.7,
+  "confirmed_by_osm": 279,
+  "partial": 18,
+  "unmapped_candidate": 265
+ },
+ "osm_reference_in_park": {
+  "lines": 193,
+  "km": 246.7,
+  "lines_detected_50pct": 31,
+  "recall_pct": 16.1
+ },
+ "recall_by_type": {
+  "track": {
+   "n": 134,
+   "mean_detected_frac": 0.22
+  },
+  "path": {
+   "n": 18,
+   "mean_detected_frac": 0.024
+  },
+  "unclassified": {
+   "n": 35,
+   "mean_detected_frac": 0.183
+  },
+  "residential": {
+   "n": 2,
+   "mean_detected_frac": 0.917
+  },
+  "footway": {
+   "n": 4,
+   "mean_detected_frac": 0.011
+  }
+ },
+ "caveat": "OSM is incomplete here, so 'unmapped_candidate' mixes real unmapped tracks with detector false positives (gully edges, erosion scarps). Each needs visual confirmation."
+}

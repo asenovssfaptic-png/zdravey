@@ -1,0 +1,885 @@
+<title>Vashlovani Terrain Survey</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Georgian:wght@400;600&display=swap">
+<style>
+/* ---------- Leaflet 1.9.4 ---------- */
+__LEAFLET_CSS__
+/* Leaflet's stylesheet references images/*.png, which the artifact CSP
+   blocks. We use no default markers and our own controls, so neutralise
+   the rules that would otherwise show a broken image. */
+.leaflet-default-icon-path,
+.leaflet-control-layers-toggle { background-image: none !important; }
+
+/* ---------- tokens ---------- */
+:root {
+  --bg: #e7eae3;
+  --panel: #f7f8f4;
+  --panel-2: #eceee6;
+  --sunk: #dfe3d8;
+  --text: #171b14;
+  --muted: #5a6152;
+  --line: #c7cdbe;
+  --line-soft: #d7dccd;
+  --brass: #7d6318;
+  --brass-ink: #fdfcf7;
+  --shadow: 0 1px 2px rgba(23,27,20,.08), 0 8px 24px rgba(23,27,20,.07);
+
+  /* data colours: identical in both themes, because they sit on imagery */
+  --c-osm: #f2b134;
+  --c-conf: #2fbfb2;
+  --c-part: #9a7ae8;
+  --c-cand: #ff6b4a;
+  --c-water: #2e86ab;
+  --c-veg: #4e7a3a;
+  --c-bound: #f4efe0;
+
+  --pin-info: #d9a92c;
+  --pin-hist: #b268e8;
+  --pin-water: #3f9ad1;
+  --pin-relief: #d98c5f;
+  --pin-place: #cfd4c2;
+  --pin-alert: #ff6b4a;
+  --pin-other: #8e957f;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1109;
+    --panel: #161a11;
+    --panel-2: #1d2217;
+    --sunk: #0a0d06;
+    --text: #e6e9df;
+    --muted: #99a18c;
+    --line: #2c3324;
+    --line-soft: #232a1c;
+    --brass: #dcc27a;
+    --brass-ink: #16190f;
+    --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 30px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1109;
+  --panel: #161a11;
+  --panel-2: #1d2217;
+  --sunk: #0a0d06;
+  --text: #e6e9df;
+  --muted: #99a18c;
+  --line: #2c3324;
+  --line-soft: #232a1c;
+  --brass: #dcc27a;
+  --brass-ink: #16190f;
+  --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 30px rgba(0,0,0,.45);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; height: 100%;
+  background: var(--bg); color: var(--text);
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px; line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+html, body { height: 100%; }
+:lang(ka), .ka { font-family: "Noto Sans Georgian", "IBM Plex Sans", sans-serif; }
+.mono, .coord { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+
+.app { display: grid; grid-template-columns: 352px 1fr; height: 100%; }
+
+/* ---------- panel ---------- */
+.panel {
+  background: var(--panel); border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; min-height: 0; z-index: 500;
+}
+.phead { padding: 18px 18px 14px; border-bottom: 1px solid var(--line); }
+.eyebrow {
+  font-size: 10.5px; font-weight: 600; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--muted); margin: 0 0 6px;
+}
+.phead h1 {
+  margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -.015em;
+  text-wrap: balance;
+}
+.phead .sub { margin: 5px 0 0; color: var(--muted); font-size: 12.5px; }
+.pscroll { overflow-y: auto; flex: 1; min-height: 0; padding: 0 18px 22px; }
+
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+  background: var(--line-soft); border: 1px solid var(--line-soft);
+  margin: 16px 0 20px; border-radius: 3px; overflow: hidden; }
+.stat { background: var(--panel); padding: 9px 11px; }
+.stat b { display: block; font-size: 17px; font-weight: 600;
+  font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 10.5px; color: var(--muted); letter-spacing: .04em;
+  text-transform: uppercase; }
+
+h2.sec {
+  font-size: 10.5px; font-weight: 600; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--muted);
+  margin: 22px 0 9px; padding-bottom: 6px; border-bottom: 1px solid var(--line-soft);
+}
+h2.sec:first-child { margin-top: 4px; }
+
+.layer { display: flex; align-items: center; gap: 9px; padding: 5px 0;
+  cursor: pointer; user-select: none; }
+.layer input { position: absolute; opacity: 0; width: 0; height: 0; }
+.box { width: 15px; height: 15px; flex: none; border: 1px solid var(--line);
+  border-radius: 3px; background: var(--panel-2); position: relative; }
+.layer input:checked + .box { background: var(--brass); border-color: var(--brass); }
+.layer input:checked + .box::after {
+  content: ""; position: absolute; left: 4px; top: 1px; width: 5px; height: 9px;
+  border: solid var(--brass-ink); border-width: 0 1.8px 1.8px 0;
+  transform: rotate(42deg);
+}
+.layer input:focus-visible + .box { outline: 2px solid var(--brass); outline-offset: 2px; }
+.swatch { width: 20px; height: 0; flex: none; border-top-width: 3px;
+  border-top-style: solid; border-radius: 2px; }
+.swatch.area { height: 12px; border: 1px solid; border-radius: 2px; }
+.lname { flex: 1; font-size: 13px; }
+.lcount { font-size: 11px; color: var(--muted);
+  font-family: "IBM Plex Mono", monospace; }
+
+.filter { width: 100%; padding: 7px 10px; font: inherit; font-size: 13px;
+  color: var(--text); background: var(--sunk);
+  border: 1px solid var(--line); border-radius: 3px; margin-bottom: 8px; }
+.filter:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
+
+.sitelist { list-style: none; margin: 0; padding: 0; }
+.sitelist li { border-bottom: 1px solid var(--line-soft); }
+.sitebtn { width: 100%; text-align: left; background: none; border: 0;
+  padding: 7px 2px; cursor: pointer; color: inherit; font: inherit;
+  display: flex; gap: 8px; align-items: baseline; }
+.sitebtn:hover { background: var(--panel-2); }
+.sitebtn:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none;
+  margin-top: 5px; box-shadow: 0 0 0 1.5px rgba(0,0,0,.25); }
+.sitebtn .nm { flex: 1; font-size: 12.5px; }
+.sitebtn .nm i { display: block; font-style: normal; font-size: 11px;
+  color: var(--muted); }
+
+.chip { display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10.5px; font-weight: 500; letter-spacing: .05em;
+  text-transform: uppercase; padding: 2.5px 7px; border-radius: 2px;
+  border: 1px solid var(--line); color: var(--muted); background: var(--panel-2); }
+.chip.on { color: var(--brass-ink); background: var(--brass); border-color: var(--brass); }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; }
+
+.back { background: none; border: 0; color: var(--brass); cursor: pointer;
+  font: inherit; font-size: 12px; padding: 12px 0 4px; font-weight: 500; }
+.back:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+#detail h2 { margin: 6px 0 2px; font-size: 18px; font-weight: 600;
+  letter-spacing: -.01em; text-wrap: balance; }
+#detail .kana { font-size: 15px; color: var(--muted); margin: 0 0 10px; }
+.kv { display: grid; grid-template-columns: 78px 1fr; gap: 3px 10px;
+  font-size: 12.5px; margin: 12px 0; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+.prose { font-size: 13px; line-height: 1.55; margin: 12px 0; }
+.srcs { list-style: none; padding: 0; margin: 8px 0 0; font-size: 11.5px; }
+.srcs li { padding: 2px 0; color: var(--muted); word-break: break-all;
+  font-family: "IBM Plex Mono", monospace; }
+
+.note { font-size: 12px; color: var(--muted); line-height: 1.5; }
+details.disc { margin: 16px 0 0; border-top: 1px solid var(--line-soft);
+  padding-top: 10px; }
+details.disc summary { cursor: pointer; font-size: 11px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+details.disc summary:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+details.disc .body { padding-top: 9px; }
+table.m { width: 100%; border-collapse: collapse; font-size: 11.5px;
+  font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; }
+table.m th, table.m td { text-align: left; padding: 3px 6px 3px 0;
+  border-bottom: 1px solid var(--line-soft); }
+table.m th { color: var(--muted); font-weight: 500; }
+
+textarea.nt { width: 100%; min-height: 62px; resize: vertical; font: inherit;
+  font-size: 12.5px; padding: 7px 9px; color: var(--text);
+  background: var(--sunk); border: 1px solid var(--line); border-radius: 3px; }
+textarea.nt:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
+.btn { font: inherit; font-size: 12px; font-weight: 500; cursor: pointer;
+  padding: 6px 12px; border-radius: 3px; border: 1px solid var(--brass);
+  background: var(--brass); color: var(--brass-ink); }
+.btn.ghost { background: none; color: var(--brass); }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.row { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.notes { list-style: none; padding: 0; margin: 10px 0 0; }
+.notes li { font-size: 12.5px; padding: 7px 9px; background: var(--panel-2);
+  border-left: 2px solid var(--brass); border-radius: 0 3px 3px 0; margin-bottom: 6px; }
+.notes time { display: block; font-size: 10.5px; color: var(--muted);
+  font-family: "IBM Plex Mono", monospace; margin-top: 3px; }
+
+/* ---------- map ---------- */
+.mapwrap { position: relative; min-height: 0; }
+#map { position: absolute; inset: 0; background: var(--sunk); }
+.leaflet-container { font-family: "IBM Plex Sans", sans-serif; background: var(--sunk); }
+.leaflet-control-attribution {
+  background: rgba(10,13,6,.72) !important; color: #cfd4c2 !important;
+  font-size: 10px !important; padding: 2px 6px !important;
+}
+.leaflet-control-attribution a { color: #e0c77a !important; }
+.leaflet-bar { border: 1px solid rgba(0,0,0,.4) !important; box-shadow: var(--shadow) !important; }
+.leaflet-bar a {
+  background: var(--panel) !important; color: var(--text) !important;
+  border-bottom-color: var(--line) !important; width: 30px !important;
+  height: 30px !important; line-height: 30px !important;
+}
+.leaflet-bar a:hover { background: var(--panel-2) !important; }
+.leaflet-control-scale-line {
+  background: rgba(10,13,6,.72) !important; color: #e6e9df !important;
+  border-color: rgba(230,233,223,.7) !important; font-size: 10px;
+  font-family: "IBM Plex Mono", monospace;
+}
+.pin { border-radius: 50%; border: 1.5px solid rgba(8,10,5,.75);
+  box-shadow: 0 1px 4px rgba(0,0,0,.5); }
+.pin.sel { outline: 2px solid #fff; outline-offset: 2px; }
+.mtoggle { display: none; }
+
+.legendbox {
+  position: absolute; right: 10px; top: 10px; z-index: 450;
+  background: rgba(10,13,6,.76); backdrop-filter: blur(6px);
+  border: 1px solid rgba(230,233,223,.16); border-radius: 4px;
+  padding: 9px 11px; color: #e6e9df; font-size: 11px; max-width: 190px;
+}
+.legendbox h3 { margin: 0 0 6px; font-size: 9.5px; letter-spacing: .12em;
+  text-transform: uppercase; color: #b4bca6; font-weight: 600; }
+.legendbox div { display: flex; align-items: center; gap: 7px; padding: 1.5px 0; }
+.legendbox i { width: 16px; height: 0; border-top: 3px solid; flex: none; }
+.legendbox i.dash { border-top-style: dashed; }
+
+@media (max-width: 880px) {
+  .app { display: flex; flex-direction: column-reverse; }
+  .mapwrap { flex: 1 1 auto; min-height: 42vh; }
+  .panel { flex: 0 0 auto; border-right: 0; border-top: 1px solid var(--line);
+    max-height: 52%; }
+  .panel.collapsed { max-height: none; }
+  .panel.collapsed .pscroll { display: none; }
+  .panel.collapsed .phead { border-bottom: 0; }
+  .mtoggle { display: block; position: absolute; right: 14px; top: 16px;
+    background: none; border: 1px solid var(--line); border-radius: 3px;
+    color: var(--muted); font: inherit; font-size: 11px; padding: 4px 9px;
+    cursor: pointer; }
+  .phead { position: relative; padding-right: 92px; }
+  .legendbox { max-width: 150px; font-size: 10px; }
+}
+</style>
+
+<div class="app">
+  <aside class="panel" id="panel">
+    <div class="phead">
+      <p class="eyebrow">Kakheti · Georgia · 41.22°N 46.51°E</p>
+      <h1>Vashlovani Terrain Survey</h1>
+      <p class="sub">442 km² of semi-desert badlands on the Azerbaijan border.
+        Satellite land-cover and track detection, cross-referenced against
+        OpenStreetMap and published sources.</p>
+      <button class="mtoggle" id="mtoggle" aria-expanded="true">Hide</button>
+    </div>
+    <div class="pscroll" id="pscroll">
+      <section id="overview">
+        <div class="stats" id="stats"></div>
+
+        <h2 class="sec">Layers</h2>
+        <div id="layers"></div>
+
+        <h2 class="sec">Sites <span class="lcount" id="sitecount"></span></h2>
+        <input class="filter" id="filter" type="search" placeholder="Filter sites…"
+               aria-label="Filter sites by name">
+        <ul class="sitelist" id="sitelist"></ul>
+
+        <details class="disc" id="perf">
+          <summary>Detector performance</summary>
+          <div class="body" id="perfbody"></div>
+        </details>
+
+        <details class="disc">
+          <summary>Provenance</summary>
+          <div class="body note" id="provbody"></div>
+        </details>
+      </section>
+
+      <section id="detail" hidden></section>
+    </div>
+  </aside>
+
+  <div class="mapwrap">
+    <div id="map"></div>
+    <div class="legendbox" id="legend">
+      <h3>Tracks</h3>
+      <div><i style="border-color:#f2b134"></i> Mapped (OSM)</div>
+      <div><i style="border-color:#2fbfb2"></i> Detected, confirmed</div>
+      <div><i class="dash" style="border-color:#9a7ae8"></i> Detected, partial</div>
+      <div><i class="dash" style="border-color:#ff6b4a"></i> Detected, unmapped</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="data/boundary.js" charset="utf-8"></script>
+<script src="data/roads_osm.js" charset="utf-8"></script>
+<script src="data/roads_detected.js" charset="utf-8"></script>
+<script src="data/water.js" charset="utf-8"></script>
+<script src="data/vegetation.js" charset="utf-8"></script>
+<script src="data/sites.js" charset="utf-8"></script>
+<script src="data/meta.js" charset="utf-8"></script>
+<script src="data/landcover.js" charset="utf-8"></script>
+<script>
+(function () {
+  "use strict";
+
+  var BOUNDARY = window.VASH_BOUNDARY || null;
+  var ROADS = window.VASH_ROADS_OSM || { features: [] };
+  var DET = window.VASH_ROADS_DET || { features: [] };
+  var WATER = window.VASH_WATER || { features: [] };
+  var VEG = window.VASH_VEG || { features: [] };
+  var SITES = (window.VASH_SITES || []).slice();
+  var META = window.VASH_META || {};
+  var LC = window.VASH_LANDCOVER || null;
+
+  var PARK = [[41.09400, 46.27756], [41.35038, 46.73632]];
+
+  // Literal hex, not CSS vars: pins sit on satellite imagery, which looks the
+  // same in either theme, and Leaflet needs a real colour value anyway.
+  var PIN_INFO = "#d9a92c", PIN_HIST = "#b268e8", PIN_WATER = "#3f9ad1",
+      PIN_RELIEF = "#d98c5f", PIN_PLACE = "#cfd4c2", PIN_ALERT = "#ff6b4a",
+      PIN_OTHER = "#8e957f";
+  var PIN_COLORS = {
+    information: PIN_INFO, viewpoint: PIN_INFO, attraction: PIN_INFO,
+    accommodation: PIN_INFO, campsite: PIN_INFO, picnic: PIN_INFO,
+    shelter: PIN_INFO, facility: PIN_INFO,
+    historic: PIN_HIST, religious: PIN_HIST,
+    water: PIN_WATER, spring: PIN_WATER, water_point: PIN_WATER,
+    detected_water: PIN_WATER, watercourse: PIN_WATER,
+    peak: PIN_RELIEF, plateau: PIN_RELIEF, valley: PIN_RELIEF, cliff: PIN_RELIEF,
+    settlement: PIN_PLACE, locality: PIN_PLACE,
+    checkpoint: PIN_ALERT,
+    infrastructure: PIN_OTHER, other: PIN_OTHER
+  };
+  function pinColor(cat) { return PIN_COLORS[cat] || PIN_OTHER; }
+
+  // ---------------------------------------------------------------- map
+  var map = L.map("map", {
+    zoomControl: false, attributionControl: true,
+    // zoomSnap < 1 lets fitBounds land between integer zooms, so the park
+    // fills the pane instead of leaving up to 2x slack.
+    minZoom: 10, maxZoom: 17, zoomSnap: 0.25, zoomDelta: 0.5,
+    maxBounds: L.latLngBounds(PARK).pad(0.5), maxBoundsViscosity: 0.7
+  });
+  map.fitBounds(PARK, { padding: [18, 18] });
+
+  // 1024 px supertiles: with zoomOffset -2 a tile at zoom Z covers the
+  // ground of 4x4 native 256 px tiles at Z+2. Shipped Z 9..13.
+  L.tileLayer("tiles/{z}/{x}_{y}.webp", {
+    tileSize: 1024, zoomOffset: -2, minZoom: 10,
+    maxNativeZoom: 15, maxZoom: 17, noWrap: true, keepBuffer: 1,
+    bounds: L.latLngBounds(PARK).pad(0.05),
+    errorTileUrl: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+    attribution: "Imagery © Esri World Imagery · Vectors © OpenStreetMap (ODbL) · Analysis: Sentinel-2 L2A"
+  }).addTo(map);
+
+  L.control.zoom({ position: "bottomright" }).addTo(map);
+  L.control.scale({ position: "bottomleft", imperial: false, maxWidth: 140 }).addTo(map);
+
+  // ---------------------------------------------------------- overlays
+  var layers = {};
+
+  if (LC && LC.bounds_4326) {
+    var b = LC.bounds_4326; // west, south, east, north
+    layers.landcover = L.imageOverlay("landcover.png",
+      [[b[1], b[0]], [b[3], b[2]]], { opacity: 0.55, interactive: false });
+  }
+
+  if (BOUNDARY) {
+    layers.boundary = L.geoJSON(BOUNDARY, {
+      style: { color: "#f4efe0", weight: 1.6, opacity: 0.9,
+               fill: false, dashArray: "5 4" }, interactive: false });
+  }
+
+  layers.water = L.geoJSON(WATER, {
+    style: { color: "#2e86ab", weight: 1, fillColor: "#2e86ab",
+             fillOpacity: 0.55 },
+    onEachFeature: function (f, l) {
+      l.on("click", function (e) {
+        L.DomEvent.stopPropagation(e);
+        showArea("Detected surface water", f.properties.area_km2,
+          "Open water in Sentinel-2 imagery of 2025-08-30 (MNDWI index " +
+          "consensus with the scene-classification band). Extent is " +
+          "date-specific: these channels and pools are seasonal.");
+      });
+    }
+  });
+
+  layers.vegetation = L.geoJSON(VEG, {
+    style: { color: "#4e7a3a", weight: 0.8, fillColor: "#4e7a3a",
+             fillOpacity: 0.4 },
+    onEachFeature: function (f, l) {
+      l.on("click", function (e) {
+        L.DomEvent.stopPropagation(e);
+        showArea("Dense vegetation", f.properties.area_km2,
+          "Highest-NDVI stratum of an unsupervised 7-class k-means " +
+          "classification. In this park that is riparian tugay forest along " +
+          "the Alazani and Iori, plus irrigated ground near the margins.");
+      });
+    }
+  });
+
+  layers.roads_osm = L.geoJSON(ROADS, {
+    style: function (f) {
+      var hw = f.properties.hw;
+      var major = hw === "unclassified" || hw === "tertiary" || hw === "residential";
+      return { color: "#f2b134", weight: major ? 2.6 : 1.7,
+               opacity: 0.95, lineCap: "round" };
+    },
+    onEachFeature: function (f, l) {
+      l.on("click", function (e) { L.DomEvent.stopPropagation(e); showRoad(f.properties); });
+    }
+  });
+
+  var DET_STYLE = {
+    confirmed_by_osm: { color: "#2fbfb2", dashArray: null },
+    partial: { color: "#9a7ae8", dashArray: "6 4" },
+    unmapped_candidate: { color: "#ff6b4a", dashArray: "5 4" }
+  };
+  layers.roads_det = L.geoJSON(DET, {
+    style: function (f) {
+      var s = DET_STYLE[f.properties.status] || DET_STYLE.unmapped_candidate;
+      return { color: s.color, weight: 2, opacity: 0.95,
+               dashArray: s.dashArray, lineCap: "round" };
+    },
+    onEachFeature: function (f, l) {
+      l.on("click", function (e) { L.DomEvent.stopPropagation(e); showDetected(f.properties); });
+    }
+  });
+
+  // pins
+  var pinLayer = L.layerGroup();
+  var markerById = {};
+  function buildPins(list) {
+    pinLayer.clearLayers();
+    markerById = {};
+    list.forEach(function (s) {
+      if (typeof s.lat !== "number" || typeof s.lon !== "number") return;
+      var m = L.circleMarker([s.lat, s.lon], {
+        radius: 6, color: "rgba(8,10,5,.8)", weight: 1.5,
+        fillColor: pinColor(s.category),
+        fillOpacity: 0.95, className: "pinmark"
+      });
+      m.on("click", function (e) { L.DomEvent.stopPropagation(e); selectSite(s.id); });
+      m.bindTooltip(s.name_en || s.name_local || s.id, { direction: "top", offset: [0, -6] });
+      markerById[s.id] = m;
+      pinLayer.addLayer(m);
+    });
+  }
+  buildPins(SITES);
+  layers.sites = pinLayer;
+
+  // ------------------------------------------------------- layer panel
+  var LAYER_DEFS = [
+    { key: "sites", name: "Site pins", on: true, kind: "pins",
+      count: function () { return SITES.length; } },
+    { key: "roads_osm", name: "Mapped roads (OSM)", on: true, kind: "line",
+      color: "#f2b134", count: function () { return ROADS.features.length; } },
+    { key: "roads_det", name: "Detected tracks", on: true, kind: "line",
+      color: "#ff6b4a", count: function () { return DET.features.length; } },
+    { key: "water", name: "Detected water", on: true, kind: "area",
+      color: "#2e86ab", count: function () { return WATER.features.length; } },
+    { key: "vegetation", name: "Dense vegetation", on: false, kind: "area",
+      color: "#4e7a3a", count: function () { return VEG.features.length; } },
+    { key: "landcover", name: "Land-cover classes", on: false, kind: "area",
+      color: "#cdaa7d", count: function () { return 7; } },
+    { key: "boundary", name: "Park boundary", on: true, kind: "line",
+      color: "#f4efe0", count: function () { return BOUNDARY ? BOUNDARY.features.length : 0; } }
+  ];
+  var lwrap = document.getElementById("layers");
+  LAYER_DEFS.forEach(function (d) {
+    if (!layers[d.key]) return;
+    var id = "lay-" + d.key;
+    var lab = document.createElement("label");
+    lab.className = "layer";
+    lab.setAttribute("for", id);
+    var sw = d.kind === "pins"
+      ? '<span class="dot" style="background:var(--pin-info);margin-top:0"></span>'
+      : '<span class="swatch' + (d.kind === "area" ? " area" : "") + '" style="border-color:' +
+        d.color + (d.kind === "area" ? ";background:" + d.color + "40" : "") + '"></span>';
+    lab.innerHTML = '<input type="checkbox" id="' + id + '"' + (d.on ? " checked" : "") +
+      '><span class="box"></span>' + sw +
+      '<span class="lname">' + d.name + '</span>' +
+      '<span class="lcount">' + d.count() + "</span>";
+    lwrap.appendChild(lab);
+    var cb = lab.querySelector("input");
+    if (d.on) layers[d.key].addTo(map);
+    cb.addEventListener("change", function () {
+      if (cb.checked) layers[d.key].addTo(map);
+      else map.removeLayer(layers[d.key]);
+    });
+  });
+
+  // ------------------------------------------------------------- stats
+  function km(v) { return (Math.round(v * 10) / 10).toFixed(1); }
+  var osmKm = (META.roads && META.roads.osm_reference_in_park
+    ? META.roads.osm_reference_in_park.km : null);
+  var detKm = (META.roads && META.roads.detected ? META.roads.detected.km : null);
+  var statHtml = [
+    ["st-area", "442", "km² park area"],
+    ["st-pins", String(SITES.length), "site pins"],
+    ["st-osm", osmKm != null ? km(osmKm) : "—", "km mapped road"],
+    ["st-det", detKm != null ? km(detKm) : "—", "km detected"]
+  ].map(function (s) {
+    return '<div class="stat"><b id="' + s[0] + '">' + s[1] + "</b><span>" +
+      s[2] + "</span></div>";
+  }).join("");
+  document.getElementById("stats").innerHTML = statHtml;
+
+  // --------------------------------------------------- detector panel
+  (function () {
+    var body = document.getElementById("perfbody");
+    var d16 = META.detector_z16, sweep = META.filter_sweep, rv = META.roads;
+    var rows = [];
+    if (d16 && d16.models) {
+      Object.keys(d16.models).forEach(function (k) {
+        var m = d16.models[k];
+        rows.push([k, m.auc, m.tpr_at_budget]);
+      });
+    }
+    if (sweep && sweep.results) {
+      var best = null;
+      Object.keys(sweep.results).forEach(function (k) {
+        var r = sweep.results[k];
+        if (!best || r.auc > best[1]) best = [k, r.auc, r.tpr_at_budget];
+      });
+      if (best) rows.push(["best hand-tuned filter", best[1], best[2]]);
+    }
+    var html = "";
+    if (rows.length) {
+      html += '<table class="m"><tr><th>model</th><th>AUC</th><th>TPR@5%FPR</th></tr>' +
+        rows.map(function (r) {
+          return "<tr><td>" + r[0] + "</td><td>" + (r[1] != null ? r[1] : "—") +
+            "</td><td>" + (r[2] != null ? r[2] : "—") + "</td></tr>";
+        }).join("") + "</table>";
+    }
+    html += '<p class="note" style="margin-top:9px">Trained on OpenStreetMap ' +
+      'tracks as labels, scored on a <b>spatially disjoint</b> half of the ' +
+      'calibration window — adjacent pixels are near-duplicates, so a random ' +
+      'split would report a fantasy score. Deployed at the threshold giving ' +
+      'a 5% false-positive rate.</p>';
+    if (rv && rv.osm_reference_in_park) {
+      html += '<p class="note">Against the ' + rv.osm_reference_in_park.lines +
+        ' mapped in-park road lines, ' + rv.osm_reference_in_park.recall_pct +
+        '% were recovered at ≥50% of their length.</p>';
+    }
+    html += '<p class="note"><b>Read “unmapped” with care.</b> The negative ' +
+      'training class is a ring 30–70 m from mapped roads, inside a park that ' +
+      'genuinely contains unmapped tracks — so some “negatives” are real roads, ' +
+      'every score here is a lower bound, and an orange line means “not in ' +
+      'OSM”, which mixes real unmapped tracks with gully edges and erosion ' +
+      'scarps the detector mistook for tracks.</p>';
+    body.innerHTML = html;
+  })();
+
+  document.getElementById("provbody").innerHTML =
+    "<p>Imagery: Esri World Imagery, shipped with this page as 144 " +
+    "pre-rendered tiles (3.6 m/px at full zoom).</p>" +
+    "<p>Land cover, water and vegetation: Sentinel-2 L2A of 2025-08-30 " +
+    "(0.04% cloud), 10–20 m, from the AWS public COG mirror. Reflectance " +
+    "scaled DN×1e-4 with <i>no</i> additive offset — applying the offset the " +
+    "STAC metadata advertises drives vegetation red reflectance negative.</p>" +
+    "<p>Roads, names and POIs: OpenStreetMap via the main API (ODbL).</p>" +
+    "<p>Track detection: random forest over 13 texture and morphology " +
+    "features at 1.8 m/px.</p>";
+
+  // ------------------------------------------------------------ detail
+  var overview = document.getElementById("overview");
+  var detail = document.getElementById("detail");
+  var selected = null;
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function openDetail(html) {
+    detail.innerHTML = '<button class="back" id="back">← Back to layers</button>' + html;
+    overview.hidden = true; detail.hidden = false;
+    document.getElementById("back").addEventListener("click", closeDetail);
+    document.getElementById("pscroll").scrollTop = 0;
+    var p = document.getElementById("panel");
+    if (p.classList.contains("collapsed")) togglePanel();
+  }
+  function closeDetail() {
+    detail.hidden = true; overview.hidden = false;
+    if (selected && markerById[selected]) {
+      markerById[selected].setStyle({ weight: 1.5, radius: 6 });
+    }
+    selected = null;
+  }
+
+  function showArea(title, km2, text) {
+    openDetail('<span class="chip">Imagery detection</span>' +
+      "<h2>" + esc(title) + "</h2>" +
+      '<dl class="kv"><dt>Area</dt><dd class="mono">' + esc(km2) + " km²</dd>" +
+      "<dt>Source</dt><dd>Sentinel-2 L2A</dd><dt>Date</dt><dd class=\"mono\">2025-08-30</dd></dl>" +
+      '<p class="prose">' + esc(text) + "</p>");
+  }
+
+  function showRoad(p) {
+    var nm = p.name_en || p.name || "Unnamed road";
+    var kv = '<dl class="kv"><dt>OSM class</dt><dd class="mono">' + esc(p.hw) + "</dd>";
+    if (p.surface) kv += '<dt>Surface</dt><dd class="mono">' + esc(p.surface) + "</dd>";
+    if (p.tracktype) kv += '<dt>Track grade</dt><dd class="mono">' + esc(p.tracktype) + "</dd>";
+    if (p.smoothness) kv += '<dt>Smoothness</dt><dd class="mono">' + esc(p.smoothness) + "</dd>";
+    if (p.osm_id) kv += '<dt>OSM id</dt><dd class="mono">' + esc(p.osm_id) + "</dd>";
+    kv += "</dl>";
+    var ka = p.name && p.name !== nm
+      ? '<p class="kana ka">' + esc(p.name) + "</p>" : "";
+    var note = p.name_en_src === "transliteration"
+      ? '<p class="note">English name is a transliteration, not an official name.</p>' : "";
+    openDetail('<span class="chip on">Mapped road</span>' +
+      "<h2>" + esc(nm) + "</h2>" + ka + kv + note +
+      '<p class="note">Roads in this park are unsurfaced. Grades vary from ' +
+      'graded gravel to wheel ruts crossing dry riverbeds; most require 4×4 ' +
+      'and a border-zone permit.</p>');
+  }
+
+  function showDetected(p) {
+    var LABEL = {
+      confirmed_by_osm: ["Confirmed", "on"],
+      partial: ["Partial match", ""],
+      unmapped_candidate: ["Not in OSM", ""]
+    };
+    var l = LABEL[p.status] || LABEL.unmapped_candidate;
+    var txt = p.status === "confirmed_by_osm"
+      ? "This detection follows a road already mapped in OpenStreetMap along " +
+        "at least half its length — evidence the detector is working, not a new find."
+      : p.status === "partial"
+      ? "Part of this line follows a mapped road and part does not. Often a " +
+        "mapped track that continues further than OSM records, or a detector " +
+        "line drifting onto an adjacent gully edge."
+      : "No mapped road within 30 m of most of this line. That makes it either " +
+        "a genuinely unmapped track or a false positive — in badlands, gully " +
+        "edges and erosion scarps read like tracks. It needs visual checking " +
+        "before it means anything.";
+    openDetail('<span class="chip ' + l[1] + '">' + l[0] + "</span>" +
+      "<h2>Detected track segment</h2>" +
+      '<dl class="kv"><dt>Length</dt><dd class="mono">' + esc(p.len) + " m</dd>" +
+      '<dt>OSM overlap</dt><dd class="mono">' + Math.round((p.match || 0) * 100) + "%</dd>" +
+      '<dt>Segment id</dt><dd class="mono">' + esc(p.id) + "</dd></dl>" +
+      '<p class="prose">' + txt + "</p>" +
+      '<div id="review"></div>');
+    mountReview(p.id, p.status);
+  }
+
+  function selectSite(id) {
+    var s = SITES.filter(function (x) { return x.id === id; })[0];
+    if (!s) return;
+    if (selected && markerById[selected]) markerById[selected].setStyle({ weight: 1.5, radius: 6 });
+    selected = id;
+    if (markerById[id]) {
+      markerById[id].setStyle({ weight: 3, radius: 8 });
+      map.panTo([s.lat, s.lon]);
+    }
+    var ev = s.evidence || {};
+    var chips = '<div class="chips">' +
+      '<span class="chip ' + (ev.osm ? "on" : "") + '">OSM</span>' +
+      '<span class="chip ' + (ev.research ? "on" : "") + '">Research</span>' +
+      '<span class="chip ' + (ev.imagery ? "on" : "") + '">Imagery</span>' +
+      '<span class="chip">' + esc(String(s.category).replace(/_/g, " ")) + "</span></div>";
+    var ka = s.name_ka ? '<p class="kana ka">' + esc(s.name_ka) + "</p>" : "";
+    var title = s.name_en || s.name_local || s.id;
+    var kv = '<dl class="kv"><dt>Coordinates</dt><dd class="coord">' +
+      s.lat.toFixed(5) + ", " + s.lon.toFixed(5) + "</dd>" +
+      "<dt>In park</dt><dd>" + (s.in_park ? "yes" : "adjacent") + "</dd>" +
+      "<dt>Confidence</dt><dd>" + esc(s.confidence || "—") + "</dd>";
+    if (s.osm_tags) kv += '<dt>OSM tags</dt><dd class="mono">' + esc(s.osm_tags) + "</dd>";
+    kv += "</dl>";
+    var desc = s.description
+      ? '<p class="prose">' + esc(s.description) + "</p>" : "";
+    var tnote = s.name_en_src === "transliteration"
+      ? '<p class="note">English name is a transliteration of the Georgian, ' +
+        "not an official name.</p>" : "";
+    var srcs = (s.sources || []).length
+      ? '<h2 class="sec">Sources</h2><ul class="srcs">' +
+        s.sources.map(function (u) { return "<li>" + esc(u) + "</li>"; }).join("") + "</ul>"
+      : "";
+    openDetail(chips + "<h2>" + esc(title) + "</h2>" + ka + kv + desc + tnote + srcs +
+      '<h2 class="sec">Field notes</h2><div id="notes"></div>');
+    mountNotes(s.id);
+  }
+
+  // ----------------------------------------------------------- filter
+  var listEl = document.getElementById("sitelist");
+  function renderList(q) {
+    var ql = (q || "").trim().toLowerCase();
+    var shown = SITES.filter(function (s) {
+      if (!ql) return true;
+      return ((s.name_en || "") + " " + (s.name_local || "") + " " +
+        (s.name_ka || "") + " " + s.category).toLowerCase().indexOf(ql) >= 0;
+    });
+    document.getElementById("sitecount").textContent =
+      shown.length + (ql ? " / " + SITES.length : "");
+    listEl.innerHTML = shown.map(function (s) {
+      var nm = esc(s.name_en || s.name_local || s.id);
+      var sub = s.name_ka && s.name_ka !== (s.name_en || "")
+        ? '<i class="ka">' + esc(s.name_ka) + "</i>"
+        : '<i>' + esc(String(s.category).replace(/_/g, " ")) + "</i>";
+      return '<li><button class="sitebtn" data-id="' + esc(s.id) + '">' +
+        '<span class="dot" style="background:' + pinColor(s.category) + '"></span>' +
+        '<span class="nm">' + nm + sub + "</span></button></li>";
+    }).join("");
+    Array.prototype.forEach.call(listEl.querySelectorAll(".sitebtn"), function (b) {
+      b.addEventListener("click", function () { selectSite(b.getAttribute("data-id")); });
+    });
+  }
+  renderList("");
+  document.getElementById("filter").addEventListener("input", function (e) {
+    renderList(e.target.value);
+  });
+
+  map.on("click", function () { if (!detail.hidden) closeDetail(); });
+
+  // Leaflet caches the container size; if the pane is laid out or resized
+  // after init (mobile especially) it renders no tiles until told.
+  function resize() { map.invalidateSize(); map.fitBounds(PARK, { padding: [16, 16] }); }
+  window.addEventListener("resize", function () { map.invalidateSize(); });
+  if (window.requestAnimationFrame) requestAnimationFrame(resize);
+  else setTimeout(resize, 60);
+  if (window.ResizeObserver) {
+    new ResizeObserver(function () { map.invalidateSize(); })
+      .observe(document.getElementById("map"));
+  }
+
+  // ------------------------------------------------------ mobile panel
+  function togglePanel() {
+    var p = document.getElementById("panel");
+    var t = document.getElementById("mtoggle");
+    var col = p.classList.toggle("collapsed");
+    t.textContent = col ? "Show" : "Hide";
+    t.setAttribute("aria-expanded", String(!col));
+    setTimeout(function () { map.invalidateSize(); }, 210);
+  }
+  document.getElementById("mtoggle").addEventListener("click", togglePanel);
+
+  // ---------------------------------------------------------- database
+  var db = null, canWrite = null;
+
+  function fmtDate(iso) {
+    try { return new Date(iso).toLocaleString(undefined,
+      { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }); }
+    catch (e) { return iso; }
+  }
+
+  function mountNotes(siteId) {
+    var host = document.getElementById("notes");
+    if (!host) return;
+    if (!db) {
+      host.innerHTML = '<p class="note">Notes need the shared database, which ' +
+        "isn't available in this view.</p>";
+      return;
+    }
+    host.innerHTML = '<ul class="notes" id="notelist"></ul>' +
+      (canWrite === false ? '<p class="note">You have read-only access here.</p>'
+        : '<textarea class="nt" id="ntext" placeholder="What did you see here?" ' +
+          'aria-label="Field note"></textarea><div class="row">' +
+          '<button class="btn" id="nsave">Save note</button>' +
+          '<span class="note" id="nmsg"></span></div>');
+    var ref = db.doc("notes/" + siteId);
+    var listEl2 = document.getElementById("notelist");
+    function paint(items) {
+      listEl2.innerHTML = (items || []).length
+        ? items.map(function (it) {
+            return "<li>" + esc(it.text) + "<time>" + esc(fmtDate(it.at)) + "</time></li>";
+          }).join("")
+        : '<li style="border-left-color:var(--line);color:var(--muted)">No notes yet.</li>';
+    }
+    ref.get().then(function (snap) {
+      paint(snap.exists ? (snap.data().items || []) : []);
+    }).catch(function () { paint([]); });
+
+    var save = document.getElementById("nsave");
+    if (save) save.addEventListener("click", function () {
+      var ta = document.getElementById("ntext");
+      var msg = document.getElementById("nmsg");
+      var text = (ta.value || "").trim();
+      if (!text) return;
+      save.disabled = true; msg.textContent = "Saving…";
+      ref.get().then(function (snap) {
+        var items = snap.exists ? (snap.data().items || []).slice() : [];
+        items.push({ text: text, at: new Date().toISOString() });
+        return ref.set({ items: items, site: siteId }).then(function () {
+          ta.value = ""; msg.textContent = "Saved."; paint(items);
+        });
+      }).catch(function (e) {
+        msg.textContent = e && e.code === "invalid_argument"
+          ? "You don't have write access." : "Couldn't save — try again.";
+      }).then(function () { save.disabled = false; });
+    });
+  }
+
+  function mountReview(detId, status) {
+    var host = document.getElementById("review");
+    if (!host) return;
+    if (!db) {
+      host.innerHTML = '<p class="note">Verdicts need the shared database, ' +
+        "which isn't available in this view.</p>";
+      return;
+    }
+    host.innerHTML = '<h2 class="sec">Your verdict</h2>' +
+      '<p class="note">Looking at the imagery under this line: is it a real ' +
+      'track?</p><div class="row">' +
+      '<button class="btn" data-v="road">Real track</button>' +
+      '<button class="btn ghost" data-v="not_road">Not a track</button>' +
+      '<button class="btn ghost" data-v="unsure">Unsure</button>' +
+      '</div><p class="note" id="rmsg" style="margin-top:8px"></p>';
+    var ref = db.doc("reviews/" + detId);
+    var msg = document.getElementById("rmsg");
+    ref.get().then(function (snap) {
+      if (snap.exists) {
+        var d = snap.data();
+        msg.textContent = "Recorded: " + String(d.verdict).replace(/_/g, " ") +
+          " (" + fmtDate(d.at) + ")";
+      }
+    }).catch(function () {});
+    Array.prototype.forEach.call(host.querySelectorAll("button[data-v]"), function (b) {
+      b.addEventListener("click", function () {
+        var v = b.getAttribute("data-v");
+        msg.textContent = "Saving…";
+        ref.set({ verdict: v, segment: detId, status: status,
+                  at: new Date().toISOString() })
+          .then(function () { msg.textContent = "Recorded: " + v.replace(/_/g, " "); })
+          .catch(function (e) {
+            msg.textContent = e && e.code === "invalid_argument"
+              ? "You don't have write access." : "Couldn't save — try again.";
+          });
+      });
+    });
+  }
+
+  if (window.claude && window.claude.use) {
+    window.claude.use("user").then(function (u) {
+      if (!u) return null;
+      return Promise.resolve(u.can ? u.can("data.write") : null)
+        .then(function (w) { canWrite = w; }).catch(function () {});
+    }).catch(function () {});
+
+    window.claude.use("db").then(function (d) {
+      if (!d) return;
+      db = d;
+      // Prefer the seeded database over the bundled copy, so records edited
+      // later are what the map shows.
+      return db.collection("sites").limit(400).get().then(function (snap) {
+        if (snap.empty) return;
+        var rows = snap.docs.map(function (doc) {
+          var o = doc.data() || {};
+          o.id = o.id || doc.id;
+          return o;
+        }).filter(function (o) {
+          return typeof o.lat === "number" && typeof o.lon === "number";
+        });
+        if (!rows.length) return;
+        SITES = rows.sort(function (a, b) {
+          return String(a.category).localeCompare(String(b.category)) ||
+            String(a.name_en || "").localeCompare(String(b.name_en || ""));
+        });
+        buildPins(SITES);
+        renderList(document.getElementById("filter").value);
+        document.getElementById("st-pins").textContent = String(SITES.length);
+      });
+    }).catch(function () {});
+  }
+})();
+</script>

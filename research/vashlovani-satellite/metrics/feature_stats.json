@@ -1,0 +1,105 @@
+{
+ "date": "2025-08-30",
+ "grid_m": 20,
+ "reflectance_scaling": "DN*1e-4, no additive offset (verified via SCL classes)",
+ "scl_pct": {
+  "dark": 1.289,
+  "vegetation": 8.5,
+  "bare": 89.838,
+  "water": 0.049,
+  "unclassified": 0.324
+ },
+ "clusters": {
+  "shadowed_or_dark_soil": {
+   "ndvi": 0.1546,
+   "mndwi": -0.5475,
+   "bsi": 0.2967,
+   "brightness": 0.0683,
+   "ndmi": -0.3227,
+   "km2": 150.57
+  },
+  "steppe_grass": {
+   "ndvi": 0.3188,
+   "mndwi": -0.4961,
+   "bsi": 0.145,
+   "brightness": 0.0878,
+   "ndmi": -0.0917,
+   "km2": 233.6
+  },
+  "woodland_scrub": {
+   "ndvi": 0.4872,
+   "mndwi": -0.4915,
+   "bsi": 0.0391,
+   "brightness": 0.0621,
+   "ndmi": 0.0156,
+   "km2": 111.05
+  },
+  "dry_steppe": {
+   "ndvi": 0.1901,
+   "mndwi": -0.4859,
+   "bsi": 0.2167,
+   "brightness": 0.1095,
+   "ndmi": -0.1884,
+   "km2": 281.38
+  },
+  "sparse_bare": {
+   "ndvi": 0.1721,
+   "mndwi": -0.3867,
+   "bsi": 0.1674,
+   "brightness": 0.1381,
+   "ndmi": -0.1308,
+   "km2": 220.26
+  },
+  "badlands_bright_bare": {
+   "ndvi": 0.0991,
+   "mndwi": -0.2871,
+   "bsi": 0.1553,
+   "brightness": 0.1948,
+   "ndmi": -0.1271,
+   "km2": 99.12
+  },
+  "dense_vegetation": {
+   "ndvi": 0.7107,
+   "mndwi": -0.5059,
+   "bsi": -0.157,
+   "brightness": 0.0493,
+   "ndmi": 0.2132,
+   "km2": 37.95
+  }
+ },
+ "water_km2": 1.3864,
+ "water_polygons": 136,
+ "dense_vegetation_km2": 33.75,
+ "index_stats": {
+  "ndvi": {
+   "p5": 0.0983,
+   "median": 0.2006,
+   "p95": 0.5563
+  },
+  "ndwi": {
+   "p5": -0.5529,
+   "median": -0.3248,
+   "p95": -0.1716
+  },
+  "mndwi": {
+   "p5": -0.5782,
+   "median": -0.476,
+   "p95": -0.3017
+  },
+  "ndmi": {
+   "p5": -0.3356,
+   "median": -0.1394,
+   "p95": 0.0713
+  },
+  "bsi": {
+   "p5": -0.0119,
+   "median": 0.1781,
+   "p95": 0.3049
+  },
+  "brightness": {
+   "p5": 0.0487,
+   "median": 0.101,
+   "p95": 0.1878
+  }
+ }
+}

@@ -1,0 +1,59 @@
+{
+ "raster": "vashlovani_esri_z16.tif",
+ "ground_m_per_px": 1.797,
+ "window": {
+  "row": 2048,
+  "col": 16384,
+  "size": 4096
+ },
+ "split": "left half train / right half test (spatially disjoint)",
+ "labels": {
+  "positive_within_m": 8.0,
+  "negative_ring_m": [
+   30.0,
+   70.0
+  ],
+  "pos_px": 182846,
+  "neg_px": 786449
+ },
+ "models": {
+  "logreg": {
+   "auc": 0.8588,
+   "thr_youden": 0.5695,
+   "tpr_youden": 0.793,
+   "fpr_youden": 0.216,
+   "thr_precision": 0.7906,
+   "tpr_at_budget": 0.437,
+   "fpr_at_budget": 0.0497
+  },
+  "rf": {
+   "auc": 0.8479,
+   "thr_youden": 0.5773,
+   "tpr_youden": 0.727,
+   "fpr_youden": 0.165,
+   "thr_precision": 0.7436,
+   "tpr_at_budget": 0.516,
+   "fpr_at_budget": 0.0495
+  }
+ },
+ "best": "rf",
+ "rf_feature_importance": {
+  "coherence9": 0.2239,
+  "gray": 0.1876,
+  "coherence3": 0.1192,
+  "std15": 0.1125,
+  "dir_open": 0.0668,
+  "highpass": 0.057,
+  "std5": 0.0531,
+  "sato3": 0.0433,
+  "sato2": 0.0403,
+  "sato1": 0.0287,
+  "tophat": 0.0272,
+  "blackhat": 0.0219,
+  "grad_mag": 0.0186
+ },
+ "caveats": [
+  "negative ring lies inside a park with genuinely unmapped tracks, so these metrics are a lower bound",
+  "OSM itself is incomplete here; 'false positive' partly means 'not in OSM' rather than 'not a road'"
+ ]
+}

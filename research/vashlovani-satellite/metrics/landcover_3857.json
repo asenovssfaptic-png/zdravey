@@ -1,0 +1,56 @@
+{
+ "bounds_4326": [
+  46.272582,
+  41.088102,
+  46.742989,
+  41.356387
+ ],
+ "size": [
+  1969,
+  1493
+ ],
+ "legend": {
+  "shadowed_or_dark_soil": {
+   "color": "#786455",
+   "ndvi": 0.155,
+   "bsi": 0.297,
+   "brightness": 0.068
+  },
+  "steppe_grass": {
+   "color": "#9caf60",
+   "ndvi": 0.319,
+   "bsi": 0.145,
+   "brightness": 0.088
+  },
+  "woodland_scrub": {
+   "color": "#558b2f",
+   "ndvi": 0.487,
+   "bsi": 0.039,
+   "brightness": 0.062
+  },
+  "dry_steppe": {
+   "color": "#c6b978",
+   "ndvi": 0.19,
+   "bsi": 0.217,
+   "brightness": 0.109
+  },
+  "sparse_bare": {
+   "color": "#cdaa7d",
+   "ndvi": 0.172,
+   "bsi": 0.167,
+   "brightness": 0.138
+  },
+  "badlands_bright_bare": {
+   "color": "#e8d6b7",
+   "ndvi": 0.099,
+   "bsi": 0.155,
+   "brightness": 0.195
+  },
+  "dense_vegetation": {
+   "color": "#1b5e20",
+   "ndvi": 0.711,
+   "bsi": -0.157,
+   "brightness": 0.049
+  }
+ }
+}

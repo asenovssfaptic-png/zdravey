@@ -1,0 +1,94 @@
+{
+ "window": {
+  "row": 2048,
+  "col": 16384,
+  "size": 4096
+ },
+ "pos_px": 182846,
+ "neg_px": 786449,
+ "fpr_budget": 0.05,
+ "caveat": "the negative ring lies inside a park containing genuinely unmapped tracks, so AUC is a lower bound",
+ "results": {
+  "sato sigmas 1-3": {
+   "auc": 0.661,
+   "thr_youden": 42,
+   "tpr_youden": 0.55,
+   "fpr_youden": 0.315,
+   "thr_prec": 92,
+   "tpr_at_budget": 0.173,
+   "fpr_at_budget": 0.0485
+  },
+  "morph tophat6 close9 open15 n16": {
+   "auc": 0.6109,
+   "thr_youden": 28,
+   "tpr_youden": 0.373,
+   "fpr_youden": 0.208,
+   "thr_prec": 42,
+   "tpr_at_budget": 0.143,
+   "fpr_at_budget": 0.0462
+  },
+  "morph tophat6 close9 open25 n16": {
+   "auc": 0.6019,
+   "thr_youden": 27,
+   "tpr_youden": 0.35,
+   "fpr_youden": 0.199,
+   "thr_prec": 39,
+   "tpr_at_budget": 0.138,
+   "fpr_at_budget": 0.0481
+  },
+  "morph tophat6 close9 open41 n16": {
+   "auc": 0.5875,
+   "thr_youden": 23,
+   "tpr_youden": 0.411,
+   "fpr_youden": 0.282,
+   "thr_prec": 36,
+   "tpr_at_budget": 0.12,
+   "fpr_at_budget": 0.0459
+  },
+  "morph tophat4 close9 open41 n16": {
+   "auc": 0.5868,
+   "thr_youden": 21,
+   "tpr_youden": 0.309,
+   "fpr_youden": 0.18,
+   "thr_prec": 28,
+   "tpr_at_budget": 0.127,
+   "fpr_at_budget": 0.0488
+  },
+  "morph tophat9 close9 open41 n16": {
+   "auc": 0.58,
+   "thr_youden": 29,
+   "tpr_youden": 0.383,
+   "fpr_youden": 0.261,
+   "thr_prec": 46,
+   "tpr_at_budget": 0.117,
+   "fpr_at_budget": 0.0494
+  },
+  "morph tophat6 close17 open61 n24": {
+   "auc": 0.5729,
+   "thr_youden": 28,
+   "tpr_youden": 0.325,
+   "fpr_youden": 0.214,
+   "thr_prec": 40,
+   "tpr_at_budget": 0.107,
+   "fpr_at_budget": 0.0445
+  },
+  "morph tophat6 close9 open61 n16": {
+   "auc": 0.5701,
+   "thr_youden": 23,
+   "tpr_youden": 0.325,
+   "fpr_youden": 0.221,
+   "thr_prec": 33,
+   "tpr_at_budget": 0.107,
+   "fpr_at_budget": 0.0448
+  },
+  "frangi sigmas 1-3": {
+   "auc": 0.4234,
+   "thr_youden": 7,
+   "tpr_youden": 0.468,
+   "fpr_youden": 0.304,
+   "thr_prec": 35,
+   "tpr_at_budget": 0.159,
+   "fpr_at_budget": 0.049
+  }
+ }
+}

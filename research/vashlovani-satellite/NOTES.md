@@ -48,25 +48,23 @@ is **2025-08-30** (0.04% max). Also good: 2025-05-09, 2025-06-01, 2025-07-14,
 
 Cost of a full-park grab: ~6 s and ~15–24 MB per band, ~18 s for three bands.
 
-### Reflectance scaling — unresolved, decide before analysing
+### Reflectance scaling — RESOLVED
 
-The STAC asset metadata advertises `scale: 0.0001, offset: -0.1` (processing
-baseline 05.11). Applying that offset gives physically odd results on this
-scene, so it needs a decision:
+The STAC metadata advertises `scale: 0.0001, offset: -0.1` (baseline 05.11).
+**Do not apply the offset.** Measured against the scene-classification band on
+2025-08-30:
 
-| handling | NDVI p1 / median / p99 | pixels outside [-1,1] |
-|---|---|---|
-| `DN * 0.0001` (no offset) | 0.06 / **0.20** / 0.77 | 0.000% |
-| `DN * 0.0001 - 0.1` (as advertised) | -6.83 / **0.48** / 9.96 | **27.1%** |
+| class | median red DN | red reflectance, no offset | with offset |
+|---|---|---|---|
+| vegetation (SCL 4) | 576 | 0.058 | **-0.042** |
+| water (SCL 6), NIR | 715 | 0.072 | **-0.029** |
+| bare (SCL 5) | 1370 | 0.137 | 0.037 |
 
-Raw DN medians: red 1300, NIR 2166. With the offset applied, red reflectance
-becomes 0.03 — implausibly dark for August badlands — and dark pixels drive the
-NDVI denominator through zero. Without it, median NDVI 0.20 is consistent with
-dry semi-desert in late August.
-
-`vashlovani_S2_ndvi_20250830_10m.tif` in this directory was written with the
-offset applied and is therefore **suspect** — recompute it once this is settled.
-Don't trust the 74%-vegetation figure it produces.
+Negative reflectance is physically impossible, and applying the offset also
+put 27% of NDVI pixels outside [-1, 1]. The Element84 COGs are already
+rescaled. Correct scaling is **`DN x 1e-4`, no additive offset**, which gives
+median NDVI 0.20 over the park in late August -- consistent with dry
+semi-desert.
 
 ## Route 2 — Esri World Imagery (the visual route) ✅ works
 
