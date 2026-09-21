@@ -1,0 +1,4 @@
+# Local download cache and generated work directories (~8 GB of Zenodo archives)
+amaryl_work/
+*.tar.gz
+__pycache__/
