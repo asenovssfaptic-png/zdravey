@@ -13,27 +13,43 @@ MNDWI, NDMI, BSI, brightness. Unsupervised k-means, k=7, deterministic init.
 additive offset; the advertised `-0.1` offset drives vegetation red reflectance
 to −0.042.
 
+**Extent bug, found by cross-referencing and fixed.** The first version
+computed class areas over the whole Sentinel-2 window — a
+1133.93 km² rectangle of which only 21.8% is inside the
+park. Every class area was inflated 3–5×, and the largest "land-cover class of
+the park" was actually the Shiraki Plain cereal belt to the north, which is
+farmland outside it. The analyzer now rasterises the boundary polygon and
+clusters only in-park pixels. Park area on the analysis grid:
+**246.68 km²** (official: 24,598 ha = 245.98 km²).
+
 Classes are labelled **by rank within the scene**, not by absolute NDVI cutoffs.
 Cutoffs tuned on temperate imagery mislabel a semi-desert, where NDVI 0.32 is
 respectable grass cover.
 
 | class | km² | NDVI | BSI | brightness |
 |---|---|---|---|---|
-| dense_vegetation | 38.0 | +0.71 | −0.16 | 0.049 |
-| woodland_scrub | 111.1 | +0.49 | +0.04 | 0.062 |
-| steppe_grass | 233.6 | +0.32 | +0.15 | 0.088 |
-| dry_steppe | 281.4 | +0.19 | +0.22 | 0.109 |
-| sparse_bare | 220.3 | +0.17 | +0.17 | 0.138 |
-| shadowed_or_dark_soil | 150.6 | +0.15 | +0.30 | 0.068 |
-| badlands_bright_bare | 99.1 | +0.10 | +0.16 | 0.195 |
+| dense_vegetation | 9.04 | +0.72 | -0.14 | 0.040 |
+| woodland_scrub | 33.01 | +0.50 | +0.04 | 0.057 |
+| steppe_grass | 65.18 | +0.34 | +0.14 | 0.080 |
+| dry_steppe | 44.74 | +0.22 | +0.15 | 0.115 |
+| sparse_bare | 62.82 | +0.21 | +0.21 | 0.106 |
+| badlands_bright_bare | 30.69 | +0.11 | +0.16 | 0.170 |
+| water | 1.2 | +0.08 | -0.01 | 0.071 |
 
-Water: MNDWI > 0.05 or SCL = water, and NDVI < 0.2 → **1.39 km², 136 polygons**,
-15 bodies of 2 ha or more. The park is 89.8% "bare" by the scene-classification
-band, which is what a semi-desert in late August looks like.
+Water: MNDWI > 0.05 or SCL = water, and NDVI < 0.2 →
+**1.3864 km² across the window, 0.5232 km²
+inside the park**, 136 polygons. Displayed beyond the boundary on purpose: the
+Alazani *is* the park's eastern edge, and clipping it away would hide the
+single most important hydrological feature. Cross-referencing established that
+90.5% of detected water area lies within 60 m of the Alazani and that 11 of the
+15 bodies ≥2 ha are in Azerbaijan — this is one river, not a set of park pools.
+The Iori has no length inside the polygon, so its absence is correct.
 
-Caveat worth carrying: one late-August date. Annual grasses are senesced by
-then, which suppresses NDVI and pushes real steppe toward the bare classes.
-Water extent is equally date-specific — these channels are seasonal.
+**Season is not a footnote here.** Comparing the cloud-free 2025-05-09 scene
+with this one over the park: median NDVI falls 0.574 → 0.260, and the area above
+NDVI 0.30 falls from 210 km² (85%) to 96 km² (39%). Annual grasses are senesced
+by late August, so real steppe is pushed into the bare classes. A May scene
+would give a materially different split.
 
 ## 2. Track detection (Esri World Imagery, 1.8 m/px)
 
@@ -124,21 +140,59 @@ clipped to the park.
 
 ## 3. Cross-referencing
 
-OSM was the only reference used for the numbers above, and OSM is demonstrably
-incomplete here. Two workflows ran against internet sources:
+OSM was the only reference behind the numbers above, and OSM is demonstrably
+incomplete here. Two workflows ran against internet sources.
 
-- **Site research** — eight independent angles (official protected-area
-  sources, named landmarks, geology/mud volcanoes, ecology, tourism routes,
-  gazetteers/Wikidata, history/archaeology, hydrology), each returning
-  structured site records, then adversarial verification in batches.
-- **Findings cross-reference** — five angles against the analysis outputs
-  themselves: do the unmapped candidates match any known route; is there an
-  independent road dataset to validate against; do the detected water bodies
-  match known hydrology; are the land-cover areas plausible against published
-  figures; and confirmation of the site names and descriptions.
+**Site research** — eight independent angles (official protected-area sources,
+named landmarks, geology, ecology, tourism routes, gazetteers/Wikidata,
+history, hydrology). 564 raw records → 483 unique → 40 confirmed, 35 with
+usable coordinates.
 
-Results merge into the site database rather than the page source, so the
-published map picks them up without a republish.
+**Findings cross-reference** — five angles aimed at the analysis output itself:
+139 claims, 22 held under adversarial check, 8 refuted, 36 contradicting the
+analysis.
+
+**Both runs were cut short by an account spend limit** — 89 of 105 research
+agents and 16 of 26 cross-reference agents failed partway through the
+verification stage. So most claims carry the researcher's own confidence
+rather than an independent second check, and each pin on the map shows its
+own status.
+
+### What it changed
+
+- **Land-cover extent bug** (section 1). The single most valuable catch:
+  every class area was the area of a rectangle, not of the park.
+- **Water identity.** 11 of 15 detected bodies ≥2 ha reverse-geocode to Qakh
+  District, Azerbaijan — irrigation and fish ponds beyond the Alazani, not
+  semi-desert pools. 90.5% of all detected water area is within 60 m of the
+  Alazani centreline.
+- **28 site names corrected.** Two OSM nodes tagged "visitor center" are not
+  one — the real centre is in Dedoplistsqaro, ~40 km outside the frame. They
+  are the Central Bungalows ("Visitors Village") and the Mijniskure bungalow
+  complex, both ranger stations. OSM `name:en` typos *Pantishira*,
+  *Pantissara* and *Vashlivani* were corrected rather than propagated.
+- **27 new sites added** with sourced coordinates: ranger protection stations,
+  the goitered-gazelle enclosure, the Alazani Floodplain Natural Monument, the
+  official numbered routes.
+
+### Independent references found
+
+The useful answer to "is there a second reference besides OSM":
+
+| source | verdict |
+|---|---|
+| **NAPR `RoadL`, Dedoplistskaro** (Georgian National Agency of Public Registry) | **Usable.** Digitised from national orthophoto, no OSM lineage. 107.3 km inside the park, 16.4 km of it absent from OSM. Shapefile/WMS/WFS, CC BY-NC 4.0. Needs a browser User-Agent and an `nsdi.gov.ge` Referer or it returns an "Access Denied" stub. |
+| **OSM public GPS traces** | **Usable.** 54,927 field trackpoints inside the park — independent of OSM *map geometry*. Gave the only hard positive GPS confirmations: four detected segments. |
+| **NAPR orthophoto WMS** | **Usable.** ~0.3 m GSD, two epochs 22 years apart — enough to separate active from abandoned track. |
+| Microsoft RoadDetections | **Marginal.** Covers the area (374 lines / 150 km in the bbox) and is 81% precise against OSM, but recovers only ~3–12% of in-park OSM tracks and **0%** of the named 4×4 routes. A hit is strong evidence; a miss says nothing. |
+| Official 1:55,000 trekking map | **Not positional.** Georeferenced from its printed UTM grid; singly-drawn routes land within ~10 m of OSM roads, but bundled routes are drawn as parallel offset lines and sit 75–137 m off. Cannot confirm a route better than ±150 m. |
+
+None of these were folded into the detector's validation numbers — they are
+the obvious next step, and NAPR in particular would give a second reference
+that does not share OSM's gaps.
+
+Results merged into the site database rather than the page source, so the
+published map picked them up without a republish.
 
 ## 4. The GIS site
 

@@ -27,10 +27,12 @@ import pathlib
 import numpy as np
 import rasterio
 from rasterio.enums import Resampling
-from rasterio.features import shapes
-from rasterio.warp import calculate_default_transform, reproject, transform_bounds, transform_geom
+from rasterio.features import geometry_mask, shapes
+from rasterio.warp import (calculate_default_transform, reproject,
+                           transform_bounds, transform_geom)
 from scipy import ndimage
 from shapely.geometry import mapping, shape
+from shapely.ops import unary_union
 
 OUT = pathlib.Path(__file__).parent
 DATE = "20250830"
@@ -67,7 +69,19 @@ def load_grid():
 
     bands = {n: band(n, "10m") for n in ("blue", "green", "red", "nir")}
     bands["swir16"] = band("swir16", "20m")
-    return bands, scl, crs, transform, prof
+
+    # Park mask on the analysis grid. WITHOUT THIS every class area is the
+    # area of the raster rectangle, not of the park: the Sentinel-2 window is
+    # 1133.93 km2 and only ~22% of it is inside the boundary, so unmasked
+    # figures are inflated 3-5x and pick up the Shiraki Plain cereal belt
+    # north of the park as a land-cover class of it.
+    park_fc = json.loads((OUT / "vashlovani_boundary.geojson").read_text())
+    geoms = [shape(f["geometry"]) for f in park_fc["features"]]
+    park_4326 = unary_union(geoms)
+    park = ~geometry_mask([transform_geom("EPSG:4326", crs.to_string(), mapping(g))
+                           for g in geoms],
+                          out_shape=(h, w), transform=transform, invert=False)
+    return bands, scl, crs, transform, prof, park, park_4326
 
 
 def indices(b):
@@ -138,7 +152,10 @@ def label_clusters(cent, names):
     for rank, j in enumerate(by_bright):
         if rank == 0:
             labels[j] = "badlands_bright_bare"
-        elif rank == len(by_bright) - 1 and len(by_bright) > 1:
+        elif (rank == len(by_bright) - 1 and len(by_bright) > 1
+              and info[j]["brightness"] < 0.08):
+            # only call it shadowed if it actually is dark; otherwise this
+            # label gets pinned on ordinary sparse ground
             labels[j] = "shadowed_or_dark_soil"
         else:
             labels[j] = "sparse_bare"
@@ -226,7 +243,7 @@ def write_overlay(cls, info, crs, transform, h, w):
 
 
 def main() -> None:
-    bands, scl, crs, transform, prof = load_grid()
+    bands, scl, crs, transform, prof, park, park_4326 = load_grid()
     idx = indices(bands)
     h, w = scl.shape
     print(f"grid {h}x{w} @20 m, CRS {crs}")
@@ -238,8 +255,13 @@ def main() -> None:
         print(f"  {n:11s} p5 {np.percentile(a,5):+.3f}  med {np.median(a):+.3f}  "
               f"p95 {np.percentile(a,95):+.3f}")
 
-    valid = ~np.isin(scl, [0, 1, 8, 9, 10])
-    print(f"valid (non-cloud) pixels: {valid.mean()*100:.2f}%")
+    window_km2 = scl.size * 400 / 1e6
+    park_px = int(park.sum())
+    print(f"analysis window {window_km2:.2f} km2; park mask {park_px*400/1e6:.2f} km2 "
+          f"({park.mean()*100:.1f}% of window)")
+    valid = ~np.isin(scl, [0, 1, 8, 9, 10]) & park
+    print(f"valid (non-cloud, in-park) pixels: {valid.sum()} "
+          f"= {valid.sum()*400/1e6:.2f} km2")
 
     names = ["ndvi", "mndwi", "bsi", "ndmi", "brightness"]
     feats = [np.where(valid, idx[n], np.nan) for n in names]
@@ -251,15 +273,26 @@ def main() -> None:
         print(f"  {j} {v['label']:24s} {px*400/1e6:7.2f} km2  ndvi{v['ndvi']:+.2f} "
               f"mndwi{v['mndwi']:+.2f} bsi{v['bsi']:+.2f} bright{v['brightness']:.3f}")
 
-    # ---- water: require index consensus, not a single cluster -----------
-    water = ((idx["mndwi"] > 0.05) | (scl == 6)) & (idx["ndvi"] < 0.2) & valid
-    water = ndimage.binary_opening(water, np.ones((2, 2)))
+    # ---- water ----------------------------------------------------------
+    # Displayed over the whole cloud-free window, because the Alazani IS the
+    # park's eastern boundary and clipping it away would hide the single most
+    # important hydrological feature. Quantified over the park only, because
+    # that is what the statistic is about. Each polygon carries in_park.
+    valid_win = ~np.isin(scl, [0, 1, 8, 9, 10])
+    water_win = (((idx["mndwi"] > 0.05) | (scl == 6))
+                 & (idx["ndvi"] < 0.2) & valid_win)
+    water_win = ndimage.binary_opening(water_win, np.ones((2, 2)))
+    water_park_km2 = float((water_win & park).sum()) * 400 / 1e6
+    water = water_win
     wpolys = vectorize(water, transform, crs, min_px=6, simplify_m=25.0)
-    print(f"\nwater: {water.sum()*400/1e6:.3f} km2, {len(wpolys)} polygons")
+    print(f"\nwater: {water.sum()*400/1e6:.3f} km2 in window, "
+          f"{water_park_km2:.3f} km2 inside the park, {len(wpolys)} polygons")
 
     fc_w = {"type": "FeatureCollection", "features": [
         {"type": "Feature", "geometry": g,
          "properties": {"layer": "water", "area_km2": round(a / 1e6, 4),
+                        "in_park": bool(shape(g).representative_point()
+                                        .within(park_4326)),
                         "detector": "MNDWI>0.05 or SCL=water, and NDVI<0.2",
                         "date": "2025-08-30"}}
         for a, g in wpolys]}
@@ -294,6 +327,7 @@ def main() -> None:
         rp = shape(g).representative_point()
         pts.append({"type": "Feature",
                     "properties": {"kind": "water_body", "area_ha": round(a / 1e4, 2),
+                                   "in_park": bool(rp.within(park_4326)),
                                    "detector": "MNDWI consensus, Sentinel-2 2025-08-30"},
                     "geometry": {"type": "Point",
                                  "coordinates": [round(rp.x, 6), round(rp.y, 6)]}})
@@ -305,6 +339,9 @@ def main() -> None:
 
     (OUT / "feature_stats.json").write_text(json.dumps({
         "date": "2025-08-30", "grid_m": 20,
+        "extent": "clipped to the OSM national-park polygon",
+        "analysis_window_km2": round(window_km2, 2),
+        "park_mask_km2": round(park_px * 400 / 1e6, 2),
         "reflectance_scaling": "DN*1e-4, no additive offset (verified via SCL classes)",
         "scl_pct": {SCL_NAMES.get(int(k), int(k)): round(float(v) * 100 / scl.size, 3)
                     for k, v in zip(scl_u, scl_c)},
@@ -312,7 +349,8 @@ def main() -> None:
                                           if k != "label"},
                                         "km2": round(float((cls == j).sum()) * 400 / 1e6, 2)}
                      for j in info},
-        "water_km2": round(float(water.sum()) * 400 / 1e6, 4),
+        "water_km2_window": round(float(water.sum()) * 400 / 1e6, 4),
+        "water_km2_in_park": round(water_park_km2, 4),
         "water_polygons": len(wpolys),
         "dense_vegetation_km2": round(float(vmask.sum()) * 400 / 1e6, 2),
         "index_stats": {n: {"p5": round(float(np.percentile(a, 5)), 4),

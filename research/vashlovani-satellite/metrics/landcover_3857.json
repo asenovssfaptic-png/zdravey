@@ -10,47 +10,47 @@
   1493
  ],
  "legend": {
-  "shadowed_or_dark_soil": {
-   "color": "#786455",
-   "ndvi": 0.155,
-   "bsi": 0.297,
-   "brightness": 0.068
-  },
-  "steppe_grass": {
-   "color": "#9caf60",
-   "ndvi": 0.319,
-   "bsi": 0.145,
-   "brightness": 0.088
-  },
-  "woodland_scrub": {
-   "color": "#558b2f",
-   "ndvi": 0.487,
-   "bsi": 0.039,
-   "brightness": 0.062
-  },
-  "dry_steppe": {
-   "color": "#c6b978",
-   "ndvi": 0.19,
-   "bsi": 0.217,
-   "brightness": 0.109
+  "water": {
+   "color": "#3182bd",
+   "ndvi": 0.079,
+   "bsi": -0.007,
+   "brightness": 0.071
   },
   "sparse_bare": {
    "color": "#cdaa7d",
-   "ndvi": 0.172,
-   "bsi": 0.167,
-   "brightness": 0.138
+   "ndvi": 0.209,
+   "bsi": 0.213,
+   "brightness": 0.106
   },
-  "badlands_bright_bare": {
-   "color": "#e8d6b7",
-   "ndvi": 0.099,
-   "bsi": 0.155,
-   "brightness": 0.195
+  "dry_steppe": {
+   "color": "#c6b978",
+   "ndvi": 0.221,
+   "bsi": 0.148,
+   "brightness": 0.115
   },
   "dense_vegetation": {
    "color": "#1b5e20",
-   "ndvi": 0.711,
-   "bsi": -0.157,
-   "brightness": 0.049
+   "ndvi": 0.718,
+   "bsi": -0.14,
+   "brightness": 0.04
+  },
+  "woodland_scrub": {
+   "color": "#558b2f",
+   "ndvi": 0.496,
+   "bsi": 0.039,
+   "brightness": 0.057
+  },
+  "steppe_grass": {
+   "color": "#9caf60",
+   "ndvi": 0.342,
+   "bsi": 0.142,
+   "brightness": 0.08
+  },
+  "badlands_bright_bare": {
+   "color": "#e8d6b7",
+   "ndvi": 0.11,
+   "bsi": 0.162,
+   "brightness": 0.17
   }
  }
 }

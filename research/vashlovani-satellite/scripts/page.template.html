@@ -266,9 +266,9 @@ textarea.nt:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px
     <div class="phead">
       <p class="eyebrow">Kakheti · Georgia · 41.22°N 46.51°E</p>
       <h1>Vashlovani Terrain Survey</h1>
-      <p class="sub">442 km² of semi-desert badlands on the Azerbaijan border.
-        Satellite land-cover and track detection, cross-referenced against
-        OpenStreetMap and published sources.</p>
+      <p class="sub">Semi-desert badlands on the Azerbaijan border. Satellite
+        land-cover and track detection, cross-referenced against OpenStreetMap,
+        an independent road dataset and published sources.</p>
       <button class="mtoggle" id="mtoggle" aria-expanded="true">Hide</button>
     </div>
     <div class="pscroll" id="pscroll">
@@ -286,6 +286,11 @@ textarea.nt:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px
         <details class="disc" id="perf">
           <summary>Detector performance</summary>
           <div class="body" id="perfbody"></div>
+        </details>
+
+        <details class="disc" id="xref">
+          <summary>Cross-reference</summary>
+          <div class="body" id="xrefbody"></div>
         </details>
 
         <details class="disc">
@@ -399,8 +404,14 @@ textarea.nt:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px
         L.DomEvent.stopPropagation(e);
         showArea("Detected surface water", f.properties.area_km2,
           "Open water in Sentinel-2 imagery of 2025-08-30 (MNDWI index " +
-          "consensus with the scene-classification band). Extent is " +
-          "date-specific: these channels and pools are seasonal.");
+          "consensus with the scene-classification band). Cross-referencing " +
+          "showed 90.5% of all detected water area lies within 60 m of the " +
+          "Alazani: this is essentially one river, not a set of park pools, " +
+          "and much of it falls outside the boundary — the Alazani IS the " +
+          "park's eastern edge. The Iori has no length inside the polygon, so " +
+          "its absence here is correct. Extent is date-specific." +
+          (f.properties.in_park === false
+            ? " This polygon is outside the park boundary." : ""));
       });
     }
   });
@@ -515,8 +526,9 @@ textarea.nt:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px
   var osmKm = (META.roads && META.roads.osm_reference_in_park
     ? META.roads.osm_reference_in_park.km : null);
   var detKm = (META.roads && META.roads.detected ? META.roads.detected.km : null);
+  var parkKm2 = (META.features && META.features.park_mask_km2) || null;
   var statHtml = [
-    ["st-area", "442", "km² park area"],
+    ["st-area", parkKm2 ? parkKm2.toFixed(0) : "—", "km² park area"],
     ["st-pins", String(SITES.length), "site pins"],
     ["st-osm", osmKm != null ? km(osmKm) : "—", "km mapped road"],
     ["st-det", detKm != null ? km(detKm) : "—", "km detected"]
@@ -572,6 +584,37 @@ textarea.nt:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px
     body.innerHTML = html;
   })();
 
+  document.getElementById("xrefbody").innerHTML =
+    "<p class=\"note\">The analysis was checked against sources beyond " +
+    "OpenStreetMap. What that changed:</p>" +
+    "<table class=\"m\"><tr><th>finding</th><th>outcome</th></tr>" +
+    "<tr><td>Land-cover areas</td><td>corrected</td></tr>" +
+    "<tr><td>Detected water identity</td><td>corrected</td></tr>" +
+    "<tr><td>Site names</td><td>28 fixed</td></tr>" +
+    "<tr><td>Independent road data</td><td>found</td></tr>" +
+    "</table>" +
+    "<p class=\"note\"><b>Land cover.</b> The first run computed class areas " +
+    "over the whole 1,134 km² Sentinel-2 window instead of the park, inflating " +
+    "every figure 3–5× and promoting the Shiraki Plain cereal belt north of the " +
+    "park to a land-cover class of it. Now clipped to the boundary: " +
+    "<b>246.7 km²</b>.</p>" +
+    "<p class=\"note\"><b>Water.</b> 11 of the 15 detected bodies of 2 ha or " +
+    "more reverse-geocode to Qakh District, Azerbaijan — irrigation and fish " +
+    "ponds beyond the Alazani, not park pools.</p>" +
+    "<p class=\"note\"><b>Names.</b> Two OSM nodes tagged “visitor center” are " +
+    "not one; the real centre is in Dedoplistsqaro, ~40 km away. They are the " +
+    "Central Bungalows and the Mijniskure bungalows, both ranger stations. " +
+    "OSM typos “Pantishira”, “Pantissara” and “Vashlivani” were corrected " +
+    "rather than propagated.</p>" +
+    "<p class=\"note\"><b>Season.</b> Comparing 2025-05-09 with this " +
+    "2025-08-30 scene over the park, median NDVI falls 0.574 → 0.260 and the " +
+    "area above NDVI 0.30 falls from 85% to 39% of the park. A late-August " +
+    "date pushes real steppe into the bare classes; read the split accordingly." +
+    "</p>" +
+    "<p class=\"note\">Verification was cut short by an account spend limit, " +
+    "so many claims carry the researcher's confidence rather than an " +
+    "independent second check. Each pin shows its own status.</p>";
+
   document.getElementById("provbody").innerHTML =
     "<p>Imagery: Esri World Imagery, shipped with this page as 144 " +
     "pre-rendered tiles (3.6 m/px at full zoom).</p>" +
@@ -579,7 +622,9 @@ textarea.nt:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px
     "(0.04% cloud), 10–20 m, from the AWS public COG mirror. Reflectance " +
     "scaled DN×1e-4 with <i>no</i> additive offset — applying the offset the " +
     "STAC metadata advertises drives vegetation red reflectance negative.</p>" +
-    "<p>Roads, names and POIs: OpenStreetMap via the main API (ODbL).</p>" +
+    "<p>Roads, names and POIs: OpenStreetMap via the main API (ODbL), with " +
+    "names checked against the Agency of Protected Areas, nationalparks.ge " +
+    "and the Council of Europe European Diploma appraisal.</p>" +
     "<p>Track detection: random forest over 13 texture and morphology " +
     "features at 1.8 m/px.</p>";
 
@@ -683,8 +728,17 @@ textarea.nt:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px
     var title = s.name_en || s.name_local || s.id;
     var kv = '<dl class="kv"><dt>Coordinates</dt><dd class="coord">' +
       s.lat.toFixed(5) + ", " + s.lon.toFixed(5) + "</dd>" +
-      "<dt>In park</dt><dd>" + (s.in_park ? "yes" : "adjacent") + "</dd>" +
+      "<dt>In park</dt><dd>" + (s.in_park ? "yes" :
+        (s.country ? esc(s.country) : "outside boundary")) + "</dd>" +
       "<dt>Confidence</dt><dd>" + esc(s.confidence || "—") + "</dd>";
+    if (s.research_status) {
+      kv += "<dt>Checked</dt><dd>" +
+        esc(String(s.research_status).toLowerCase().replace(/_/g, " ")) + "</dd>";
+    }
+    if (s.name_en_prev) {
+      kv += "<dt>Was named</dt><dd>" + esc(s.name_en_prev) +
+        " <span class=\"note\">(corrected)</span></dd>";
+    }
     if (s.osm_tags) kv += '<dt>OSM tags</dt><dd class="mono">' + esc(s.osm_tags) + "</dd>";
     kv += "</dl>";
     var desc = s.description
