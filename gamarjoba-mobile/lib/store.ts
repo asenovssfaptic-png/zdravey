@@ -1,4 +1,4 @@
-/* Gamarjoba! mobile — progress store.
+/* Grammarjoba! mobile — progress store.
  *
  * ONE AsyncStorage key, `gamarjoba.v1`, with the exact JSON shape of the
  * web app's storeDefaults() — a save file is portable between the two.

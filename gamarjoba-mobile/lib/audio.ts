@@ -1,4 +1,4 @@
-/* Gamarjoba! mobile — speech/content audio.
+/* Grammarjoba! mobile — speech/content audio.
  *
  * ONE shared expo-audio player (the web app plays one clip at a time;
  * keep that). Everything resolves when playback finishes (via

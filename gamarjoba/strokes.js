@@ -1,4 +1,4 @@
-/* Gamarjoba! — strokes.js
+/* Grammarjoba! — strokes.js
  * Stroke-order data for all 33 Mkhedruli letters.
  * Plain (non-module) script: assigns window.LETTER_STROKES.
  * Each letter maps to an ordered array of strokes; each stroke is an ordered

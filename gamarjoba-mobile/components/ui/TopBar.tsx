@@ -62,7 +62,7 @@ export function TopBar(): React.ReactElement {
     <View style={styles.bar}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Gamarjoba! — go home"
+        accessibilityLabel="Grammarjoba! — go home"
         onPress={() => {
           playId(CURRICULUM.vocab.gamarjoba.id).catch(() => {});
           router.navigate("/" as never);
@@ -70,7 +70,7 @@ export function TopBar(): React.ReactElement {
         style={({ pressed }) => [styles.brand, pressed && { opacity: 0.7 }]}
       >
         <Borjgali size={30} />
-        <Text style={styles.brandText}>Gamarjoba!</Text>
+        <Text style={styles.brandText}>Grammarjoba!</Text>
       </Pressable>
       <View style={styles.chips}>
         <Chip emoji="⭐" value={stars} label={`Total stars: ${stars} — open My treasures`} />

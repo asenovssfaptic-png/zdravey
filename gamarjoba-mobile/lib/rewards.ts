@@ -1,4 +1,4 @@
-/* Gamarjoba! mobile — rewards: XP milestones, stars, crowns, badges,
+/* Grammarjoba! mobile — rewards: XP milestones, stars, crowns, badges,
  * stickers. A faithful port of the web app's reward branches. MONOTONIC
  * ONLY: everything here can only add — nothing is ever taken away, and
  * exams/lessons always award at least one star.

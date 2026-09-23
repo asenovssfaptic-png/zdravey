@@ -1,4 +1,4 @@
-/* Gamarjoba! mobile — programmatic app icon.
+/* Grammarjoba! mobile — programmatic app icon.
  *
  * Renders the borjgali (the app's brand mark — 7 spiral arms, matching the
  * web app's <symbol id="borjgali">: quadratic curves M50,50 Q58,30 50,12

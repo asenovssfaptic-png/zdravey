@@ -1,4 +1,4 @@
-/* Gamarjoba! mobile — exercise engine.
+/* Grammarjoba! mobile — exercise engine.
  *
  * Pure TypeScript, ZERO React Native imports. A faithful port of the
  * builders, distractor logic, retry policy and progress selectors in the

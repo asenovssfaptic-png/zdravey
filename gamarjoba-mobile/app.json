@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "Gamarjoba!",
-    "slug": "gamarjoba",
+    "name": "Grammarjoba!",
+    "slug": "grammarjoba",
     "version": "1.0.0",
-    "scheme": "gamarjoba",
+    "scheme": "grammarjoba",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "bundleIdentifier": "ge.gamarjoba.app",
+      "bundleIdentifier": "ge.grammarjoba.app",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -16,7 +16,7 @@
       "requireFullScreen": true
     },
     "android": {
-      "package": "ge.gamarjoba.app",
+      "package": "ge.grammarjoba.app",
       "predictiveBackGestureEnabled": false,
       "adaptiveIcon": {
         "backgroundColor": "#FAF6F0",

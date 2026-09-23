@@ -1,4 +1,4 @@
-/* Gamarjoba! mobile — curriculum types.
+/* Grammarjoba! mobile — curriculum types.
  * Hand-written, foundation-owned. Mirrors the shapes of the web app's
  * data.js (window.CURRICULUM) exactly — the generated content in
  * `content/generated/` is typed against this file.

@@ -1,6 +1,6 @@
-# Testing Gamarjoba! (mobile)
+# Testing Grammarjoba! (mobile)
 
-The native iOS + Android app for **Gamarjoba!** — Expo SDK 57 / React
+The native iOS + Android app for **Grammarjoba!** — Expo SDK 57 / React
 Native 0.86 / expo-router. Fully offline: all 373 audio clips, the
 curriculum (18 units), stroke data and SFX are bundled; there is no
 backend, no account, no analytics, no network call at runtime.

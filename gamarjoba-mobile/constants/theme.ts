@@ -1,4 +1,4 @@
-/* Gamarjoba! mobile — design tokens, ported verbatim from the web app's
+/* Grammarjoba! mobile — design tokens, ported verbatim from the web app's
  * styles.css :root. The ONLY place hex colors may appear.
  */
 

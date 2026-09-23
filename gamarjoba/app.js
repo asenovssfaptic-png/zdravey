@@ -1,4 +1,4 @@
-/* Gamarjoba! — app.js
+/* Grammarjoba! — app.js
  * Vanilla JS, no frameworks, no modules, no network requests.
  * Router (#/home, #/unit/:id, #/lesson/:id, #/alphabet, #/practice),
  * localStorage store ('gamarjoba.v1'), 4 data-driven exercise renderers.

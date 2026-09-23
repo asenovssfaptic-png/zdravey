@@ -1,4 +1,4 @@
-/* Gamarjoba! — curriculum data
+/* Grammarjoba! — curriculum data
  * Plain (non-module) script: assigns window.CURRICULUM.
  * Teaches Georgian (ქართული, Mkhedruli script) to English speakers.
  * Romanization: apostrophes mark ejectives (k', p', t', q', ts', ch').

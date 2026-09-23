@@ -1,4 +1,4 @@
-/* Gamarjoba! mobile — content bridge.
+/* Grammarjoba! mobile — content bridge.
  *
  * The web app at ../../gamarjoba is the single source of truth for all
  * content. This script evaluates its plain-script globals (data.js,
