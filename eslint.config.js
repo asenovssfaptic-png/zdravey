@@ -5,6 +5,6 @@ const expoConfig = require("eslint-config-expo/flat");
 module.exports = defineConfig([
   expoConfig,
   {
-    ignores: ["dist/*", "gamarjoba-mobile/*"],
+    ignores: ["dist/*", "gamarjoba-mobile/*", "shkolo-bot/*"],
   }
 ]);
